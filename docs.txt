@@ -1,0 +1,90 @@
+sam_annotator/
+├── src/
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── annotator.py          # Core annotation logic (current multi_class.py)
+│   │   ├── predictor.py          # SAM prediction wrapper
+│   │   └── weight_manager.py     # SAM weight management
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── window_manager.py     # Window creation and management
+│   │   ├── event_handler.py      # Mouse and keyboard event handling
+│   │   └── widgets/
+│   │       ├── __init__.py
+│   │       ├── class_selector.py # Class selection interface
+│   │       └── status_overlay.py # Status display
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── image_utils.py        # Image processing utilities
+│   │   ├── file_utils.py         # File operations
+│   │   └── visualization.py      # Visualization functions
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── settings.py           # Global settings and constants
+│   │   └── shortcuts.py          # Keyboard shortcut definitions
+│   └── data/
+│       ├── __init__.py
+│       ├── annotation.py         # Annotation data structures
+│       └── dataset.py            # Dataset management
+├── tests/
+│   └── ...                       # Test files mirroring src structure
+├── examples/
+│   └── ...                       # Usage examples
+|── test_data/
+|     └── s2/... 
+└── main.py                       # Entry point
+
+
+Project - Implementation Priority and Timeline
+Phase 1: Core Refactoring (1-2 weeks)
+
+    1. Split current monolithic class into modular components
+    2. Implement proper event handling system
+    3. Create configuration management
+    4. Add basic logging and error handling
+
+
+Phase 2: Essential Features (2-3 weeks)
+
+    1. Review Mode Basics
+
+        -   Delete/edit existing annotations
+        -   Undo/redo support
+        -   Basic visualization improvements
+
+
+    2. Annotation Mode Improvements
+
+        -   Customizable shortcuts
+        -   Quick class selection
+        -   Basic validation rules
+
+Phase 3: Advanced Features (3-4 weeks)
+
+    1. Enhanced Visualization
+
+        -   Opacity control
+        -   Zoom functionality
+        -   Side-by-side view
+
+
+    2. Quality Control
+
+        -   Auto-save
+        -   Validation rules
+        -   Overlap detection
+
+Phase 4: Additional Features (4+ weeks)
+
+    1. Project Management
+
+        -   Multiple project support
+        -   Export formats
+        -   Progress tracking
+
+
+    2. Performance Optimization
+
+        -   Lazy loading
+        -   Memory optimization
+        -   Caching
