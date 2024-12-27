@@ -250,7 +250,7 @@ class SAMAnnotator:
                 'box': [min(box_start[0], box_end[0]),
                        min(box_start[1], box_end[1]),
                        max(box_start[0], box_end[0]),
-                       max(box_start[1], box_end[1])]
+                       max(box_start[1], box_end[1])] 
             }
             self.annotations.append(annotation)
             self.logger.info(f"Successfully added annotation. Total annotations: {len(self.annotations)}")
