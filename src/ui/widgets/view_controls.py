@@ -116,8 +116,7 @@ class ViewControls:
         # Convert to value
         ratio = (mouse_x - track_start) / track_width
         return slider_min + ratio * (slider_max - slider_min)
-    
-    
+     
     def update_state(self, key: str, value: any) -> None:
         """Update a state value and notify change."""
         if key in self.view_state:
@@ -135,7 +134,6 @@ class ViewControls:
                 self.logger.info(f"Toggled {key} to {self.view_state[key]}")
             self._notify_state_change()
             self.render()
-    
     
     def handle_mouse(self, event: int, x: int, y: int, flags: int, param: any) -> None:
         """Handle mouse events in the control panel."""
@@ -198,7 +196,6 @@ class ViewControls:
         elif event == cv2.EVENT_LBUTTONUP:
             self.active_slider = None
 
-
     def render(self):
         """Render the control panel."""
         self._create_control_panel()
@@ -237,7 +234,6 @@ class ViewControls:
                        0.5, (200, 200, 200), 1)
         
         cv2.imshow(self.window_name, self.panel)
-   
    
     def get_state(self) -> Dict:
         """Get current view state."""

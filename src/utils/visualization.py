@@ -37,7 +37,6 @@ class VisualizationManager:
         self.show_minimap = False
         self.minimap_scale = 0.2
     
-    
     def _generate_colors(self, n: int) -> List[Tuple[int, int, int]]:
         """Generate distinct colors for visualization."""
         colors = []
@@ -56,8 +55,6 @@ class VisualizationManager:
             colors.append((int(rgb[0]), int(rgb[1]), int(rgb[2])))
         return colors
         
-    
-
     def _draw_mask(self, image: np.ndarray, mask: np.ndarray, 
                    color: Tuple[int, int, int]) -> np.ndarray:
         """Draw a single mask on the image."""
@@ -67,16 +64,11 @@ class VisualizationManager:
         return cv2.addWeighted(image, 1.0,
                              colored_mask, self.mask_opacity, 0)
     
-    
-    
-    
     def _draw_box(self, image: np.ndarray, box: List[int], 
                   color: Tuple[int, int, int], thickness: int = 2) -> np.ndarray:
         """Draw a bounding box on the image."""
         x1, y1, x2, y2 = map(int, box)
         return cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
-    
-    
     
     def _draw_label(self, image: np.ndarray, text: str, position: Tuple[int, int],
                     color: Tuple[int, int, int]) -> np.ndarray:
@@ -103,8 +95,6 @@ class VisualizationManager:
                     thickness)
         return image
     
-    
-    
     def _draw_points(self, image: np.ndarray, contour_points: np.ndarray,
                      color: Tuple[int, int, int]) -> np.ndarray:
         """Draw contour points on the image."""
@@ -112,9 +102,7 @@ class VisualizationManager:
             x, y = point[0]
             cv2.circle(image, (int(x), int(y)), 2, color, -1)
         return image
-    
-    
-        
+       
     def set_color_scheme(self, scheme: str = 'default') -> None:
         """Change color scheme."""
         if scheme == 'dark':
@@ -295,8 +283,6 @@ class VisualizationManager:
         
         return preview
     
-  
-  
     def create_composite_view(self,
                             image: np.ndarray,
                             annotations: List[Dict],
@@ -352,9 +338,6 @@ class VisualizationManager:
             display = self._draw_box(display, current_box, (0, 255, 0))
             
         return display
-   
-   
-   
    
     def add_status_overlay(self, image: np.ndarray, 
                           status: str = "",

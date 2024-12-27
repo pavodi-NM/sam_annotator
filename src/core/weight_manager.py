@@ -4,7 +4,7 @@ import logging
 import requests
 from tqdm import tqdm
 
-class SAMWeightManager: 
+class SAMWeightManager:  
     """Manages SAM model weights including downloading and path verification."""
     
     DEFAULT_CHECKPOINT_URL = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"

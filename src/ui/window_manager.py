@@ -85,14 +85,7 @@ class WindowManager:
         # Create opacity trackbar
         cv2.createTrackbar('Mask Opacity', self.main_window, 50, 100,
                         lambda x: self.vis_manager.set_mask_opacity(x / 100))
-    
-    
-    
-    # def _handle_view_state_change(self, new_state: Dict) -> None:
-    #     """Handle changes in view controls."""
-    #     self.window_state.update(new_state)
-    #     self.image_scale = new_state['zoom_level']
-    #     self.vis_manager.set_mask_opacity(new_state['mask_opacity'])
+       
     def _handle_view_state_change(self, new_state: Dict) -> None:
         """Handle changes in view controls."""
         try:
@@ -121,8 +114,6 @@ class WindowManager:
                 import traceback
                 self.logger.error(traceback.format_exc())
                 
-    
-    
     def update_main_window(self, 
                           image: np.ndarray,
                           annotations: List[Dict],
@@ -182,14 +173,12 @@ class WindowManager:
                 self.logger.error(f"Error updating main window: {str(e)}")
                 import traceback
                 self.logger.error(traceback.format_exc())
-    
-    
+     
     def update_review_panel(self, annotations: List[Dict]) -> None:
         """Update annotation review panel."""
         self.annotation_review.set_annotations(annotations)
         self.annotation_review.render()    
-        
-    
+         
     def handle_review_keyboard(self, key: int) -> None:
         """Handle keyboard events for review panel."""
         self.annotation_review.handle_keyboard(key)
@@ -197,8 +186,7 @@ class WindowManager:
     def get_selected_annotation_idx(self) -> Optional[int]:
         """Get currently selected annotation index."""
         return self.annotation_review.selected_idx
-    
-    
+       
     def update_class_window(self, class_names: List[str], current_class_id: int) -> None:
         """Update class selection window."""
         self.class_selector.set_classes(class_names)

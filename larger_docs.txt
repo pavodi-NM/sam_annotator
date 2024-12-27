@@ -1,3 +1,44 @@
+sam_annotator/
+├── src/
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── annotator.py          # Core annotation logic (current multi_class.py)
+│   │   ├── predictor.py          # SAM prediction wrapper
+│   │   └── weight_manager.py     # SAM weight management
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── window_manager.py     # Window creation and management
+│   │   ├── event_handler.py      # Mouse and keyboard event handling
+│   │   └── widgets/
+│   │       ├── __init__.py
+│   │       ├── class_selector.py # Class selection interface
+│   │       └── status_overlay.py # Status display
+│   │       └── annotation_review.py # reviewing and managing annotations
+│   │       └── view_controls.py #  controlling view settings like zoom, pan, and layer visibility
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── image_utils.py        # Image processing utilities
+│   │   ├── file_utils.py         # File operations
+│   │   └── visualization.py      # Visualization functions
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── settings.py           # Global settings and constants
+│   │   └── shortcuts.py          # Keyboard shortcut definitions
+│   └── data/
+│       ├── __init__.py
+│       ├── annotation.py         # Annotation data structures
+│       └── dataset.py            # Dataset management
+├── tests/
+│   └── ...                       # Test files mirroring src structure
+├── examples/
+│   └── ...                       # Usage examples
+|── test_data/
+|     └── s2/... 
+└── main.py                       # Entry point
+
+
+
+
 
 We should be able to access the viewer mode pressing v and quit it if we press again v.
     - Here, the original image, the mask and the overlay must be visible.
