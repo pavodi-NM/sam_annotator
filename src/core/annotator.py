@@ -74,8 +74,7 @@ class SAMAnnotator:
         """Setup paths for images and annotations."""
         self.images_path = os.path.join(category_path, 'images')
         self.annotations_path = os.path.join(category_path, 'labels')
-        os.makedirs(self.annotations_path, exist_ok=True)
-    
+        os.makedirs(self.annotations_path, exist_ok=True)  
     
     def _setup_callbacks(self) -> None:
         """Setup event callbacks."""
@@ -99,25 +98,20 @@ class SAMAnnotator:
             review_callbacks=review_callbacks
         )
         
-        def _on_annotation_delete(self, idx: int) -> None:
-            """Handle annotation deletion."""
-            if 0 <= idx < len(self.annotations):
-                del self.annotations[idx]
-                self.window_manager.update_review_panel(self.annotations)
 
-        def _on_annotation_select(self, idx: int) -> None:
-            """Handle annotation selection."""
-            if 0 <= idx < len(self.annotations):
-                self.selected_annotation_idx = idx
-                # Update the main window to highlight selected annotation
-                # This will be handled through the window manager's update mechanism
+    def _on_annotation_select(self, idx: int) -> None:
+        """Handle annotation selection."""
+        if 0 <= idx < len(self.annotations):
+            self.selected_annotation_idx = idx
+            # Update the main window to highlight selected annotation
+            # This will be handled through the window manager's update mechanism
 
-        def _on_annotation_class_change(self, idx: int, new_class_id: int) -> None:
-            """Handle annotation class change."""
-            if 0 <= idx < len(self.annotations):
-                self.annotations[idx]['class_id'] = new_class_id
-                self.annotations[idx]['class_name'] = self.class_names[new_class_id]
-                self.window_manager.update_review_panel(self.annotations)
+    def _on_annotation_class_change(self, idx: int, new_class_id: int) -> None:
+        """Handle annotation class change."""
+        if 0 <= idx < len(self.annotations):
+            self.annotations[idx]['class_id'] = new_class_id
+            self.annotations[idx]['class_name'] = self.class_names[new_class_id]
+            self.window_manager.update_review_panel(self.annotations)
     
     def _handle_mask_prediction(self, 
                               box_start: Tuple[int, int],
@@ -374,22 +368,6 @@ class SAMAnnotator:
             )
     
     
-    """ Handle the annotation review panel """
-
-
-    def _on_annotation_select(self, idx: int) -> None:
-        """Handle annotation selection."""
-        # Highlight the selected annotation in the main window
-        self.selected_annotation_idx = idx
-        # Update visualization...
-
-    def _on_annotation_class_change(self, idx: int, new_class_id: int) -> None:
-        """Handle annotation class change."""
-        if 0 <= idx < len(self.annotations):
-            self.annotations[idx]['class_id'] = new_class_id
-            self.annotations[idx]['class_name'] = self.class_names[new_class_id]
-            self.window_manager.update_review_panel(self.annotations)    
-    
     def _get_label_path(self, image_path: str) -> str:
             """Get the corresponding label file path for an image."""
             # Assuming image_path is like: test_data/s2/images/img1.jpg
@@ -464,9 +442,7 @@ class SAMAnnotator:
                 self.logger.error(f"Error deleting annotation: {str(e)}")
                 import traceback
                 self.logger.error(traceback.format_exc())
-    
-    
-    
+     
     def run(self) -> None:
             """Run the main annotation loop."""
             try:
