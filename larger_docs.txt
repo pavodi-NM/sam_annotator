@@ -1,0 +1,4 @@
+
+We should be able to access the viewer mode pressing v and quit it if we press again v.
+    - Here, the original image, the mask and the overlay must be visible.
+    - Interactive Buttons: Previous, Next, Save, Mark as faulty, Delete, 

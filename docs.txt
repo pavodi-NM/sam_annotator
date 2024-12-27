@@ -13,6 +13,8 @@ sam_annotator/
 │   │       ├── __init__.py
 │   │       ├── class_selector.py # Class selection interface
 │   │       └── status_overlay.py # Status display
+│   │       └── annotation_review.py # reviewing and managing annotations
+│   │       └── view_controls.py #  controlling view settings like zoom, pan, and layer visibility
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   ├── image_utils.py        # Image processing utilities
