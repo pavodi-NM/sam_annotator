@@ -55,9 +55,6 @@ class AnnotationReview:
         self.panel_height = total_height
         self.panel = np.zeros((total_height, self.width, 3), dtype=np.uint8)
     
-    
-    
-
     def _draw_annotation_entry(self, 
                              y_pos: int, 
                              annotation: Dict, 
@@ -111,8 +108,7 @@ class AnnotationReview:
         cv2.putText(self.panel, "Delete",
                    (self.width - 55, y_pos + 25),
                    font, 0.4, (255, 255, 255), 1)
-    
-        
+      
     def handle_mouse(self, event: int, x: int, y: int, flags: int, param: any) -> None:
         """Handle mouse events in the review panel."""
         # Adjust y for scroll position

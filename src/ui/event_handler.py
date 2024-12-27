@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from ..config.shortcuts import SHORTCUTS
 
-class EventHandler:
+class EventHandler: 
     """Handles all mouse and keyboard events for the SAM Annotator."""
     
     def __init__(self, window_manager, logger):
@@ -68,8 +68,7 @@ class EventHandler:
             selected_class = y // button_height
             if self.on_class_selection:
                 self.on_class_selection(selected_class)
-
-    
+ 
     def handle_keyboard_event(self, key: int) -> Optional[str]:
         """Handle keyboard events and return action string."""
         try:
@@ -143,7 +142,6 @@ class EventHandler:
         except Exception as e:
             self.logger.error(f"Error in keyboard event handler: {str(e)}")
             return None
-  
   
     def reset_state(self) -> None:
         """Reset the event handler state."""
