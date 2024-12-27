@@ -20,7 +20,7 @@ def main():
                                args.classes_csv)
         annotator.run()
     except Exception as e:
-        logging.error(f"Error in main: {str(e)}")
+        logging.error(f"Error in main: {str(e)}") 
         raise
 
 if __name__ == "__main__":
