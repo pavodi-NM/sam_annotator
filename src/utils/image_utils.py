@@ -28,7 +28,7 @@ class ImageProcessor:
         Process image for annotation display.
         
         Args:
-            image: Input image array
+            image: Input image array, Handle images
             
         Returns:
             Tuple of (processed_image, metadata)
