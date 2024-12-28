@@ -304,6 +304,7 @@ class VisualizationManager:
             # Draw mask from contour points
             if show_masks and 'contour_points' in annotation:
                 mask = np.zeros(image.shape[:2], dtype=np.uint8)
+                #cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1) #   cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
                 cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
                 display = self._draw_mask(display, mask, color)
             
