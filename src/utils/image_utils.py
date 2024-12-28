@@ -25,7 +25,7 @@ class ImageProcessor:
         
     def process_image(self, image: np.ndarray) -> Tuple[np.ndarray, Dict]:
         """
-        Process image for annotation display.
+        Process image for annotation display. 
         
         Args:
             image: Input image array, Handle images

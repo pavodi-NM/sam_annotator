@@ -169,6 +169,9 @@ class EventHandler:
             elif char == SHORTCUTS['undo']:
                 self.logger.info("Undo command received")
                 return 'undo'
+            elif char == SHORTCUTS['redo']:
+                self.logger.info("Redo command received")
+                return 'redo'
             elif char == SHORTCUTS['clear_all']:
                 self.logger.info("Clear all command received")
                 return 'clear_all'

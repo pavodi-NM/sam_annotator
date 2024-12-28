@@ -13,6 +13,13 @@ from .predictor import SAMPredictor
 from .weight_manager import SAMWeightManager 
 from ..utils.image_utils import ImageProcessor 
 
+from .command_manager import (
+    CommandManager,
+    AddAnnotationCommand,
+    DeleteAnnotationCommand,
+    ModifyAnnotationCommand
+)
+
 class SAMAnnotator:
     """Main class for SAM-based image annotation."""
     
@@ -44,6 +51,9 @@ class SAMAnnotator:
         self.image: Optional[np.ndarray] = None
         self.annotations: List[Dict] = []
         self.current_class_id = 0
+        
+        # add command manager
+        self.command_manager = CommandManager()
         
         
         # Setup callbacks
@@ -108,12 +118,29 @@ class SAMAnnotator:
             # Update the main window to highlight selected annotation
             # This will be handled through the window manager's update mechanism
 
+    # def _on_annotation_class_change(self, idx: int, new_class_id: int) -> None:
+    #     """Handle annotation class change."""
+    #     if 0 <= idx < len(self.annotations):
+    #         self.annotations[idx]['class_id'] = new_class_id
+    #         self.annotations[idx]['class_name'] = self.class_names[new_class_id]
+    #         self.window_manager.update_review_panel(self.annotations)
+    
     def _on_annotation_class_change(self, idx: int, new_class_id: int) -> None:
         """Handle annotation class change."""
-        if 0 <= idx < len(self.annotations):
-            self.annotations[idx]['class_id'] = new_class_id
-            self.annotations[idx]['class_name'] = self.class_names[new_class_id]
-            self.window_manager.update_review_panel(self.annotations)
+        if 0 <= idx < len(self.annotations) and 0 <= new_class_id < len(self.class_names):
+            try:
+                # Create new state
+                new_state = self.annotations[idx].copy()
+                new_state['class_id'] = new_class_id
+                new_state['class_name'] = self.class_names[new_class_id]
+                
+                # Create and execute modify command
+                command = ModifyAnnotationCommand(self.annotations, idx, new_state, self.window_manager)
+                self.command_manager.execute(command)
+                
+            except Exception as e:
+                self.logger.error(f"Error changing annotation class: {str(e)}")
+
     
     def _handle_mask_prediction(self, 
                               box_start: Tuple[int, int],
@@ -210,19 +237,11 @@ class SAMAnnotator:
             raise
      
     
-    
-    
-    
-    
-    
-    
-    
-    
     # def _add_annotation(self) -> None:
-    #     """Add current annotation to the list with full mask."""
+    #     """Add current annotation to the list."""
     #     self.logger.info("Attempting to add annotation...")
         
-    #     # Get current mask from window manager
+    #     current_mask = self.window_manager.current_mask
     #     current_mask = self.window_manager.current_mask
     #     if current_mask is None:
     #         self.logger.warning("No region selected! Draw a box first.")
@@ -247,32 +266,53 @@ class SAMAnnotator:
     #             self.logger.warning("Box coordinates not found")
     #             return
 
-    #         # Convert mask to uint8 and find contours
+    #         # Get display dimensions
+    #         display_height, display_width = self.image.shape[:2]
+            
+    #         # Convert mask to uint8 and find contours at display size
     #         mask_uint8 = (current_mask.astype(np.uint8) * 255)
-    #         contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    #         contours, _ = cv2.findContours(mask_uint8, 
+    #                                     cv2.RETR_EXTERNAL,
+    #                                     cv2.CHAIN_APPROX_TC89_KCOS)
             
     #         if not contours:
     #             self.logger.warning("No valid contours found in mask")
     #             return
                 
-    #         # Get the largest contour
-    #         contour = max(contours, key=cv2.contourArea)
+    #         # Get the largest contour at display size
+    #         display_contour = max(contours, key=cv2.contourArea)
             
-    #         # Approximate the contour to reduce noise while keeping accuracy
-    #         epsilon = 0.0005 * cv2.arcLength(contour, True)  # Reduced epsilon for more accuracy
-    #         approx_contour = cv2.approxPolyDP(contour, epsilon, True)
+    #         # Calculate bounding box at display size
+    #         display_box = [
+    #             min(box_start[0], box_end[0]),
+    #             min(box_start[1], box_end[1]),
+    #             max(box_start[0], box_end[0]),
+    #             max(box_start[1], box_end[1])
+    #         ]
             
-    #         # Store annotation with both mask and contour
+    #         # Get original image dimensions
+    #         original_image = cv2.imread(self.current_image_path)
+    #         orig_height, orig_width = original_image.shape[:2]
+            
+    #         # Scale contour to original size
+    #         scale_x = orig_width / display_width
+    #         scale_y = orig_height / display_height
+            
+    #         original_contour = display_contour.copy()
+    #         original_contour[:, :, 0] = display_contour[:, :, 0] * scale_x
+    #         original_contour[:, :, 1] = display_contour[:, :, 1] * scale_y
+    #         original_contour = original_contour.astype(np.int32)
+            
+    #         # Store annotation with both display and original coordinates
     #         annotation = {
     #             'class_id': self.current_class_id,
     #             'class_name': self.class_names[self.current_class_id],
     #             'mask': current_mask.copy(),
-    #             'contour_points': approx_contour,
-    #             'box': [min(box_start[0], box_end[0]),
-    #                 min(box_start[1], box_end[1]),
-    #                 max(box_start[0], box_end[0]),
-    #                 max(box_start[1], box_end[1])]
+    #             'contour_points': display_contour,
+    #             'original_contour': original_contour,
+    #             'box': display_box
     #         }
+            
     #         self.annotations.append(annotation)
     #         self.logger.info(f"Successfully added annotation. Total annotations: {len(self.annotations)}")
             
@@ -298,11 +338,16 @@ class SAMAnnotator:
     #         import traceback
     #         self.logger.error(traceback.format_exc())
     
+    
+    
+    
+    
 
     def _add_annotation(self) -> None:
         """Add current annotation to the list."""
         self.logger.info("Attempting to add annotation...")
         
+        current_mask = self.window_manager.current_mask
         current_mask = self.window_manager.current_mask
         if current_mask is None:
             self.logger.warning("No region selected! Draw a box first.")
@@ -369,30 +414,32 @@ class SAMAnnotator:
                 'class_id': self.current_class_id,
                 'class_name': self.class_names[self.current_class_id],
                 'mask': current_mask.copy(),
-                'contour_points': display_contour,  # For display
-                'original_contour': original_contour,  # For saving
+                'contour_points': display_contour,
+                'original_contour': original_contour,
                 'box': display_box
             }
             
-            self.annotations.append(annotation)
-            self.logger.info(f"Successfully added annotation. Total annotations: {len(self.annotations)}")
-            
-            # Clear current selection
-            self.event_handler.reset_state()
-            self.window_manager.set_mask(None)
-            
-            # Update displays
-            self.window_manager.update_main_window(
-                image=self.image,
-                annotations=self.annotations,
-                current_class=self.class_names[self.current_class_id],
-                current_class_id=self.current_class_id,
-                current_image_path=self.current_image_path,
-                current_idx=self.current_idx,
-                total_images=len(self.image_files),
-                status=f"Annotation {len(self.annotations)} added!"
-            )
-            self.window_manager.update_review_panel(self.annotations)
+            # Create and execute command instead of directly modifying annotations
+            command = AddAnnotationCommand(self.annotations, annotation, self.window_manager)
+            if self.command_manager.execute(command):
+                self.logger.info(f"Successfully added annotation. Total annotations: {len(self.annotations)}")
+                
+                # Clear current selection
+                self.event_handler.reset_state()
+                self.window_manager.set_mask(None)
+                
+                # Update displays
+                self.window_manager.update_main_window(
+                    image=self.image,
+                    annotations=self.annotations,
+                    current_class=self.class_names[self.current_class_id],
+                    current_class_id=self.current_class_id,
+                    current_image_path=self.current_image_path,
+                    current_idx=self.current_idx,
+                    total_images=len(self.image_files),
+                    status=f"Annotation {len(self.annotations)} added!"
+                )
+            #self.window_manager.update_review_panel(self.annotations)
             
         except Exception as e:
             self.logger.error(f"Error adding annotation: {str(e)}")
@@ -723,41 +770,96 @@ class SAMAnnotator:
                 import traceback
                 self.logger.error(traceback.format_exc())
          
+    # def _on_annotation_delete(self, idx: int) -> None:
+    #     """Handle annotation deletion."""
+    #     if 0 <= idx < len(self.annotations):
+    #         try:
+    #             # Store info for logging
+    #             deleted_class = self.annotations[idx]['class_id']
+                
+    #             # Remove from annotations list
+    #             del self.annotations[idx]
+                
+    #             # Update review panel
+    #             self.window_manager.update_review_panel(self.annotations)
+                
+    #             # Save updated annotations to file
+    #             self._save_annotations_to_file()
+                
+    #             # Update main window
+    #             self.window_manager.update_main_window(
+    #                 image=self.image,
+    #                 annotations=self.annotations,
+    #                 current_class=self.class_names[self.current_class_id],
+    #                 current_class_id=self.current_class_id,
+    #                 current_image_path=self.current_image_path,
+    #                 current_idx=self.current_idx,
+    #                 total_images=len(self.image_files),
+    #                 status=f"Deleted annotation {idx + 1} (Class: {self.class_names[deleted_class]})"
+    #             )
+                
+    #             self.logger.info(f"Successfully deleted annotation {idx + 1} of class {self.class_names[deleted_class]}")
+                
+    #         except Exception as e:
+    #             self.logger.error(f"Error deleting annotation: {str(e)}")
+    #             import traceback
+    #             self.logger.error(traceback.format_exc())
+     
+    
     def _on_annotation_delete(self, idx: int) -> None:
         """Handle annotation deletion."""
         if 0 <= idx < len(self.annotations):
             try:
-                # Store info for logging
-                deleted_class = self.annotations[idx]['class_id']
-                
-                # Remove from annotations list
-                del self.annotations[idx]
-                
-                # Update review panel
-                self.window_manager.update_review_panel(self.annotations)
-                
-                # Save updated annotations to file
-                self._save_annotations_to_file()
-                
-                # Update main window
-                self.window_manager.update_main_window(
-                    image=self.image,
-                    annotations=self.annotations,
-                    current_class=self.class_names[self.current_class_id],
-                    current_class_id=self.current_class_id,
-                    current_image_path=self.current_image_path,
-                    current_idx=self.current_idx,
-                    total_images=len(self.image_files),
-                    status=f"Deleted annotation {idx + 1} (Class: {self.class_names[deleted_class]})"
-                )
-                
-                self.logger.info(f"Successfully deleted annotation {idx + 1} of class {self.class_names[deleted_class]}")
-                
+                # Create and execute delete command
+                command = DeleteAnnotationCommand(self.annotations, idx, self.window_manager)
+                if self.command_manager.execute(command):
+                    # Update main window
+                    self.window_manager.update_main_window(
+                        image=self.image,
+                        annotations=self.annotations,
+                        current_class=self.class_names[self.current_class_id],
+                        current_class_id=self.current_class_id,
+                        current_image_path=self.current_image_path,
+                        current_idx=self.current_idx,
+                        total_images=len(self.image_files),
+                        status=f"Deleted annotation {idx + 1}"
+                    )
+                    
+                    self.logger.info(f"Successfully deleted annotation {idx + 1}")
+                    
             except Exception as e:
                 self.logger.error(f"Error deleting annotation: {str(e)}")
                 import traceback
                 self.logger.error(traceback.format_exc())
-     
+                
+    def _handle_undo(self) -> None:
+        """Handle undo command."""
+        if self.command_manager.undo():
+            self.window_manager.update_main_window(
+                image=self.image,
+                annotations=self.annotations,
+                current_class=self.class_names[self.current_class_id],
+                current_class_id=self.current_class_id,
+                current_image_path=self.current_image_path,
+                current_idx=self.current_idx,
+                total_images=len(self.image_files),
+                status="Undo successful"
+            )
+            
+    def _handle_redo(self) -> None:
+        """Handle redo command."""
+        if self.command_manager.redo():
+            self.window_manager.update_main_window(
+                image=self.image,
+                annotations=self.annotations,
+                current_class=self.class_names[self.current_class_id],
+                current_class_id=self.current_class_id,
+                current_image_path=self.current_image_path,
+                current_idx=self.current_idx,
+                total_images=len(self.image_files),
+                status="Redo successful"
+            )
+    
     def run(self) -> None:
             """Run the main annotation loop."""
             try:
@@ -834,7 +936,10 @@ class SAMAnnotator:
                     elif action == 'add':
                         self._add_annotation()
                     elif action == 'undo':
-                        self._remove_last_annotation()
+                        self._handle_undo()
+                        #self._remove_last_annotation()
+                    elif action == "redo":
+                        self._handle_redo()
                     elif action == 'clear_all':
                         self.annotations = []
                         

@@ -8,7 +8,8 @@ SHORTCUTS = {
     'save': 's',
     'clear_selection': 'r', 
     'add_annotation': 'a',
-    'undo': 'z',
+    'undo': 'z',  # Add undo shortcut
+    'redo': 'y',  # Add redo shortcut
     'clear_all': 'c',
     
     # View controls

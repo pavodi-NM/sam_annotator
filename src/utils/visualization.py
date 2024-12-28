@@ -38,23 +38,59 @@ class VisualizationManager:
         self.minimap_scale = 0.2
     
     def _generate_colors(self, n: int) -> List[Tuple[int, int, int]]:
-        """Generate distinct colors for visualization."""
+        """Generate visually distinct colors using improved HSV spacing."""
         colors = []
-        for i in range(n):
-            hue = i / n
-            sat = 0.7 + (i % 3) * 0.1
-            val = 0.9 + (i % 2) * 0.1
-            
-            # Convert HSV to RGB
-            rgb = cv2.cvtColor(np.uint8([[[
-                hue * 179,
-                sat * 255,
-                val * 255
-            ]]]), cv2.COLOR_HSV2BGR)[0][0]
-            
-            colors.append((int(rgb[0]), int(rgb[1]), int(rgb[2])))
-        return colors
+        # Use golden ratio for better distribution
+        golden_ratio = 0.618033988749895
         
+        # Predefined colors for first few classes to ensure distinctiveness
+        base_colors = [
+            (255, 0, 0),     # Red
+            (0, 255, 0),     # Green
+            (0, 0, 255),     # Blue
+            (255, 255, 0),   # Yellow
+            (255, 0, 255),   # Magenta
+            (0, 255, 255),   # Cyan
+            (255, 128, 0),   # Orange
+            (128, 0, 255),   # Purple
+            (0, 255, 128),   # Spring Green
+            (255, 0, 128),   # Rose
+        ]
+        
+        colors.extend(base_colors)
+        
+        # Generate additional colors if needed
+        if n > len(base_colors):
+            hue = 0.0
+            for i in range(n - len(base_colors)):
+                hue = (hue + golden_ratio) % 1.0
+                sat = 0.8 + (i % 3) * 0.1  # Vary saturation
+                val = 0.9 + (i % 2) * 0.1   # Vary value
+                
+                # Convert HSV to RGB
+                rgb = cv2.cvtColor(np.uint8([[[
+                    hue * 179,
+                    sat * 255,
+                    val * 255
+                ]]]), cv2.COLOR_HSV2BGR)[0][0]
+                
+                colors.append((int(rgb[0]), int(rgb[1]), int(rgb[2])))
+        
+        return colors[:n]
+        
+    
+    def _get_text_color(self, background_color: Tuple[int, int, int]) -> Tuple[int, int, int]:
+        """Determine text color based on background brightness."""
+        # Calculate perceived brightness using weighted RGB values
+        brightness = (0.299 * background_color[0] + 
+                    0.587 * background_color[1] + 
+                    0.114 * background_color[2])
+        
+        return (0, 0, 0) if brightness > 127 else (255, 255, 255)
+    
+    
+    
+    
     def _draw_mask(self, image: np.ndarray, mask: np.ndarray, 
                    color: Tuple[int, int, int]) -> np.ndarray:
         """Draw a single mask on the image."""
@@ -70,30 +106,39 @@ class VisualizationManager:
         x1, y1, x2, y2 = map(int, box)
         return cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     
+    
+    
+    # def _draw_label(self, image: np.ndarray, text: str, position: Tuple[int, int],
+    #                 color: Tuple[int, int, int]) -> np.ndarray:
+    #     """Draw text label with background."""
+    #     font = cv2.FONT_HERSHEY_SIMPLEX
+    #     scale = 0.5
+    #     thickness = 1
+        
+    #     # Get text size
+    #     (text_width, text_height), baseline = cv2.getTextSize(
+    #         text, font, scale, thickness)
+            
+    #     # Draw background rectangle
+    #     x, y = position
+    #     cv2.rectangle(image,
+    #                  (x, y - text_height - baseline),
+    #                  (x + text_width, y),
+    #                  color, -1)
+                     
+    #     # Draw text
+    #     cv2.putText(image, text,
+    #                 (x, y - baseline),
+    #                 font, scale, (255, 255, 255),
+    #                 thickness)
+    #     return image
+    
     def _draw_label(self, image: np.ndarray, text: str, position: Tuple[int, int],
                     color: Tuple[int, int, int]) -> np.ndarray:
-        """Draw text label with background."""
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        scale = 0.5
-        thickness = 1
-        
-        # Get text size
-        (text_width, text_height), baseline = cv2.getTextSize(
-            text, font, scale, thickness)
-            
-        # Draw background rectangle
-        x, y = position
-        cv2.rectangle(image,
-                     (x, y - text_height - baseline),
-                     (x + text_width, y),
-                     color, -1)
-                     
-        # Draw text
-        cv2.putText(image, text,
-                    (x, y - baseline),
-                    font, scale, (255, 255, 255),
-                    thickness)
-        return image
+        """Draw text label with semi-transparent dark background."""
+        return self._add_text_with_background(image, text, position)
+    
+    
     
     def _draw_points(self, image: np.ndarray, contour_points: np.ndarray,
                      color: Tuple[int, int, int]) -> np.ndarray:
@@ -283,6 +328,100 @@ class VisualizationManager:
         
         return preview
     
+    # def create_composite_view(self,
+    #                         image: np.ndarray,
+    #                         annotations: List[Dict],
+    #                         current_mask: Optional[np.ndarray] = None,
+    #                         box_start: Optional[Tuple[int, int]] = None,
+    #                         box_end: Optional[Tuple[int, int]] = None,
+    #                         show_masks: bool = True,
+    #                         show_boxes: bool = True,
+    #                         show_labels: bool = True,
+    #                         show_points: bool = True) -> np.ndarray:
+    #     """Create composite view with all visualizations."""
+    #     display = image.copy()
+        
+    #     # Draw saved annotations
+    #     for annotation in annotations:
+    #         class_id = annotation['class_id']
+    #         color = self.colors[class_id % len(self.colors)]
+            
+    #         # Draw mask from contour points
+    #         if show_masks and 'contour_points' in annotation:
+    #             mask = np.zeros(image.shape[:2], dtype=np.uint8)
+    #             #cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1) #   cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
+    #             cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
+    #             display = self._draw_mask(display, mask, color)
+            
+    #         # Draw bounding box
+    #         if show_boxes and 'box' in annotation:
+    #             display = self._draw_box(display, annotation['box'], color)
+            
+    #         # Draw class label
+    #         if show_labels and 'box' in annotation:
+    #             label_pos = (int(annotation['box'][0]), int(annotation['box'][1]) - 5)
+    #             display = self._draw_label(display,
+    #                                      f"Class: {class_id}",
+    #                                      label_pos, color)
+            
+    #         # Draw contour points
+    #         if show_points and 'contour_points' in annotation:
+    #             display = self._draw_points(display,
+    #                                       annotation['contour_points'],
+    #                                       color)
+        
+    #     # Draw current selection
+    #     if current_mask is not None and show_masks:
+    #         display = self._draw_mask(display, current_mask, (0, 255, 0))
+            
+    #     if box_start and box_end and show_boxes:
+    #         current_box = [
+    #             min(box_start[0], box_end[0]),
+    #             min(box_start[1], box_end[1]),
+    #             max(box_start[0], box_end[0]),
+    #             max(box_start[1], box_end[1])
+    #         ]
+    #         display = self._draw_box(display, current_box, (0, 255, 0))
+            
+    #     return display
+    
+    def _add_text_with_background(self, image: np.ndarray, text: str, position: Tuple[int, int], 
+                               font_scale: float = 0.6, bg_alpha: float = 0.5) -> np.ndarray:
+        """Add text with semi-transparent dark background."""
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        thickness = 1
+        padding = 8
+        
+        # Get text size
+        (text_width, text_height), baseline = cv2.getTextSize(
+            text, font, font_scale, thickness)
+        
+        # Calculate background rectangle coordinates with padding
+        x, y = position
+        rect_x1 = x - padding
+        rect_y1 = y - text_height - padding
+        rect_x2 = x + text_width + padding
+        rect_y2 = y + padding
+        
+        # Create overlay for semi-transparent background
+        overlay = image.copy()
+        cv2.rectangle(overlay,
+                    (rect_x1, rect_y1),
+                    (rect_x2, rect_y2),
+                    (0, 0, 0),  # Black background
+                    -1)
+        
+        # Apply transparency to background
+        cv2.addWeighted(overlay, bg_alpha, image, 1 - bg_alpha, 0, image)
+        
+        # Draw text in white
+        cv2.putText(image, text,
+                    (x, y - baseline//2),
+                    font, font_scale, (255, 255, 255), thickness)
+        
+        return image
+    
+    
     def create_composite_view(self,
                             image: np.ndarray,
                             annotations: List[Dict],
@@ -304,7 +443,6 @@ class VisualizationManager:
             # Draw mask from contour points
             if show_masks and 'contour_points' in annotation:
                 mask = np.zeros(image.shape[:2], dtype=np.uint8)
-                #cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1) #   cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
                 cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
                 display = self._draw_mask(display, mask, color)
             
@@ -312,18 +450,16 @@ class VisualizationManager:
             if show_boxes and 'box' in annotation:
                 display = self._draw_box(display, annotation['box'], color)
             
-            # Draw class label
+            # Draw class label with class name and ID
             if show_labels and 'box' in annotation:
                 label_pos = (int(annotation['box'][0]), int(annotation['box'][1]) - 5)
-                display = self._draw_label(display,
-                                         f"Class: {class_id}",
-                                         label_pos, color)
+                class_name = annotation.get('class_name', f'Class {class_id}')
+                label_text = f"{class_name} ({class_id})"
+                display = self._draw_label(display, label_text, label_pos, color)
             
             # Draw contour points
             if show_points and 'contour_points' in annotation:
-                display = self._draw_points(display,
-                                          annotation['contour_points'],
-                                          color)
+                display = self._draw_points(display, annotation['contour_points'], color)
         
         # Draw current selection
         if current_mask is not None and show_masks:
@@ -339,43 +475,39 @@ class VisualizationManager:
             display = self._draw_box(display, current_box, (0, 255, 0))
             
         return display
-   
+    
+    
+    
     def add_status_overlay(self, image: np.ndarray, 
-                          status: str = "",
-                          current_class: str = "",
-                          current_class_id: int = 0,
-                          current_image_path: Optional[str] = None,
-                          current_idx: Optional[int] = None,
-                          total_images: Optional[int] = None,
-                          num_annotations: int = 0) -> np.ndarray:
+                        status: str = "",
+                        current_class: str = "",
+                        current_class_id: int = 0,
+                        current_image_path: Optional[str] = None,
+                        current_idx: Optional[int] = None,
+                        total_images: Optional[int] = None,
+                        num_annotations: int = 0) -> np.ndarray:
         """Add status text overlay to the image."""
         overlay = image.copy()
         
-        def put_text_with_outline(img, text, position):
-            """Helper function to put text with outline."""
-            cv2.putText(img, text, position, self.font, self.font_scale, 
-                       self.outline_color, self.box_thickness + 1)
-            cv2.putText(img, text, position, self.font, self.font_scale, 
-                       self.text_color, self.box_thickness)
-
         # Add class information
         if current_class:
-            class_text = f"Current Class: {current_class} (ID: {current_class_id})"
-            put_text_with_outline(overlay, class_text, (10, 30))
+            class_text = f"Class: {current_class} (ID: {current_class_id})"
+            overlay = self._add_text_with_background(overlay, class_text, (10, 30))
         
         # Add image counter
         if current_image_path and current_idx is not None and total_images is not None:
             current_img_name = os.path.basename(current_image_path)
-            counter_text = f"Image: {current_idx + 1}/{total_images} - {current_img_name}"
-            put_text_with_outline(overlay, counter_text, (10, 60))
+            counter_text = f"Image {current_idx + 1}/{total_images} - {current_img_name}"
+            overlay = self._add_text_with_background(overlay, counter_text, (10, 60))
         
         # Add annotation counter
-        annotations_text = f"Current annotations: {num_annotations}"
-        put_text_with_outline(overlay, annotations_text, (10, 90))
+        h, _ = image.shape[:2]
+        annotations_text = f"Annotations: {num_annotations}"
+        overlay = self._add_text_with_background(overlay, annotations_text, (10, h - 30))
         
         # Add status message
         if status:
-            h, w = image.shape[:2]
-            put_text_with_outline(overlay, status, (w//2 - 100, 30))
+            _, w = image.shape[:2]
+            overlay = self._add_text_with_background(overlay, status, (w//2 - 100, 30))
             
         return overlay

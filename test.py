@@ -131,5 +131,20 @@ def _on_annotation_delete(self, idx: int) -> None:
             14. create_annotation_preview
             15. create_composite_view
             16. add_status_overlay
+    utils/ class ImageProcessor
+        List of Methods
+            1. __init__
+            2. process_image
+            3. _create_metadata
+            4. scale_coordinates_to_original
+            5. scale_coordinates_to_display
+            6. scale_box_to_original
+            7. scale_box_to_display
+            8. scale_contour_to_original
+            9. scale_contour_to_display
+            
+    config/ shortcuts.py
+    config/ settings.py 
+        
 
 """
