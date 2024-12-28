@@ -16,6 +16,10 @@ SHORTCUTS = {
     'toggle_boxes': 'b',
     'toggle_labels': 'l',
     'toggle_points': 't',
+    'toggle_view_controls': 'v',
+     
+    # Toggle annotation review
+    'toggle_review':'r', 
     
     # Zoom controls
     'zoom_in': '=',    # Plus key

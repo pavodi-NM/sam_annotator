@@ -7,40 +7,34 @@ class ViewControls:
     
     def __init__(self, window_name: str = "View Controls", width: int = 300, logger=None):
         """Initialize the view controls widget."""
-        self.window_name = window_name
-        self.width = width
-        self.height = 400
-        self.padding = 10
+        self.window_name = "View Controls"
         self.logger = logger
+        self.is_visible = False  # Start hidden by default
         
         # View state
         self.view_state = {
-            'zoom_level': 1.0,
-            'pan_x': 0,
-            'pan_y': 0,
-            'mask_opacity': 0.5,
             'show_masks': True,
             'show_boxes': True,
             'show_labels': True,
             'show_points': True
         }
         
-        # Callbacks
-        self.on_state_change: Optional[Callable[[Dict], None]] = None
+        # Callback for state changes
+        self.on_state_change = None
         
-        # Create window
-        cv2.namedWindow(self.window_name)
-        self._create_control_panel()
+        # # Create window
+        # cv2.namedWindow(self.window_name)
+        # self._create_control_panel()
         
-        if self.logger:
-            self.logger.info("ViewControls initialized with default state")
-            self.logger.debug(f"Initial view state: {self.view_state}")
+        # if self.logger:
+        #     self.logger.info("ViewControls initialized with default state")
+        #     self.logger.debug(f"Initial view state: {self.view_state}")
         
     def _notify_state_change(self):
-        """Notify window manager of state changes."""
+        """Notify callback of state changes."""
         if self.on_state_change:
             if self.logger:
-                self.logger.debug(f"Notifying state change: {self.view_state}")
+                self.logger.debug(f"View state changed: {self.view_state}")
             self.on_state_change(self.view_state.copy())
             
     def toggle_state(self, key: str) -> None:
@@ -126,114 +120,106 @@ class ViewControls:
             self._notify_state_change()
             self.render()
             
-    def toggle_visibility(self, key: str) -> None:
-        """Toggle a visibility state."""
-        if key in self.view_state:
-            self.view_state[key] = not self.view_state[key]
-            if self.logger:
-                self.logger.info(f"Toggled {key} to {self.view_state[key]}")
-            self._notify_state_change()
+    def toggle_visibility(self) -> None:
+        """Toggle the control panel visibility."""
+        self.is_visible = not self.is_visible
+        if self.is_visible:
+            cv2.namedWindow(self.window_name)
             self.render()
+        else:
+            cv2.destroyWindow(self.window_name)
+            
+        if self.logger:
+            self.logger.debug(f"View controls visibility toggled to {self.is_visible}")
+            
+    def handle_keyboard(self, key: int) -> bool:
+        """Handle keyboard shortcuts for view controls."""
+        try:
+            char = chr(key).lower()
+            handled = True
+            
+            if char == 'v':  # Toggle visibility
+                self.toggle_visibility()
+            elif char == 'm':  # Toggle masks
+                self.view_state['show_masks'] = not self.view_state['show_masks']
+            elif char == 'b':  # Toggle boxes
+                self.view_state['show_boxes'] = not self.view_state['show_boxes']
+            elif char == 'l':  # Toggle labels
+                self.view_state['show_labels'] = not self.view_state['show_labels']
+            elif char == 't':  # Toggle points (t for targets)
+                self.view_state['show_points'] = not self.view_state['show_points']
+            else:
+                handled = False
+                
+            if handled:
+                self._notify_state_change()
+                if self.is_visible:
+                    self.render()
+                return True
+                    
+        except ValueError:
+            pass
+            
+        return False
+            
+    
     
     def handle_mouse(self, event: int, x: int, y: int, flags: int, param: any) -> None:
-        """Handle mouse events in the control panel."""
-        if event == cv2.EVENT_LBUTTONDOWN:
-            # Check if click is on a toggle button
-            toggle_positions = {
-                'show_masks': (self.padding, 150, self.padding + 30, 170),
-                'show_boxes': (self.padding, 180, self.padding + 30, 200),
-                'show_labels': (self.padding, 210, self.padding + 30, 230),
-                'show_points': (self.padding, 240, self.padding + 30, 260)
-            }
+        """Handle mouse events in control panel."""
+        if not self.is_visible:
+            return
             
-            for key, (x1, y1, x2, y2) in toggle_positions.items():
-                if x1 <= x <= x2 and y1 <= y <= y2:
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # Check toggle buttons
+            toggles = [
+                ('show_masks', 150),
+                ('show_boxes', 180),
+                ('show_labels', 210),
+                ('show_points', 240)
+            ]
+            
+            for key, y_pos in toggles:
+                if 10 <= x <= 40 and y_pos <= y <= y_pos + 20:
                     self.view_state[key] = not self.view_state[key]
                     self._notify_state_change()
                     self.render()
-                    return
-            
-            # Handle slider interactions
-            slider_y_positions = {
-                'zoom': 50,
-                'opacity': 100
-            }
-            
-            for name, y_pos in slider_y_positions.items():
-                if abs(y - y_pos) < 10:
-                    self.active_slider = name
-                    # Update value immediately
-                    new_value = self._get_slider_value(x, 
-                                                     self.slider_values[name][1],
-                                                     self.slider_values[name][2])
-                    self.slider_values[name] = (new_value, 
-                                              self.slider_values[name][1],
-                                              self.slider_values[name][2])
-                    
-                    if name == 'zoom':
-                        self.view_state['zoom_level'] = new_value
-                    else:
-                        self.view_state['mask_opacity'] = new_value
-                    
-                    self._notify_state_change()
-                    self.render()
                     break
-        
-        elif event == cv2.EVENT_MOUSEMOVE and self.active_slider:
-            # Update slider value
-            _, min_val, max_val = self.slider_values[self.active_slider]
-            new_value = self._get_slider_value(x, min_val, max_val)
-            self.slider_values[self.active_slider] = (new_value, min_val, max_val)
-            
-            if self.active_slider == 'zoom':
-                self.view_state['zoom_level'] = new_value
-            else:
-                self.view_state['mask_opacity'] = new_value
-            
-            self._notify_state_change()
-            self.render()
-            
-        elif event == cv2.EVENT_LBUTTONUP:
-            self.active_slider = None
 
-    def render(self):
-        """Render the control panel."""
-        self._create_control_panel()
+    def render(self) -> None:
+        """Render the control panel if visible."""
+        if not self.is_visible:
+            return
+            
+        # Create panel
+        height = 300
+        width = 200
+        panel = np.zeros((height, width, 3), dtype=np.uint8)
+        panel.fill(50)  # Dark gray background
         
-        # Draw sliders
-        y = 50
-        # Zoom slider
-        cv2.putText(self.panel, f"Zoom: {self.view_state['zoom_level']:.2f}",
-                   (self.padding, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
-        
-        y = 100
-        # Opacity slider
-        cv2.putText(self.panel, f"Mask Opacity: {self.view_state['mask_opacity']:.2f}",
-                   (self.padding, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+        # Draw title
+        cv2.putText(panel, "View Controls",
+                   (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                   0.6, (200, 200, 200), 1)
         
         # Draw toggles
         toggles = [
-            ('show_masks', 'Show Masks', 150),
-            ('show_boxes', 'Show Boxes', 180),
-            ('show_labels', 'Show Labels', 210),
-            ('show_points', 'Show Points', 240)
+            ('show_masks', 'Masks (M)', 150),
+            ('show_boxes', 'Boxes (B)', 180),
+            ('show_labels', 'Labels (L)', 210),
+            ('show_points', 'Points (T)', 240)
         ]
         
         for key, label, y in toggles:
-            # Draw toggle background
+            # Toggle box
             color = (0, 255, 0) if self.view_state[key] else (100, 100, 100)
-            cv2.rectangle(self.panel,
-                         (self.padding, y),
-                         (self.padding + 30, y + 20),
-                         color, -1)
+            cv2.rectangle(panel, (10, y), (40, y + 20), color, -1)
             
-            # Draw label
-            cv2.putText(self.panel, label,
-                       (self.padding + 40, y + 15),
-                       cv2.FONT_HERSHEY_SIMPLEX,
+            # Label
+            cv2.putText(panel, label,
+                       (50, y + 15), cv2.FONT_HERSHEY_SIMPLEX,
                        0.5, (200, 200, 200), 1)
         
-        cv2.imshow(self.window_name, self.panel)
+        cv2.imshow(self.window_name, panel)
    
     def get_state(self) -> Dict:
         """Get current view state."""
@@ -241,8 +227,5 @@ class ViewControls:
     
     def destroy(self) -> None:
         """Destroy the view controls window."""
-        try:
-            if cv2.getWindowProperty(self.window_name, cv2.WND_PROP_VISIBLE) >= 0:
-                cv2.destroyWindow(self.window_name)
-        except:
-            pass
+        if self.is_visible:
+            cv2.destroyWindow(self.window_name)

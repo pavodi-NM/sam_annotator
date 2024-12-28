@@ -6,7 +6,7 @@ from ..utils.visualization import VisualizationManager
 from .widgets.status_overlay import StatusOverlay
 from .widgets.class_selector import ClassSelector
 from .widgets.annotation_review import AnnotationReview
-from .widgets.view_controls import ViewControls
+from .widgets.view_controls import ViewControls 
 
 class WindowManager:
     """Manages all window-related operations for the SAM Annotator."""
@@ -38,36 +38,32 @@ class WindowManager:
         # Sync view controls with window state
         self.view_controls.view_state = self.window_state.copy()
         
-        # Window state
+        # Window state 
         self.current_image: Optional[np.ndarray] = None
         self.current_mask: Optional[np.ndarray] = None
         
-        # Initialize windows
+        # Initialize windows (create main window - always visible)
         cv2.namedWindow(self.main_window)
         
         if self.logger:
             self.logger.info("WindowManager initialized")
     
-    
     def setup_windows(self, 
-                    mouse_callback, 
-                    class_callback,
-                    review_callbacks: Dict[str, Callable]) -> None:
-        """
-        Set up window callbacks and create trackbars.
-        
-        Args:
-            mouse_callback: Main window mouse callback
-            class_callback: Class selector mouse callback
-            review_callbacks: Dictionary of review panel callbacks:
-                - 'delete': Called when deleting annotation
-                - 'select': Called when selecting annotation
-                - 'class_change': Called when changing annotation class
-        """
+                     mouse_callback, 
+                     class_callback,
+                     review_callbacks: Dict[str, Callable]) -> None:
+        """Set up window callbacks."""
+        # Set main window mouse callback (always visible)
         cv2.setMouseCallback(self.main_window, mouse_callback)
+        
+        # Set class selector callback
         cv2.setMouseCallback(self.class_selector.window_name, class_callback)
-        cv2.setMouseCallback(self.annotation_review.window_name,
-                        self.annotation_review.handle_mouse)
+        
+        # Store callbacks for annotation review (will be set when window is created)
+        self.annotation_review.set_mouse_callback(
+            lambda event, x, y, flags, param: 
+                self.annotation_review.handle_mouse(event, x, y, flags, param)
+        )
         
         # Register review callbacks
         self.annotation_review.register_callbacks(
@@ -76,16 +72,15 @@ class WindowManager:
             on_class_change=review_callbacks['class_change']
         )
         
-        # Register review control callback 
+        # Register view control callback
         self.view_controls.register_callback(self._handle_view_state_change)
         
-        # Initial render of controls
-        self.view_controls.render()
-        
-        # Create opacity trackbar
+        # Create opacity trackbar in main window
         cv2.createTrackbar('Mask Opacity', self.main_window, 50, 100,
-                        lambda x: self.vis_manager.set_mask_opacity(x / 100))
-       
+                          lambda x: self.vis_manager.set_mask_opacity(x / 100))
+    
+    
+    
     def _handle_view_state_change(self, new_state: Dict) -> None:
         """Handle changes in view controls."""
         try:
@@ -183,6 +178,20 @@ class WindowManager:
         """Handle keyboard events for review panel."""
         self.annotation_review.handle_keyboard(key)
         
+    
+    def handle_keyboard_event(self, key: int) -> Optional[str]:
+        """Handle keyboard events."""
+        # Let annotation review handle its keys
+        if self.annotation_review.handle_keyboard(key):
+            return "update_view"
+            
+        # Let view controls handle its keys
+        if self.view_controls.handle_keyboard(key):
+            return "update_view"
+            
+        # Handle other keyboard events...
+        return None   
+    
     def get_selected_annotation_idx(self) -> Optional[int]:
         """Get currently selected annotation index."""
         return self.annotation_review.selected_idx

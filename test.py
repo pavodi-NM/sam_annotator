@@ -16,11 +16,11 @@ def _on_annotation_delete(self, idx: int) -> None:
         3. 
 """
 
-
+ 
 
 # Work hard to improve this class 
 """ 
-    Main Class SamAnnotator Predictor:
+    Main Class SamAnnotator Predictor: 
         List of Methods:
             1. __init__
             2. _initialize_model 

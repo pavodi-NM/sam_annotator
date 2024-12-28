@@ -191,8 +191,16 @@ class SAMAnnotator:
             raise
      
     
+    
+    
+    
+    
+    
+    
+    
+    
     def _add_annotation(self) -> None:
-        """Add current annotation to the list."""
+        """Add current annotation to the list with full mask."""
         self.logger.info("Attempting to add annotation...")
         
         # Get current mask from window manager
@@ -212,22 +220,6 @@ class SAMAnnotator:
             return
 
         try:
-            # Convert mask to more memory-efficient format
-            mask_uint8 = (current_mask.astype(np.uint8)) * 255
-            
-            # Find contours immediately and store only the points
-            contours, _ = cv2.findContours(mask_uint8, 
-                                       cv2.RETR_EXTERNAL, 
-                                       cv2.CHAIN_APPROX_SIMPLE)
-            
-            if not contours:
-                self.logger.warning("No valid contours found in mask")
-                return
-                
-            contour = max(contours, key=cv2.contourArea)
-            epsilon = 0.001 * cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, epsilon, True)
-            
             # Get current box from event handler
             box_start = self.event_handler.box_start
             box_end = self.event_handler.box_end
@@ -236,15 +228,31 @@ class SAMAnnotator:
                 self.logger.warning("Box coordinates not found")
                 return
 
-            # Store only the approximated contour points instead of full mask
+            # Convert mask to uint8 and find contours
+            mask_uint8 = (current_mask.astype(np.uint8) * 255)
+            contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+            
+            if not contours:
+                self.logger.warning("No valid contours found in mask")
+                return
+                
+            # Get the largest contour
+            contour = max(contours, key=cv2.contourArea)
+            
+            # Approximate the contour to reduce noise while keeping accuracy
+            epsilon = 0.0005 * cv2.arcLength(contour, True)  # Reduced epsilon for more accuracy
+            approx_contour = cv2.approxPolyDP(contour, epsilon, True)
+            
+            # Store annotation with both mask and contour
             annotation = {
                 'class_id': self.current_class_id,
-                'class_name': self.class_names[self.current_class_id],  # Add class_name for review panel
-                'contour_points': approx.copy(),
+                'class_name': self.class_names[self.current_class_id],
+                'mask': current_mask.copy(),
+                'contour_points': approx_contour,
                 'box': [min(box_start[0], box_end[0]),
-                       min(box_start[1], box_end[1]),
-                       max(box_start[0], box_end[0]),
-                       max(box_start[1], box_end[1])] 
+                    min(box_start[1], box_end[1]),
+                    max(box_start[0], box_end[0]),
+                    max(box_start[1], box_end[1])]
             }
             self.annotations.append(annotation)
             self.logger.info(f"Successfully added annotation. Total annotations: {len(self.annotations)}")
@@ -253,7 +261,7 @@ class SAMAnnotator:
             self.event_handler.reset_state()
             self.window_manager.set_mask(None)
             
-            # Update both main window and review panel
+            # Update displays
             self.window_manager.update_main_window(
                 image=self.image,
                 annotations=self.annotations,
@@ -264,18 +272,21 @@ class SAMAnnotator:
                 total_images=len(self.image_files),
                 status=f"Annotation {len(self.annotations)} added!"
             )
-            
-            # Update review panel with current annotations
             self.window_manager.update_review_panel(self.annotations)
             
         except Exception as e:
             self.logger.error(f"Error adding annotation: {str(e)}")
             import traceback
             self.logger.error(traceback.format_exc())
-      
+    
+    
     
     def _save_annotations(self) -> bool:
-        """Save all annotations for the current image."""
+        """Save annotations in multiple formats:
+        1. labels/*.txt: normalized contour coordinates
+        2. masks/*.png: visual mask representation
+        3. metadata/*: additional information
+        """
         try:
             self.logger.info(f"Starting save_annotations. Number of annotations: {len(self.annotations)}")
             
@@ -283,30 +294,85 @@ class SAMAnnotator:
                 self.logger.warning("No annotations to save!")
                 return False
 
+            # Get image dimensions and base paths
             height, width = self.image.shape[:2]
             base_name = os.path.splitext(os.path.basename(self.current_image_path))[0]
-            anno_path = os.path.join(self.annotations_path, f"{base_name}.txt")
+            original_ext = os.path.splitext(self.current_image_path)[1]
             
-            self.logger.info(f"Saving to: {anno_path}")
+            # Setup directories
+            masks_dir = os.path.join(os.path.dirname(self.annotations_path), 'masks')
+            metadata_dir = os.path.join(os.path.dirname(self.annotations_path), 'metadata')
+            os.makedirs(masks_dir, exist_ok=True)
+            os.makedirs(metadata_dir, exist_ok=True)
             
-            # Clear existing annotations for this image
-            with open(anno_path, 'w') as f:
-                for idx, annotation in enumerate(self.annotations):
-                    self.logger.info(f"Processing annotation {idx + 1}")
-                    contour_points = annotation['contour_points']
-                    class_id = annotation['class_id']
-                    
-                    # Write annotation line
-                    line = f"{class_id}"
-                    for point in contour_points:
+            # 1. Save normalized contour coordinates to labels/*.txt
+            label_path = os.path.join(self.annotations_path, f"{base_name}.txt")
+            with open(label_path, 'w') as f:
+                for annotation in self.annotations:
+                    # Write class_id and normalized contour points
+                    contour = annotation['contour_points']
+                    line = f"{annotation['class_id']}"
+                    for point in contour:
                         x, y = point[0]
                         x_norm = x / width
                         y_norm = y / height
                         line += f" {x_norm:.6f} {y_norm:.6f}"
                     f.write(line + '\n')
-                    self.logger.info(f"Wrote annotation {idx + 1} with {len(contour_points)} points")
             
-            self.logger.info(f"Successfully saved {len(self.annotations)} annotations to {anno_path}")
+            # 2. Save visual mask and overlay side by side
+            # Create combined mask image
+            combined_mask = np.zeros((height, width), dtype=np.uint8)
+            overlay = self.image.copy()
+            
+            for annotation in self.annotations:
+                mask = annotation['mask']
+                combined_mask = np.logical_or(combined_mask, mask)
+                
+                # Create green overlay for this mask
+                mask_area = mask > 0
+                green_overlay = overlay.copy()
+                green_overlay[mask_area] = (0, 255, 0)  # Pure green for masked areas
+                
+                # Blend with original image
+                overlay = cv2.addWeighted(overlay, 0.7, green_overlay, 0.3, 0)
+            
+            # Convert binary mask to 3-channel for visualization
+            combined_mask_rgb = cv2.cvtColor(combined_mask.astype(np.uint8) * 255, cv2.COLOR_GRAY2BGR)
+            
+            # Create side-by-side visualization
+            side_by_side = np.hstack((combined_mask_rgb, overlay))
+            
+            # Add a vertical line between the images
+            separator_x = width
+            cv2.line(side_by_side, 
+                    (separator_x, 0), 
+                    (separator_x, height), 
+                    (0, 0, 255),  # Red line
+                    2)  # Line thickness
+            
+            # Save combined visualization with same extension as original
+            mask_path = os.path.join(masks_dir, f"{base_name}_mask{original_ext}")
+            cv2.imwrite(mask_path, side_by_side)
+            
+            # 3. Save metadata (optional)
+            metadata = {
+                'num_annotations': len(self.annotations),
+                'class_distribution': {str(i): 0 for i in range(len(self.class_names))}
+            }
+            
+            # Count instances of each class
+            for annotation in self.annotations:
+                class_id = str(annotation['class_id'])
+                metadata['class_distribution'][class_id] += 1
+                
+            metadata_path = os.path.join(metadata_dir, f"{base_name}.txt")
+            with open(metadata_path, 'w') as f:
+                for key, value in metadata.items():
+                    f.write(f"{key}: {value}\n")
+            
+            self.logger.info(f"Successfully saved annotations to {label_path}")
+            self.logger.info(f"Saved mask and overlay to {masks_dir}")
+            self.logger.info(f"Saved metadata to {metadata_path}")
             
             # Show save confirmation
             self.window_manager.update_main_window(
@@ -321,11 +387,67 @@ class SAMAnnotator:
             )
             
             return True
+            
         except Exception as e:
             self.logger.error(f"Error in save_annotations: {str(e)}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False
+    
+    
+    def _load_annotations(self, image_path: str) -> List[Dict]:
+        """Load annotations from label file and reconstruct masks."""
+        annotations = []
+        try:
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            label_path = os.path.join(self.annotations_path, f"{base_name}.txt")
+            
+            if not os.path.exists(label_path):
+                return annotations
+                
+            height, width = self.image.shape[:2]
+            
+            with open(label_path, 'r') as f:
+                for line in f:
+                    parts = line.strip().split()
+                    class_id = int(parts[0])
+                    
+                    # Convert normalized coordinates back to pixel space
+                    points = []
+                    for i in range(1, len(parts), 2):
+                        x = float(parts[i]) * width
+                        y = float(parts[i + 1]) * height
+                        points.append([[int(x), int(y)]])
+                    
+                    contour = np.array(points, dtype=np.int32)
+                    
+                    # Create mask from contour
+                    mask = np.zeros((height, width), dtype=bool)
+                    cv2.fillPoly(mask, [contour], 1)
+                    
+                    # Calculate bounding box
+                    x, y, w, h = cv2.boundingRect(contour)
+                    box = [x, y, x + w, y + h]
+                    
+                    annotations.append({
+                        'class_id': class_id,
+                        'class_name': self.class_names[class_id],
+                        'mask': mask,
+                        'contour_points': contour,
+                        'box': box
+                    })
+                    
+            self.logger.info(f"Loaded {len(annotations)} annotations from {label_path}")
+            
+        except Exception as e:
+            self.logger.error(f"Error loading annotations: {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            
+        return annotations
+    
+
+    
     
     def _prev_image(self) -> None:
         """Move to previous image."""
@@ -351,7 +473,6 @@ class SAMAnnotator:
             self.current_idx +=1
             self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
      
-    
     def _remove_last_annotation(self) -> None:
         """Remove the last added annotation."""
         if self.annotations:
@@ -366,7 +487,6 @@ class SAMAnnotator:
                 total_images=len(self.image_files),
                 status="Last annotation removed"
             )
-    
     
     def _get_label_path(self, image_path: str) -> str:
             """Get the corresponding label file path for an image."""
