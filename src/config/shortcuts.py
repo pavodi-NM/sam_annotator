@@ -22,6 +22,10 @@ SHORTCUTS = {
     # Toggle annotation review
     'toggle_review':'r', 
     
+    # Export shortcuts (new)
+    'export_coco': 'e',  # Press 'e' then 'c' for COCO export
+    'export_yolo': 'e',  # Press 'e' then 'y' for YOLO export
+    
     # Zoom controls
     'zoom_in': '=',    # Plus key
     'zoom_out': '-',   # Minus key

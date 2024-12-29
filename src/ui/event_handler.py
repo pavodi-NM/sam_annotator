@@ -69,67 +69,23 @@ class EventHandler:
             if self.on_class_selection:
                 self.on_class_selection(selected_class)
  
- 
- 
- 
-    # def handle_keyboard_event(self, key: int) -> Optional[str]:
-    #     """Handle keyboard events and return action string."""
-    #     try:
-    #         # Handle function keys
-    #         if key == -1:  # No key pressed
-    #             return None
-                
-    #         # First check if view controls handle the key
-    #         if self.window_manager.view_controls.handle_keyboard(key):
-    #             return "update_view"
-                
-    #         # Convert key to character, handling both upper and lowercase
-    #         try:
-    #             char = chr(key).lower()
-    #             self.logger.debug(f"Key pressed: {char} (ASCII: {key})")
-    #         except ValueError:
-    #             self.logger.debug(f"Special key pressed: {key}")
-    #             return None
-            
-    #         # Basic navigation shortcuts
-    #         if char == SHORTCUTS['quit']:
-    #             self.logger.info("Quit command received")
-    #             return 'quit'
-    #         elif char == SHORTCUTS['next_image']:
-    #             self.logger.info("Next image command received")
-    #             return 'next'
-    #         elif char == SHORTCUTS['prev_image']:
-    #             self.logger.info("Previous image command received")
-    #             return 'prev'
-    #         elif char == SHORTCUTS['save']:
-    #             self.logger.info("Save command received")
-    #             return 'save'
-    #         elif char == SHORTCUTS['clear_selection']:
-    #             self.logger.info("Clear selection command received")
-    #             return 'clear_selection'
-    #         elif char == SHORTCUTS['add_annotation']:
-    #             self.logger.info("Add annotation command received")
-    #             return 'add'
-    #         elif char == SHORTCUTS['undo']:
-    #             self.logger.info("Undo command received")
-    #             return 'undo'
-    #         elif char == SHORTCUTS['clear_all']:
-    #             self.logger.info("Clear all command received")
-    #             return 'clear_all'
-            
-    #         return None
-            
-    #     except Exception as e:
-    #         self.logger.error(f"Error in keyboard event handler: {str(e)}")
-    #         return None
-   
-
     def handle_keyboard_event(self, key: int) -> Optional[str]:
         """Handle keyboard events and return action string."""
         try:
             # Handle function keys
             if key == -1:  # No key pressed
                 return None
+            
+            if key == ord('e'):
+                self.logger.info("Export mode - waiting for format selection (c/y)...")
+                second_key = cv2.waitKey(0) & 0xFF
+                
+                if second_key == ord('c'):
+                    self.logger.info("COCO export selected")
+                    return "export_coco"
+                elif second_key == ord('y'):
+                    self.logger.info("YOLO export selected")
+                    return "export_yolo"
                 
             # Let view controls handle their keys first
             if self.window_manager.view_controls.handle_keyboard(key):

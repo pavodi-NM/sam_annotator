@@ -79,8 +79,6 @@ class WindowManager:
         cv2.createTrackbar('Mask Opacity', self.main_window, 50, 100,
                           lambda x: self.vis_manager.set_mask_opacity(x / 100))
     
-    
-    
     def _handle_view_state_change(self, new_state: Dict) -> None:
         """Handle changes in view controls."""
         try:
@@ -177,8 +175,7 @@ class WindowManager:
     def handle_review_keyboard(self, key: int) -> None:
         """Handle keyboard events for review panel."""
         self.annotation_review.handle_keyboard(key)
-        
-    
+         
     def handle_keyboard_event(self, key: int) -> Optional[str]:
         """Handle keyboard events."""
         # Let annotation review handle its keys

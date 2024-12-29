@@ -22,14 +22,6 @@ class ViewControls:
         # Callback for state changes
         self.on_state_change = None
         
-        # # Create window
-        # cv2.namedWindow(self.window_name)
-        # self._create_control_panel()
-        
-        # if self.logger:
-        #     self.logger.info("ViewControls initialized with default state")
-        #     self.logger.debug(f"Initial view state: {self.view_state}")
-        
     def _notify_state_change(self):
         """Notify callback of state changes."""
         if self.on_state_change:

@@ -20,16 +20,6 @@ class VisualizationManager:
         
         self.colors = self._generate_colors(100)  # Pre-generate colors for classes
         
-        # Colors
-        # self.colors = {
-        #     'text': (255, 255, 0),     # Yellow
-        #     'outline': (0, 0, 0),       # Black
-        #     'box': (0, 255, 0),         # Green
-        #     'selected_box': (255, 165, 0),  # Orange
-        #     'mask': (0, 0, 255),        # Red
-        #     'contour': (0, 0, 255),     # Red
-        #     'grid': (128, 128, 128)     # Gray
-        # }
         
         # Visualization options
         self.show_grid = False
@@ -76,8 +66,7 @@ class VisualizationManager:
                 
                 colors.append((int(rgb[0]), int(rgb[1]), int(rgb[2])))
         
-        return colors[:n]
-        
+        return colors[:n]    
     
     def _get_text_color(self, background_color: Tuple[int, int, int]) -> Tuple[int, int, int]:
         """Determine text color based on background brightness."""
@@ -87,18 +76,45 @@ class VisualizationManager:
                     0.114 * background_color[2])
         
         return (0, 0, 0) if brightness > 127 else (255, 255, 255)
-    
-    
-    
-    
+     
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
     def _draw_mask(self, image: np.ndarray, mask: np.ndarray, 
-                   color: Tuple[int, int, int]) -> np.ndarray:
+                color: Tuple[int, int, int]) -> np.ndarray:
         """Draw a single mask on the image."""
+        # Resize mask if dimensions don't match
+        img_h, img_w = image.shape[:2]
+        mask_h, mask_w = mask.shape[:2]
+        
+        if mask_h != img_h or mask_w != img_w:
+            mask = cv2.resize(mask.astype(np.uint8), (img_w, img_h), 
+                            interpolation=cv2.INTER_NEAREST)
+        
+        # Create colored mask
         colored_mask = np.zeros_like(image)
         colored_mask[mask > 0] = color
         
-        return cv2.addWeighted(image, 1.0,
-                             colored_mask, self.mask_opacity, 0)
+        return cv2.addWeighted(image, 1.0, colored_mask, self.mask_opacity, 0)
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     def _draw_box(self, image: np.ndarray, box: List[int], 
                   color: Tuple[int, int, int], thickness: int = 2) -> np.ndarray:
@@ -106,39 +122,10 @@ class VisualizationManager:
         x1, y1, x2, y2 = map(int, box)
         return cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     
-    
-    
-    # def _draw_label(self, image: np.ndarray, text: str, position: Tuple[int, int],
-    #                 color: Tuple[int, int, int]) -> np.ndarray:
-    #     """Draw text label with background."""
-    #     font = cv2.FONT_HERSHEY_SIMPLEX
-    #     scale = 0.5
-    #     thickness = 1
-        
-    #     # Get text size
-    #     (text_width, text_height), baseline = cv2.getTextSize(
-    #         text, font, scale, thickness)
-            
-    #     # Draw background rectangle
-    #     x, y = position
-    #     cv2.rectangle(image,
-    #                  (x, y - text_height - baseline),
-    #                  (x + text_width, y),
-    #                  color, -1)
-                     
-    #     # Draw text
-    #     cv2.putText(image, text,
-    #                 (x, y - baseline),
-    #                 font, scale, (255, 255, 255),
-    #                 thickness)
-    #     return image
-    
     def _draw_label(self, image: np.ndarray, text: str, position: Tuple[int, int],
                     color: Tuple[int, int, int]) -> np.ndarray:
         """Draw text label with semi-transparent dark background."""
         return self._add_text_with_background(image, text, position)
-    
-    
     
     def _draw_points(self, image: np.ndarray, contour_points: np.ndarray,
                      color: Tuple[int, int, int]) -> np.ndarray:
@@ -328,63 +315,6 @@ class VisualizationManager:
         
         return preview
     
-    # def create_composite_view(self,
-    #                         image: np.ndarray,
-    #                         annotations: List[Dict],
-    #                         current_mask: Optional[np.ndarray] = None,
-    #                         box_start: Optional[Tuple[int, int]] = None,
-    #                         box_end: Optional[Tuple[int, int]] = None,
-    #                         show_masks: bool = True,
-    #                         show_boxes: bool = True,
-    #                         show_labels: bool = True,
-    #                         show_points: bool = True) -> np.ndarray:
-    #     """Create composite view with all visualizations."""
-    #     display = image.copy()
-        
-    #     # Draw saved annotations
-    #     for annotation in annotations:
-    #         class_id = annotation['class_id']
-    #         color = self.colors[class_id % len(self.colors)]
-            
-    #         # Draw mask from contour points
-    #         if show_masks and 'contour_points' in annotation:
-    #             mask = np.zeros(image.shape[:2], dtype=np.uint8)
-    #             #cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1) #   cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
-    #             cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
-    #             display = self._draw_mask(display, mask, color)
-            
-    #         # Draw bounding box
-    #         if show_boxes and 'box' in annotation:
-    #             display = self._draw_box(display, annotation['box'], color)
-            
-    #         # Draw class label
-    #         if show_labels and 'box' in annotation:
-    #             label_pos = (int(annotation['box'][0]), int(annotation['box'][1]) - 5)
-    #             display = self._draw_label(display,
-    #                                      f"Class: {class_id}",
-    #                                      label_pos, color)
-            
-    #         # Draw contour points
-    #         if show_points and 'contour_points' in annotation:
-    #             display = self._draw_points(display,
-    #                                       annotation['contour_points'],
-    #                                       color)
-        
-    #     # Draw current selection
-    #     if current_mask is not None and show_masks:
-    #         display = self._draw_mask(display, current_mask, (0, 255, 0))
-            
-    #     if box_start and box_end and show_boxes:
-    #         current_box = [
-    #             min(box_start[0], box_end[0]),
-    #             min(box_start[1], box_end[1]),
-    #             max(box_start[0], box_end[0]),
-    #             max(box_start[1], box_end[1])
-    #         ]
-    #         display = self._draw_box(display, current_box, (0, 255, 0))
-            
-    #     return display
-    
     def _add_text_with_background(self, image: np.ndarray, text: str, position: Tuple[int, int], 
                                font_scale: float = 0.6, bg_alpha: float = 0.5) -> np.ndarray:
         """Add text with semi-transparent dark background."""
@@ -421,6 +351,10 @@ class VisualizationManager:
         
         return image
     
+   
+    
+    
+    
     
     def create_composite_view(self,
                             image: np.ndarray,
@@ -432,8 +366,10 @@ class VisualizationManager:
                             show_boxes: bool = True,
                             show_labels: bool = True,
                             show_points: bool = True) -> np.ndarray:
+        
         """Create composite view with all visualizations."""
         display = image.copy()
+        img_h, img_w = display.shape[:2]
         
         # Draw saved annotations
         for annotation in annotations:
@@ -442,7 +378,7 @@ class VisualizationManager:
             
             # Draw mask from contour points
             if show_masks and 'contour_points' in annotation:
-                mask = np.zeros(image.shape[:2], dtype=np.uint8)
+                mask = np.zeros((img_h, img_w), dtype=np.uint8)
                 cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
                 display = self._draw_mask(display, mask, color)
             
@@ -463,6 +399,10 @@ class VisualizationManager:
         
         # Draw current selection
         if current_mask is not None and show_masks:
+            # Ensure the mask matches image dimensions
+            if current_mask.shape[:2] != (img_h, img_w):
+                current_mask = cv2.resize(current_mask.astype(np.uint8), (img_w, img_h), 
+                                        interpolation=cv2.INTER_NEAREST)
             display = self._draw_mask(display, current_mask, (0, 255, 0))
             
         if box_start and box_end and show_boxes:
@@ -475,6 +415,10 @@ class VisualizationManager:
             display = self._draw_box(display, current_box, (0, 255, 0))
             
         return display
+        
+    
+    
+    
     
     
     

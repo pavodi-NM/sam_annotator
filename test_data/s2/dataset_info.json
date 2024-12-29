@@ -1,0 +1,44 @@
+{
+    "total_images": 3,
+    "total_annotations": 11,
+    "classes": {
+        "4": {
+            "name": "class_4",
+            "count": 2
+        },
+        "8": {
+            "name": "class_8",
+            "count": 2
+        },
+        "12": {
+            "name": "class_12",
+            "count": 1
+        },
+        "14": {
+            "name": "class_14",
+            "count": 1
+        },
+        "0": {
+            "name": "class_0",
+            "count": 1
+        },
+        "3": {
+            "name": "class_3",
+            "count": 1
+        },
+        "5": {
+            "name": "class_5",
+            "count": 1
+        },
+        "10": {
+            "name": "class_10",
+            "count": 1
+        },
+        "13": {
+            "name": "class_13",
+            "count": 1
+        }
+    },
+    "last_modified": 1735473925.7105308,
+    "creation_date": 1735473925.7105308
+}

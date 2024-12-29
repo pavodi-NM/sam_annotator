@@ -59,12 +59,13 @@ def _on_annotation_delete(self, idx: int) -> None:
             4. update_main_window
             5. update_review_panel
             6. handle_review_keyboard
-            7. get_selected_annotation_idx
-            8. update_class_window
-            8. set_mask
-            9. toggle_view_option
-            10. set_image_scale
-            11. destroy_windows
+            7.handle_keyboard_event
+            8. get_selected_annotation_idx
+            9. update_class_window
+            10. set_mask
+            11. toggle_view_option
+            11. set_image_scale
+            12. destroy_windows
 
     ui/widget - Class ClassSelector
         List of Methods
@@ -82,19 +83,22 @@ def _on_annotation_delete(self, idx: int) -> None:
             1. __init__
             2. _add_text_with_background
             3. render
-            4. 
 
     ui/widget - Class AnnotationReview
         List of Methods
             1. __init__
-            2. set_annotations
-            3. register_callbacks
-            4. _update_panel_size
-            5. _draw_annotation_entry
-            6. handle_mouse
-            7. handle_keyboard
-            8. render
-            9. destroy
+            2. toggle_visibility
+            3. set_mouse_callback
+            4. set_annotations
+            5. register_callbacks
+            6. _update_panel_size
+            7. draw_header
+            8. draw_toolbar 
+            9. _draw_annotation_entry
+            10. handle_keyboard
+            11. handle_mouse   
+            12. render
+            13. destroy
 
     ui/widget - Class ViewControls
         List of Methods
@@ -108,29 +112,32 @@ def _on_annotation_delete(self, idx: int) -> None:
             8. _get_slider_value
             9. update_state
             10. toggle_visibility
-            11. handle_mouse
-            12. render
-            13. get_state
-            14. destroy
+            11. handle_keyboard
+            12. handle_mouse
+            13. render
+            14. get_state
+            15. destroy
 
     utils/ class VisualizationManager
         List of Methods
             1. __init__
             2. _generate_colors
-            3. _draw_mask
-            4. draw_box 
-            5. _draw_label
-            6. _draw_points
-            7. set_color_scheme
-            8. set_mask_opacity 
-            9. add_grid_overlay 
-            10. create_minimap
-            11. create_side_by_side_view
-            12. highlight_overlapping_regions
-            13. create_measurement_overlay
-            14. create_annotation_preview
-            15. create_composite_view
-            16. add_status_overlay
+            3. _get_text_color
+            4. _draw_mask 
+            5. _draw_box
+            6. _draw_label
+            7. _draw_points
+            8. set_color_scheme
+            9. set_mask_opacity 
+            10. add_grid_overlay 
+            11. create_minimap
+            12. create_side_by_side_view
+            13. highlight_overlapping_regions
+            14. create_measurement_overlay
+            15. create_annotation_preview
+            16. _add_text_with_background
+            17. create_composite_view
+            18. add_status_overlay
     utils/ class ImageProcessor
         List of Methods
             1. __init__
@@ -143,7 +150,7 @@ def _on_annotation_delete(self, idx: int) -> None:
             8. scale_contour_to_original
             9. scale_contour_to_display
             
-    config/ shortcuts.py
+    config/ shortcuts.py 
     config/ settings.py 
         
 

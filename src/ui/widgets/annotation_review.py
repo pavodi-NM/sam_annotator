@@ -27,21 +27,11 @@ class AnnotationReview:
         self.hover_idx: Optional[int] = None
         self.scroll_position = 0
         
-        # # Toolbar buttons
-        # self.toolbar_buttons = [
-        #     {'icon': '⟲', 'tooltip': 'Reset View (R)', 'width': 30},
-        #     {'icon': '↑', 'tooltip': 'Scroll Up (W)', 'width': 30},
-        #     {'icon': '↓', 'tooltip': 'Scroll Down (S)', 'width': 30},
-        #     {'icon': '×', 'tooltip': 'Close (Esc)', 'width': 30}
-        # ]
-        
         # Callbacks
         self.on_delete: Optional[Callable[[int], None]] = None
         self.on_select: Optional[Callable[[int], None]] = None
         self.on_class_change: Optional[Callable[[int, int], None]] = None
         self.mouse_callback: Optional[Callable] = None
-
-
 
     def toggle_visibility(self) -> None:
         """Toggle the review panel visibility."""
@@ -81,7 +71,6 @@ class AnnotationReview:
         self.panel_height = max(600, len(self.annotations) * self.item_height + self.header_height)
         self.panel = np.zeros((self.panel_height, self.width, 3), dtype=np.uint8)
         
-    
     def _draw_header(self) -> None:
         """Draw the header section."""
         # Header background
@@ -97,9 +86,6 @@ class AnnotationReview:
                    (self.padding, 20),
                    font, 0.5, (255, 255, 255), 1)
 
-    
-    
-    
     def _draw_toolbar(self) -> None:
         """Draw toolbar with control buttons."""
         # Toolbar background
@@ -131,17 +117,6 @@ class AnnotationReview:
                    (x_pos + 10, self.toolbar_height - 8),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                    (200, 200, 200), 1)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     def _draw_annotation_entry(self, y_pos: int, annotation: Dict, idx: int,
                              is_selected: bool, is_hovered: bool) -> None:
