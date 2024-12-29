@@ -1,5 +1,13 @@
-# from .visualization import VisualizationManager
-# from .image_utils import ImageProcessor
-# from .file_utils import FileHandler
+"""Utility modules for image processing and annotation."""
 
-# __all__ = ['VisualizationManager', 'ImageProcessor', 'FileHandler']
+from .scaling import ScalingManager, InterpolationMethod, ImageDimensions
+from .image_utils import ImageProcessor
+from .visualization import VisualizationManager
+
+__all__ = [
+    'ScalingManager',
+    'InterpolationMethod',
+    'ImageDimensions',
+    'ImageProcessor',
+    'VisualizationManager',
+]
