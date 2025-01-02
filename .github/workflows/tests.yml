@@ -47,11 +47,15 @@ jobs:
     
     - name: Run tests with pytest
       run: |
-        pytest tests/ \
+        export PYTORCH_ENABLE_MPS_FALLBACK=1
+        export PYTORCH_NO_CUDA_MEMORY_CACHING=1
+        python -m pytest tests/ \
           --doctest-modules \
           --junitxml=junit/test-results.xml \
           --cov=src \
-          --cov-report=term
+          --cov-report=term \
+          -v \
+          --tb=short
     
     - name: Upload test results
       uses: actions/upload-artifact@v3
