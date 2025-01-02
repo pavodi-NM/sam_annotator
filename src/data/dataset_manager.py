@@ -7,26 +7,80 @@ import time
 from pathlib import Path
 import cv2
 import numpy as np
+from weakref import WeakValueDictionary
+import psutil
+from threading import Thread, Lock
+import queue
+
+
+
+
+class LazyImageLoader:
+    """Handles lazy loading of images with metadata caching."""
+    
+    def __init__(self, image_path: str):
+        self.image_path = image_path
+        self._image = None
+        self._metadata = None
+        self._lock = Lock()
+    
+    @property
+    def image(self) -> Optional[np.ndarray]:
+        with self._lock:
+            if self._image is None:
+                self._image = cv2.imread(self.image_path)
+                if self._image is not None:
+                    self._metadata = {
+                        'height': self._image.shape[0],
+                        'width': self._image.shape[1],
+                        'channels': self._image.shape[2] if len(self._image.shape) > 2 else 1,
+                        'size': os.path.getsize(self.image_path)
+                    }
+            return self._image
+    
+    @property
+    def metadata(self) -> Optional[Dict]:
+        if self._metadata is None and os.path.exists(self.image_path):
+            # Get basic metadata without loading image
+            self._metadata = {
+                'size': os.path.getsize(self.image_path),
+                'modified': os.path.getmtime(self.image_path)
+            }
+        return self._metadata
+    
+    def clear(self):
+        with self._lock:
+            self._image = None
+
+
+
+
 
 class DatasetManager:
-    """Manages dataset operations, including import/export and auto-save."""
+    """Enhanced dataset manager with lazy loading and caching."""
     
-    def __init__(self, dataset_path: str):
+    def __init__(self, dataset_path: str, cache_size: int = 10):
         """Initialize dataset manager with the root dataset path."""
-        
-    
         self.dataset_path = dataset_path
-        # Setup logging
         self.logger = logging.getLogger(__name__)
         
-        # Ensure required directories exist
+        # Setup directory structure
         self.images_path = os.path.join(dataset_path, 'images')
         self.labels_path = os.path.join(dataset_path, 'labels')
         self.masks_path = os.path.join(dataset_path, 'masks')
         self.metadata_path = os.path.join(dataset_path, 'metadata')
+        self.exports_path = os.path.join(dataset_path, 'exports')
+        self.backups_path = os.path.join(dataset_path, 'backups')
         
-        for path in [self.labels_path, self.masks_path, self.metadata_path]:
+        for path in [self.labels_path, self.masks_path, self.metadata_path, 
+                    self.exports_path, self.backups_path]:
             os.makedirs(path, exist_ok=True)
+        
+        # Initialize caches with weak references
+        self.image_cache = WeakValueDictionary()
+        self.annotation_cache = {}
+        self.metadata_cache = {}
+        self.max_cache_size = cache_size
         
         # Auto-save settings
         self.auto_save_enabled = True
@@ -37,9 +91,72 @@ class DatasetManager:
         self.max_backups = 5
         self.backup_interval = 3600  # 1 hour
         
-        # Cache for faster access
-        self.image_cache = {}
-        self.annotation_cache = {}
+        # Preloading settings
+        self.preload_enabled = True
+        self.preload_queue = queue.Queue(maxsize=5)
+        self.preload_thread = Thread(target=self._preload_worker, daemon=True)
+        self.preload_thread.start()
+        
+    def _preload_worker(self):
+        """Background worker for preloading images."""
+        while True:
+            try:
+                image_path = self.preload_queue.get()
+                if image_path not in self.image_cache:
+                    loader = LazyImageLoader(image_path)
+                    # Only load metadata, not the actual image
+                    _ = loader.metadata
+                    self.image_cache[image_path] = loader
+                self.preload_queue.task_done()
+            except Exception as e:
+                self.logger.error(f"Error in preload worker: {str(e)}")
+            
+    def load_image(self, image_path: str) -> Tuple[np.ndarray, Dict]:
+        """Load image with lazy loading and caching."""
+        try:
+            # Check cache first
+            if image_path in self.image_cache:
+                loader = self.image_cache[image_path]
+            else:
+                loader = LazyImageLoader(image_path)
+                self.image_cache[image_path] = loader
+            
+            # Trigger actual image loading
+            image = loader.image
+            if image is None:
+                raise ValueError(f"Could not load image: {image_path}")
+            
+            # Queue next images for preloading
+            self._queue_next_images(image_path)
+            
+            return image, loader.metadata
+            
+        except Exception as e:
+            self.logger.error(f"Error loading image: {str(e)}")
+            raise
+            
+    def _queue_next_images(self, current_path: str):
+        """Queue next few images for preloading."""
+        if not self.preload_enabled:
+            return
+            
+        try:
+            current_name = os.path.basename(current_path)
+            image_files = sorted([f for f in os.listdir(self.images_path)
+                                if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+            current_idx = image_files.index(current_name)
+            
+            # Queue next 3 images
+            for idx in range(current_idx + 1, min(current_idx + 4, len(image_files))):
+                next_path = os.path.join(self.images_path, image_files[idx])
+                if next_path not in self.image_cache:
+                    try:
+                        self.preload_queue.put_nowait(next_path)
+                    except queue.Full:
+                        break
+                        
+        except Exception as e:
+            self.logger.error(f"Error queueing next images: {str(e)}")
         
     def setup_directory_structure(self) -> None:
         """Create necessary directory structure."""
@@ -303,42 +420,53 @@ class DatasetManager:
         return backup_path
     
     def auto_save(self, annotations: List[Dict], image_path: str) -> None:
-        """Perform auto-save if needed."""
+        """Auto-save with optimized saving frequency."""
         current_time = time.time()
-        
         if not self.auto_save_enabled:
             return
             
         if current_time - self.last_auto_save >= self.auto_save_interval:
-            self.save_annotations(annotations, image_path)
-            self.last_auto_save = current_time
+            try:
+                self.save_annotations(annotations, image_path)
+                self.last_auto_save = current_time
+            except Exception as e:
+                self.logger.error(f"Error in auto-save: {str(e)}")
             
+    
+    
+    
     def save_annotations(self, annotations: List[Dict], image_path: str) -> None:
-        """Save annotations for current image."""
-        # Get label path
-        image_name = os.path.basename(image_path)
-        label_name = os.path.splitext(image_name)[0] + '.txt'
-        label_path = os.path.join(self.dataset_path, 'labels', label_name)
-        
-        # Ensure the labels directory exists
-        os.makedirs(os.path.dirname(label_path), exist_ok=True)
-        
-        # Create annotation strings
-        annotation_lines = []
-        for annotation in annotations:
-            # Convert contour points to string format
-            points_str = ' '.join([f"{pt[0][0]} {pt[0][1]}" for pt in annotation['contour_points']])
-            # Format: class_id num_points x1 y1 x2 y2 ...
-            line = f"{annotation['class_id']} {len(annotation['contour_points'])} {points_str}"
-            annotation_lines.append(line)
-        
-        # Write to file
-        with open(label_path, 'w') as f:
-            f.write('\n'.join(annotation_lines))
+        """Save annotations with caching."""
+        try:
+            # Get label path
+            image_name = os.path.basename(image_path)
+            label_name = os.path.splitext(image_name)[0] + '.txt'
+            label_path = os.path.join(self.labels_path, label_name)
             
-        # Update dataset info
-        self._update_dataset_info()
-        
+            # Create annotation strings
+            annotation_lines = []
+            for annotation in annotations:
+                points_str = ' '.join([f"{pt[0][0]} {pt[0][1]}" 
+                                     for pt in annotation['contour_points']])
+                line = f"{annotation['class_id']} {len(annotation['contour_points'])} {points_str}"
+                annotation_lines.append(line)
+            
+            # Write to file
+            os.makedirs(os.path.dirname(label_path), exist_ok=True)
+            with open(label_path, 'w') as f:
+                f.write('\n'.join(annotation_lines))
+            
+            # Update caches
+            self.annotation_cache[image_path] = annotations.copy()
+            self._update_dataset_info()
+            
+        except Exception as e:
+            self.logger.error(f"Error saving annotations: {str(e)}")
+            raise
+    
+    
+    
+    
     def _update_dataset_info(self) -> None:
         """Update dataset information after changes."""
         try:
@@ -356,58 +484,95 @@ class DatasetManager:
             self.logger.error(f"Error updating dataset info: {str(e)}")
             # Don't return anything since it's a void method
             
+   
+   
+   
+   
     def load_annotations(self, image_path: str) -> List[Dict]:
-        """Load annotations for given image."""
-        annotations = []
+        """Load polygon annotations with caching."""
         try:
-            # Get paths and check if label exists
+            # Check cache first
+            if image_path in self.annotation_cache:
+                return self.annotation_cache[image_path]
+            
+            annotations = []
             base_name = os.path.splitext(os.path.basename(image_path))[0]
-            label_path = os.path.join(self.dataset_path, 'labels', f"{base_name}.txt")
+            label_path = os.path.join(self.labels_path, f"{base_name}.txt")
             
             if not os.path.exists(label_path):
                 return annotations
             
             # Get image dimensions
-            img = cv2.imread(image_path)
-            orig_height, orig_width = img.shape[:2]
+            if image_path in self.image_cache:
+                img_metadata = self.image_cache[image_path].metadata
+                orig_height, orig_width = img_metadata['height'], img_metadata['width']
+            else:
+                img = cv2.imread(image_path)
+                if img is None:
+                    self.logger.error(f"Could not read image: {image_path}")
+                    return annotations
+                orig_height, orig_width = img.shape[:2]
             
+            # Load annotations
             with open(label_path, 'r') as f:
                 for line in f:
-                    parts = line.strip().split()
-                    class_id = int(parts[0])
-                    num_points = int(parts[1])
-                    
-                    # Parse points
-                    points = []
-                    for i in range(2, len(parts), 2):
-                        x = float(parts[i])
-                        y = float(parts[i + 1])
-                        points.append([[x, y]])
-                    
-                    # Convert to numpy array
-                    contour = np.array(points, dtype=np.int32)
-                    
-                    # Calculate bounding box
-                    x, y, w, h = cv2.boundingRect(contour)
-                    box = [x, y, x + w, y + h]
-                    
-                    # Create mask
-                    mask = np.zeros((orig_height, orig_width), dtype=bool)
-                    cv2.fillPoly(mask, [contour], 1)
-                    
-                    annotations.append({
-                        'class_id': class_id,
-                        'contour_points': contour,
-                        'box': box,
-                        'mask': mask
-                    })
-                    
+                    try:
+                        parts = line.strip().split()
+                        if len(parts) < 3:  # Need at least class_id and one point
+                            continue
+                        
+                        # First value is class ID
+                        class_id = int(float(parts[0]))
+                        
+                        # Rest of values are x,y coordinates
+                        polygon_points = []
+                        for i in range(1, len(parts), 2):
+                            if i + 1 >= len(parts):
+                                break
+                            x = float(parts[i]) * orig_width
+                            y = float(parts[i + 1]) * orig_height
+                            polygon_points.append([[int(x), int(y)]])
+                        
+                        if len(polygon_points) < 3:  # Need at least 3 points for a polygon
+                            continue
+                        
+                        # Convert points to numpy array
+                        contour = np.array(polygon_points, dtype=np.int32)
+                        
+                        # Calculate bounding box
+                        x, y, w, h = cv2.boundingRect(contour)
+                        
+                        # Create mask using uint8 instead of bool
+                        mask = np.zeros((orig_height, orig_width), dtype=np.uint8)
+                        cv2.fillPoly(mask, [contour], 1)
+                        
+                        # Convert mask to boolean after filling
+                        mask_bool = mask.astype(bool)
+                        
+                        annotations.append({
+                            'class_id': class_id,
+                            'contour_points': contour,
+                            'box': [x, y, x + w, y + h],
+                            'mask': mask_bool,
+                            'original_shape': (orig_height, orig_width)
+                        })
+                        
+                    except Exception as e:
+                        self.logger.warning(f"Error parsing annotation line: {line.strip()}, Error: {str(e)}")
+                        continue
+            
+            # Cache the results
+            self.annotation_cache[image_path] = annotations
             return annotations
             
         except Exception as e:
-            print(f"Error loading annotations: {str(e)}")
+            self.logger.error(f"Error loading annotations: {str(e)}")
             return []
-    
+        
+   
+   
+   
+   
     def get_dataset_statistics(self) -> Dict:
         """Get detailed dataset statistics."""
         stats = {
@@ -451,3 +616,50 @@ class DatasetManager:
                 stats['annotations_per_image'].append(0)
         
         return stats
+    
+    
+    def monitor_memory_usage(self) -> bool:
+        """Monitor memory usage and clear cache if needed."""
+        try:
+            process = psutil.Process()
+            memory_percent = process.memory_percent()
+            
+            if memory_percent > 75:  # Over 75% memory usage
+                self.logger.warning(f"High memory usage detected: {memory_percent:.1f}%")
+                self.clear_cache()
+                return True
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Error monitoring memory: {str(e)}")
+            return False
+        
+        
+        
+    def clear_cache(self, current_image_path: Optional[str] = None) -> None:
+        """Clear cache with option to keep current image."""
+        try:
+            if current_image_path and current_image_path in self.image_cache:
+                # Keep only current image
+                current_loader = self.image_cache[current_image_path]
+                current_annot = self.annotation_cache.get(current_image_path)
+                
+                self.image_cache.clear()
+                self.annotation_cache.clear()
+                self.metadata_cache.clear()
+                
+                self.image_cache[current_image_path] = current_loader
+                if current_annot is not None:
+                    self.annotation_cache[current_image_path] = current_annot
+            else:
+                self.image_cache.clear()
+                self.annotation_cache.clear()
+                self.metadata_cache.clear()
+                
+        except Exception as e:
+            self.logger.error(f"Error clearing cache: {str(e)}")
+            
+            
+    
+        
+    

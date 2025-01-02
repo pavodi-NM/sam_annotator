@@ -45,10 +45,10 @@ class SAMAnnotator:
         self.vis_manager = VisualizationManager()
         
         """ New """
-        # Initialize managers
+        # Initialize dataset manager and validation manager
         self.dataset_manager = DatasetManager(category_path)
         self.validation_manager = ValidationManager(self.vis_manager)
-      
+             
         
         # Load SAM model
         self._initialize_model(checkpoint_path)
@@ -57,7 +57,13 @@ class SAMAnnotator:
         self._load_classes(classes_csv)
         self._setup_paths(category_path)
         
+        # get image files 
+        self.image_files = [f for f in os.listdir(self.images_path)
+                            if f.lower().endswith(('.png', '.jpg', 'jpeg'))]
+        self.image_files.sort()
+        
         # Initialize state
+        self.total_images = len(self.image_files)
         self.current_idx = 0
         self.current_image_path: Optional[str] = None
         self.image: Optional[np.ndarray] = None
@@ -70,6 +76,26 @@ class SAMAnnotator:
         
         # Setup callbacks
         self._setup_callbacks()
+        
+    def _get_last_annotated_index(self) -> int:
+        """Find the index of the last image that has annotations."""
+        try:
+            # Start from the beginning
+            for idx in range(len(self.image_files)):
+                img_path = os.path.join(self.images_path, self.image_files[idx])
+                base_name = os.path.splitext(self.image_files[idx])[0]
+                label_path = os.path.join(self.annotations_path, f"{base_name}.txt")
+                
+                # If this image doesn't have annotations, this is where we should start
+                if not os.path.exists(label_path):
+                    return idx
+                    
+            # If all images are annotated, return the last index
+            return len(self.image_files) - 1
+                
+        except Exception as e:
+            self.logger.error(f"Error finding last annotated image: {str(e)}")
+            return 0
     
     def _initialize_model(self, checkpoint_path: str) -> None:
         """Initialize SAM model."""
@@ -246,30 +272,83 @@ class SAMAnnotator:
                 self.current_class_id
             )
     
+    # In annotator.py, in _load_image method:
     def _load_image(self, image_path: str) -> None:
-        """Load image and prepare for annotation."""
+        """Load image and its existing annotations."""
         try:
             # Load original image
             original_image = cv2.imread(image_path)
             if original_image is None:
                 raise ValueError(f"Could not load image: {image_path}")
                 
-            # Process image for display
+            # Process image for display with caching
             display_image, metadata = self.image_processor.process_image(original_image)
             
             self.image = display_image
             self.current_image_path = image_path
             
-            # Set original image in predictor
-            self.predictor.set_image(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
-            
-            # Reset annotations and mask
-            self.annotations = []
+            # Load existing annotations if they exist
+            self.annotations = []  # Clear current annotations
             self.window_manager.set_mask(None)
+            
+            # Load annotations through dataset manager
+            loaded_annotations = self.dataset_manager.load_annotations(image_path)
+            if loaded_annotations:
+                self.logger.info(f"Loaded {len(loaded_annotations)} existing annotations")
+                
+                # Process and add each annotation
+                for ann in loaded_annotations:
+                    # Scale contour points to display size
+                    display_height, display_width = self.image.shape[:2]
+                    orig_height, orig_width = original_image.shape[:2]
+                    
+                    scale_x = display_width / orig_width
+                    scale_y = display_height / orig_height
+                    
+                    contour = ann['contour_points'].copy()
+                    contour = contour.astype(np.float32)
+                    contour[:, :, 0] *= scale_x
+                    contour[:, :, 1] *= scale_y
+                    contour = contour.astype(np.int32)
+                    
+                    # Create mask at display size
+                    mask = np.zeros((display_height, display_width), dtype=bool)
+                    cv2.fillPoly(mask.astype(np.uint8), [contour], 1)
+                    mask = mask.astype(bool)
+                    
+                    # Calculate display box
+                    x, y, w, h = cv2.boundingRect(contour)
+                    
+                    # Add to annotations list
+                    self.annotations.append({
+                        'class_id': ann['class_id'],
+                        'class_name': self.class_names[ann['class_id']],
+                        'mask': mask,
+                        'contour_points': contour,
+                        'box': [x, y, x + w, y + h],
+                        'original_contour': ann['contour_points']
+                    })
+            
+            # Set image in predictor
+            self.predictor.set_image(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
             
             self.logger.info(f"Loaded image: {image_path}")
             self.logger.info(f"Original size: {metadata['original_size']}")
             self.logger.info(f"Display size: {metadata['display_size']}")
+            
+            # Update windows with loaded annotations
+            self.window_manager.update_main_window(
+                image=self.image,
+                annotations=self.annotations,
+                current_class=self.class_names[self.current_class_id],
+                current_class_id=self.current_class_id,
+                current_image_path=self.current_image_path,
+                current_idx=self.current_idx, #  current_idx=self.current_idx + 1,
+                total_images= self.total_images #len(self.image_files)
+            )
+            
+            # Update review panel
+            self.window_manager.update_review_panel(self.annotations)
             
         except Exception as e:
             self.logger.error(f"Error loading image: {str(e)}")
@@ -619,7 +698,9 @@ class SAMAnnotator:
             
             # Move to the previous iamge
             self.current_idx -= 1
+            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
             self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
+
             
     def _next_image(self) -> None:
         """ Move to the next image """
@@ -631,7 +712,9 @@ class SAMAnnotator:
             
             # move to the next image 
             self.current_idx +=1
+            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
             self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
+        
      
     def _remove_last_annotation(self) -> None:
         """Remove the last added annotation."""
@@ -815,8 +898,11 @@ class SAMAnnotator:
                     self.logger.error(f"No images found in {self.images_path}")
                     return
                 
+                
+                # Find the first unannotated image or last image if all are annotated
+                self.current_idx = self._get_last_annotated_index()
                 # Load first image
-                self._load_image(os.path.join(self.images_path, self.image_files[0]))
+                self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
                 
                 # Initialize windows
                 self.window_manager.update_class_window(
@@ -831,6 +917,20 @@ class SAMAnnotator:
                 """ End """
                 
                 while True:
+                    # Periodically check memory usage
+                    if hasattr(self.image_processor, 'get_memory_usage'):
+                        memory_usage = self.image_processor.get_memory_usage()
+                        if memory_usage > 1e9:  # More than 1GB
+                            self.logger.info("Clearing image cache due to high memory usage")
+                            self.image_processor.clear_cache()
+                            
+                    # Check GPU memory periodically
+                    if hasattr(self.predictor, 'get_memory_usage'):
+                        gpu_memory = self.predictor.get_memory_usage()
+                        if gpu_memory > 0.8:  # Over 80% GPU memory
+                            self.predictor.optimize_memory()
+                            
+                    
                     # Update display
                     self.window_manager.update_main_window(
                         image=self.image,
@@ -838,8 +938,8 @@ class SAMAnnotator:
                         current_class=self.class_names[self.current_class_id],
                         current_class_id=self.current_class_id,
                         current_image_path=self.current_image_path,
-                        current_idx=self.current_idx,
-                        total_images=len(self.image_files),
+                        current_idx=self.current_idx, #  current_idx=self.current_idx + 1,
+                        total_images=self.total_images,
                         box_start=self.event_handler.box_start,
                         box_end=self.event_handler.box_end
                     )
