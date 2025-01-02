@@ -1,8 +1,34 @@
 
-# import sys 
-# import segment_anything
-# print(dir(segment_anything))
-# sys.exit()
+import torch
+import sys 
+
+def check_torch_cuda():
+    # Print PyTorch version
+    print(f"PyTorch Version: {torch.__version__}")
+    
+    # Check CUDA availability
+    cuda_available = torch.cuda.is_available()
+    print(f"CUDA Available: {cuda_available}")
+    
+    if cuda_available:
+        # Print CUDA version
+        print(f"CUDA Version: {torch.version.cuda}")
+        
+        # Print current device information
+        current_device = torch.cuda.current_device()
+        print(f"Current CUDA Device: {current_device}")
+        print(f"Device Name: {torch.cuda.get_device_name(current_device)}")
+        
+        # Print device capability
+        capability = torch.cuda.get_device_capability(current_device)
+        print(f"Device Capability: {capability[0]}.{capability[1]}")
+        
+        # Print maximum memory allocated
+        print(f"Max Memory Allocated: {torch.cuda.max_memory_allocated() / 1e9:.2f} GB")
+
+if __name__ == "__main__":
+    check_torch_cuda()
+sys.exit()
 
 # Removing duplicate functions
 
