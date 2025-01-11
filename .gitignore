@@ -1,5 +1,8 @@
 *.pth
+*.pt 
 test_data/s1
+weights/
+
 
 # Python bytecode
 __pycache__/

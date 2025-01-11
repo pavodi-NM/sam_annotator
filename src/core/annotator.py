@@ -10,7 +10,7 @@ import pandas as pd
 from ..ui.window_manager import WindowManager
 from ..ui.event_handler import EventHandler
 from ..utils.visualization import VisualizationManager
-from .predictor import SAMPredictor
+#from .predictor import SAMPredictor
 from .weight_manager import SAMWeightManager 
 from ..utils.image_utils import ImageProcessor 
 
@@ -24,10 +24,20 @@ from .command_manager import (
     ModifyAnnotationCommand
 )
 
+from .base_predictor import BaseSAMPredictor 
+from .predictor import SAM1Predictor, SAM2Predictor
+
+
 class SAMAnnotator:
     """Main class for SAM-based image annotation."""
     
-    def __init__(self, checkpoint_path: str, category_path: str, classes_csv: str):
+    def __init__(self, 
+                 checkpoint_path: str, 
+                 category_path: str, 
+                 classes_csv: str,
+                 sam_version: str = 'sam1',
+                 model_type: str = None
+                 ):
         """Initialize the SAM annotator."""
         
 
@@ -35,23 +45,28 @@ class SAMAnnotator:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
+        # Store SAM version and model type
+        self.sam_version = sam_version
+        self.model_type = model_type or ('vit_h' if sam_version == 'sam1' else 'small_v2')
+        self.logger.info(f"Using SAM version: {sam_version} with model type: {self.model_type}")
+        
         # Initialize image processor (add this)
         self.image_processor = ImageProcessor(target_size=1024, min_size=600)
-        
+            
         
         # Initialize managers
         self.window_manager = WindowManager(logger=self.logger)
         self.event_handler = EventHandler(self.window_manager, logger=self.logger)
         self.vis_manager = VisualizationManager()
         
-        """ New """
         # Initialize dataset manager and validation manager
         self.dataset_manager = DatasetManager(category_path)
         self.validation_manager = ValidationManager(self.vis_manager)
              
         
         # Load SAM model
-        self._initialize_model(checkpoint_path)
+        #self._initialize_model(checkpoint_path)
+        self._create_predictor(checkpoint_path)
         
         # Load classes and setup paths
         self._load_classes(classes_csv)
@@ -96,16 +111,56 @@ class SAMAnnotator:
         except Exception as e:
             self.logger.error(f"Error finding last annotated image: {str(e)}")
             return 0
+        
+        
+    def _create_predictor(self, checkpoint_path: str) -> None:
+        """Create and initialize appropriate predictor based on version."""
+        try:
+            # Initialize weight manager
+            weight_manager = SAMWeightManager()
+            
+            # Get appropriate checkpoint path
+            verified_checkpoint = weight_manager.get_checkpoint_path(
+                user_checkpoint_path=checkpoint_path,
+                version=self.sam_version,
+                model_type=self.model_type
+            )
+            
+            if self.sam_version == 'sam1':
+                self.predictor = SAM1Predictor()
+            else:
+                self.predictor = SAM2Predictor()
+                
+            # Initialize the predictor with verified checkpoint
+            self.predictor.initialize(verified_checkpoint)
+            self.logger.info(f"Successfully initialized {self.sam_version.upper()} predictor with {self.model_type} model")
+            
+        except Exception as e:
+            self.logger.error(f"Error creating predictor: {str(e)}")
+            raise
     
     def _initialize_model(self, checkpoint_path: str) -> None:
-        """Initialize SAM model."""
+        """Initialize SAM model based on version."""
         try:
-            weight_manager = SAMWeightManager()
-            verified_checkpoint_path = weight_manager.get_checkpoint_path(checkpoint_path)
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.logger.info(f"Using device: {device}")
+
+            if self.sam_version == 'sam1':
+                # Initialize original SAM
+                weight_manager = SAMWeightManager()
+                verified_checkpoint_path = weight_manager.get_checkpoint_path(checkpoint_path)
+                
+                sam = sam_model_registry["vit_h"](checkpoint=verified_checkpoint_path)
+                sam.to(device=device)
+                self.predictor = SamPredictor(sam)
+                
+            else:  # sam2
+                # Initialize SAM2 through Ultralytics
+                self.predictor = SAM2(checkpoint_path)
+                self.latest_results = None  # Store latest SAM2 results
+
+            self.logger.info(f"SAM{self.sam_version[-1]} model initialized successfully!")
             
-            self.predictor = SAMPredictor()
-            self.predictor.initialize(verified_checkpoint_path)
-            self.logger.info("SAM model initialized successfully!")
         except Exception as e:
             self.logger.error(f"Error initializing SAM model: {str(e)}")
             raise
@@ -173,6 +228,14 @@ class SAMAnnotator:
             except Exception as e:
                 self.logger.error(f"Error changing annotation class: {str(e)}")
  
+  
+  """  
+      Interesting fact to know about mask prediction Interface:
+            - Is version-agnostic at the high level
+            - Handles conversion between formats internally
+            - Maintains consistent input/output interfaces
+  """
+  
     def _handle_mask_prediction(self, 
                           box_start: Tuple[int, int],
                           box_end: Tuple[int, int],
@@ -227,7 +290,7 @@ class SAMAnnotator:
                 max(orig_box_start[1], orig_box_end[1])
             ])
             
-            # Predict mask
+            # Predict mask using either SAM1 or SAM2
             masks, scores, _ = self.predictor.predict(
                 point_coords=input_points,
                 point_labels=input_labels,
@@ -235,11 +298,11 @@ class SAMAnnotator:
                 multimask_output=True
             )
             
-            if len(scores) > 0:
-                best_mask_idx = np.argmax(scores)
+            if len(masks) > 0:
+                best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
+                best_mask = masks[best_mask_idx]
                 
                 # Scale the mask to display size
-                best_mask = masks[best_mask_idx]
                 display_mask = cv2.resize(
                     best_mask.astype(np.uint8),
                     (display_width, display_height),

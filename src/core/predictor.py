@@ -1,6 +1,7 @@
 from typing import Optional, Tuple, List, Dict
 import torch
 from segment_anything import sam_model_registry, SamPredictor
+from ultralytics import SAM as SAM2 
 import numpy as np
 import logging
 import hashlib
@@ -8,77 +9,13 @@ from functools import lru_cache
 import gc
 import psutil
 
-class GPUMemoryManager:
-    """Manages GPU memory allocation and optimization."""
-    
-    def __init__(self, warning_threshold: float = 0.85, critical_threshold: float = 0.95):
-        self.warning_threshold = warning_threshold
-        self.critical_threshold = critical_threshold
-        self.logger = logging.getLogger(__name__)
-        
-        # Track consecutive warnings
-        self.warning_count = 0
-        self.max_warnings = 3
-        
-    def get_gpu_memory_info(self) -> Dict[str, float]:
-        """Get detailed GPU memory information."""
-        if not torch.cuda.is_available():
-            return {'used': 0, 'total': 0, 'utilization': 0}
+from .base_predictor import BaseSAMPredictor
+from .memory_manager import GPUMemoryManager
+from ..utils.visualization import VisualizationManager
+
             
-        try:
-            gpu_memory = torch.cuda.memory_stats()
-            allocated = gpu_memory.get('allocated_bytes.all.current', 0)
-            reserved = gpu_memory.get('reserved_bytes.all.current', 0)
-            total = torch.cuda.get_device_properties(0).total_memory
-            
-            return {
-                'used': allocated,
-                'reserved': reserved,
-                'total': total,
-                'utilization': allocated / total
-            }
-        except Exception as e:
-            self.logger.error(f"Error getting GPU memory info: {str(e)}")
-            return {'used': 0, 'total': 0, 'utilization': 0}
-            
-    def check_memory_status(self) -> Tuple[bool, str]:
-        """Check memory status and return status with message."""
-        memory_info = self.get_gpu_memory_info()
-        utilization = memory_info['utilization']
-        
-        if utilization > self.critical_threshold:
-            self.warning_count += 1
-            if self.warning_count >= self.max_warnings:
-                return False, "CRITICAL: GPU memory usage exceeded safe limits. Stopping operation."
-            return False, f"WARNING: Very high GPU memory usage ({utilization:.2%})"
-            
-        if utilization > self.warning_threshold:
-            self.warning_count += 1
-            return True, f"WARNING: High GPU memory usage ({utilization:.2%})"
-            
-        # Reset warning count if memory usage is normal
-        self.warning_count = 0
-        return True, "OK"
-        
-    def optimize_memory(self, force: bool = False) -> None:
-        """Optimize GPU memory usage."""
-        if not torch.cuda.is_available():
-            return
-            
-        memory_info = self.get_gpu_memory_info()
-        
-        if force or memory_info['utilization'] > self.warning_threshold:
-            # Clear CUDA cache
-            torch.cuda.empty_cache()
-            
-            # Run garbage collection
-            gc.collect()
-            
-            # Reset warning count after optimization
-            self.warning_count = 0
-            
-class SAMPredictor:
-    """Enhanced wrapper for SAM prediction with advanced memory management."""
+class SAM1Predictor(BaseSAMPredictor):
+    """Original SAM implementation with advanced memory management."""
     
     def __init__(self, model_type: str = "vit_h"):
         self.model_type = model_type
@@ -130,8 +67,7 @@ class SAMPredictor:
         except Exception as e:
             self.logger.error(f"Error initializing SAM model: {str(e)}")
             raise
-        
-        
+
     def set_image(self, image: np.ndarray) -> None:
         """Set image with embedding caching."""
         if self.predictor is None:
@@ -159,7 +95,7 @@ class SAMPredictor:
         except Exception as e:
             self.logger.error(f"Error setting image: {str(e)}")
             raise
-            
+
     def predict(self,
                point_coords: Optional[np.ndarray] = None,
                point_labels: Optional[np.ndarray] = None,
@@ -239,3 +175,181 @@ class SAMPredictor:
             key_parts.append(hashlib.md5(box.tobytes()).hexdigest())
             
         return "_".join(key_parts)
+    
+    
+
+class SAM2Predictor(BaseSAMPredictor):
+    """Ultralytics SAM2 implementation with memory management."""
+    
+    def __init__(self, model_type: str = "base"):
+        super().__init__()
+        self.model_type = model_type
+        self.model = None
+        self.logger = logging.getLogger(__name__)
+        
+        # Initialize memory manager
+        self.memory_manager = GPUMemoryManager()
+        
+        # Cache settings
+        self.current_image = None
+        self.current_image_hash = None
+        self.prediction_cache = {}
+        self.max_cache_size = 50
+        self.current_results = None
+        
+        # Initialize device
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if self.device.type == 'cpu':
+            self.logger.warning("Running on CPU. Performance may be limited.")
+            
+    def initialize(self, checkpoint_path: str) -> None:
+        """Initialize SAM2 model with memory optimizations."""
+        try:
+            # Check available GPU memory before loading
+            if self.device.type == 'cuda':
+                memory_info = self.memory_manager.get_gpu_memory_info()
+                available_memory = memory_info['total'] - memory_info['used']
+                
+                if available_memory < 4 * (1024 ** 3):  # 4GB threshold for SAM2
+                    self.logger.warning("Limited GPU memory available. Performance may be affected.")
+            
+            self.model = SAM2(checkpoint_path)
+            if self.device.type == 'cuda':
+                # Enable memory optimizations
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
+                torch.backends.cudnn.benchmark = True
+            
+            self.logger.info(f"Initialized SAM2 model on {self.device}")
+            
+        except Exception as e:
+            self.logger.error(f"Error initializing SAM2: {str(e)}")
+            raise
+            
+    def predict(self, 
+                point_coords: Optional[np.ndarray] = None,
+                point_labels: Optional[np.ndarray] = None,
+                box: Optional[np.ndarray] = None,
+                multimask_output: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Predict masks with memory management and caching."""
+        if self.model is None:
+            raise RuntimeError("Model not initialized. Call initialize() first.")
+            
+        try:
+            # Check memory status before prediction
+            status_ok, message = self.memory_manager.check_memory_status()
+            if not status_ok:
+                self.logger.error(message)
+                raise RuntimeError(message)
+            
+            with torch.no_grad():
+                if box is not None:
+                    # Format box for SAM2 (simpler approach matching working implementation)
+                    results = self.model(
+                        source=self.current_image,
+                        bboxes=[box.tolist()]  # Just pass the box directly
+                    )
+                elif point_coords is not None and point_labels is not None:
+                    # Format points for SAM2
+                    points = []
+                    for coord, label in zip(point_coords, point_labels):
+                        points.append([float(coord[0]), float(coord[1]), int(label)])
+                    
+                    results = self.model(
+                        source=self.current_image,
+                        points=[points]  # Wrap points in list
+                    )
+                else:
+                    raise ValueError("Either points with labels or box must be provided")
+                    
+                # Store results for potential reuse
+                self.current_results = results
+                
+                # Convert results to match SAM1 format
+                if len(results) > 0 and results[0].masks is not None:
+                    # Get masks and ensure they're in the correct format
+                    masks = results[0].masks.data.cpu().numpy()
+                    
+                    # Handle single mask case
+                    if len(masks.shape) == 2:
+                        masks = np.expand_dims(masks, 0)
+                    
+                    # Use confidence scores if available, otherwise use ones
+                    scores = results[0].conf.cpu().numpy() if hasattr(results[0], 'conf') else \
+                            np.ones(len(masks))
+                            
+                    # Create placeholder logits
+                    logits = np.ones((len(masks), 1))
+                else:
+                    masks = np.zeros((1, self.current_image.shape[0], self.current_image.shape[1]), dtype=bool)
+                    scores = np.array([0.0])
+                    logits = np.array([[0.0]])
+                
+                return masks, scores, logits
+                
+        except Exception as e:
+            self.logger.error(f"Error in SAM2 prediction: {str(e)}")
+            self.memory_manager.optimize_memory(force=True)
+            raise
+            
+    def set_image(self, image: np.ndarray) -> None:
+        """Store image with caching."""
+        try:
+            # Calculate image hash
+            image_hash = hashlib.md5(image.tobytes()).hexdigest()
+            
+            # Only update if image changed
+            if image_hash != self.current_image_hash:
+                self.current_image = image
+                self.current_image_hash = image_hash
+                self.prediction_cache.clear()
+                
+        except Exception as e:
+            self.logger.error(f"Error setting image in SAM2: {str(e)}")
+            raise
+            
+    def clear_cache(self, keep_current: bool = False) -> None:
+        """Clear prediction cache with option to keep current image."""
+        if keep_current and self.current_image_hash:
+            current_predictions = {k: v for k, v in self.prediction_cache.items()
+                                if k.startswith(str(self.current_image_hash))}
+            self.prediction_cache.clear()
+            self.prediction_cache.update(current_predictions)
+        else:
+            self.prediction_cache.clear()
+            
+        # Force memory optimization
+        self.memory_manager.optimize_memory(force=True)
+        
+    def get_memory_usage(self) -> float:
+        """Get current GPU memory usage ratio."""
+        return self.memory_manager.get_gpu_memory_info()['utilization']
+        
+    def _generate_cache_key(self,
+                          point_coords: Optional[np.ndarray],
+                          point_labels: Optional[np.ndarray],
+                          box: Optional[np.ndarray]) -> str:
+        """Generate cache key for prediction inputs."""
+        key_parts = [str(self.current_image_hash)]
+        
+        if point_coords is not None:
+            key_parts.append(hashlib.md5(point_coords.tobytes()).hexdigest())
+        if point_labels is not None:
+            key_parts.append(hashlib.md5(point_labels.tobytes()).hexdigest())
+        if box is not None:
+            key_parts.append(hashlib.md5(box.tobytes()).hexdigest())
+            
+        return "_".join(key_parts)
+        """Get additional information from the latest prediction."""
+        if self.current_results is None:
+            return {}
+            
+        try:
+            result = self.current_results[0]
+            return {
+                'confidence': result.conf.cpu().numpy() if hasattr(result, 'conf') else None,
+                'boxes': result.boxes.data.cpu().numpy() if hasattr(result, 'boxes') else None,
+            }
+        except Exception as e:
+            self.logger.error(f"Error getting additional info: {str(e)}")
+            return {}
