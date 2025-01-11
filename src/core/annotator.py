@@ -229,13 +229,13 @@ class SAMAnnotator:
                 self.logger.error(f"Error changing annotation class: {str(e)}")
  
   
-  """  
-      Interesting fact to know about mask prediction Interface:
-            - Is version-agnostic at the high level
-            - Handles conversion between formats internally
-            - Maintains consistent input/output interfaces
-  """
-  
+    """  
+        Interesting fact to know about mask prediction Interface:
+                - Is version-agnostic at the high level
+                - Handles conversion between formats internally
+                - Maintains consistent input/output interfaces
+    """
+    
     def _handle_mask_prediction(self, 
                           box_start: Tuple[int, int],
                           box_end: Tuple[int, int],
@@ -256,6 +256,9 @@ class SAMAnnotator:
             return
         
         try:
+            # Get memory info before prediction
+            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            self.logger.info(f"Memory before prediction: {memory_info['formatted']}")
             # Get display and original dimensions
             display_height, display_width = self.image.shape[:2]
             original_image = cv2.imread(self.current_image_path)
@@ -320,6 +323,10 @@ class SAMAnnotator:
                     total_images=len(self.image_files),
                     status="Mask predicted - press 'a' to add"
                 )
+                
+            # Get memory info after prediction
+            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            self.logger.info(f"Memory after prediction: {memory_info['formatted']}")
                 
         except Exception as e:
             self.logger.error(f"Error in mask prediction: {str(e)}")

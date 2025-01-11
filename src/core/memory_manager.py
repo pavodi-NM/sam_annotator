@@ -1,86 +1,167 @@
+# src/core/memory_manager.py
+
+import os
 import torch
 import logging
-import gc
-import psutil
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 class GPUMemoryManager:
-    """Manages GPU memory allocation and optimization."""
+    """Enhanced GPU memory manager with fallback options."""
     
-    def __init__(self, warning_threshold: float = 0.85, critical_threshold: float = 0.95):
-        self.warning_threshold = warning_threshold
-        self.critical_threshold = critical_threshold
+    def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-        # Track consecutive warnings
-        self.warning_count = 0
-        self.max_warnings = 3
+        # Load configuration from environment variables with defaults
+        self.memory_fraction = self._get_env_float('SAM_GPU_MEMORY_FRACTION', 0.9)
+        self.warning_threshold = self._get_env_float('SAM_MEMORY_WARNING_THRESHOLD', 0.8)
+        self.critical_threshold = self._get_env_float('SAM_MEMORY_CRITICAL_THRESHOLD', 0.95)
+        self.enable_memory_growth = self._get_env_bool('SAM_ENABLE_MEMORY_GROWTH', True)
         
-        # Initialize CUDA optimizations if available
-        if torch.cuda.is_available():
+        # Try to initialize NVIDIA SMI, but don't fail if it's not available
+        self.nvml_initialized = False
+        try:
+            import nvidia_smi
+            nvidia_smi.nvmlInit()
+            self.nvidia_smi = nvidia_smi
+            self.nvml_initialized = True
+            self.logger.info("NVIDIA SMI initialized successfully")
+        except ImportError:
+            self.logger.warning("nvidia-smi module not available, using torch memory management")
+        except Exception as e:
+            self.logger.warning(f"Could not initialize NVIDIA SMI: {e}")
+            
+        # Setup GPU if available
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if self.device.type == 'cuda':
+            self._setup_gpu()
+        else:
+            self.logger.warning("Running on CPU - memory management will be limited")
+
+    def _get_env_float(self, name: str, default: float) -> float:
+        """Get float value from environment variable with validation."""
+        try:
+            value = float(os.getenv(name, default))
+            if 0.0 <= value <= 1.0:
+                return value
+            self.logger.warning(f"Invalid value for {name}: {value}. Using default: {default}")
+            return default
+        except ValueError:
+            self.logger.warning(f"Could not parse {name}. Using default: {default}")
+            return default
+
+    def _get_env_bool(self, name: str, default: bool) -> bool:
+        """Get boolean value from environment variable."""
+        return os.getenv(name, str(default)).lower() in ('true', '1', 'yes')
+
+    def _setup_gpu(self) -> None:
+        """Configure GPU memory management."""
+        try:
+            if self.enable_memory_growth:
+                # Enable memory growth
+                for device in range(torch.cuda.device_count()):
+                    torch.cuda.set_per_process_memory_fraction(self.memory_fraction, device)
+            
+            # Enable TF32 for better performance on Ampere GPUs
             torch.backends.cuda.matmul.allow_tf32 = True
             torch.backends.cudnn.allow_tf32 = True
-            torch.backends.cudnn.benchmark = True
+            
+            self.logger.info(f"GPU memory management configured with {self.memory_fraction*100}% limit")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up GPU memory management: {e}")
+            raise
         
+        
+    def _format_memory_info(self, info: dict) -> str:
+        """Format memory info into human readable string."""
+        used = self._format_bytes(info['used'])
+        total = self._format_bytes(info['total'])
+        percentage = info['utilization'] * 100
+        return f"Used: {used} / Total: {total} ({percentage:.1f}%)"
+    
+    @staticmethod
+    def _format_bytes(bytes_num: int) -> str:
+        """Convert bytes to human readable format."""
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if bytes_num < 1024:
+                return f"{bytes_num:.2f} {unit}"
+            bytes_num /= 1024
+        return f"{bytes_num:.2f} PB"
+
     def get_gpu_memory_info(self) -> Dict[str, float]:
         """Get detailed GPU memory information."""
-        if not torch.cuda.is_available():
-            return {'used': 0, 'total': 0, 'reserved': 0, 'utilization': 0}
+        try:
+            if self.device.type != 'cuda':
+                return {'used': 0, 'total': 0, 'utilization': 0}
+                
+            if self.nvml_initialized:
+                # Use NVIDIA SMI if available
+                handle = self.nvidia_smi.nvmlDeviceGetHandleByIndex(0)
+                info = self.nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
+                
+                memory_info = {
+                    'used': info.used,
+                    'total': info.total,
+                    'utilization': info.used / info.total
+                }
+            else:
+                # Fallback to torch memory management
+                used = torch.cuda.memory_allocated()
+                total = torch.cuda.get_device_properties(0).total_memory
+                memory_info = {
+                    'used': used,
+                    'total': total,
+                    'utilization': used / total
+                }
+            
+            # Add formatted string to the dictionary
+            memory_info['formatted'] = self._format_memory_info(memory_info)
+            return memory_info
+                
+        except Exception as e:
+            self.logger.error(f"Error getting GPU memory info: {e}")
+            return {'used': 0, 'total': 0, 'utilization': 0, 'formatted': 'Error getting memory info'}
+
+    def check_memory_status(self) -> Tuple[bool, Optional[str]]:
+        """Check memory status and return warning if needed."""
+        if self.device.type != 'cuda':
+            return True, None
             
         try:
-            gpu_memory = torch.cuda.memory_stats()
-            allocated = gpu_memory.get('allocated_bytes.all.current', 0)
-            reserved = gpu_memory.get('reserved_bytes.all.current', 0)
-            total = torch.cuda.get_device_properties(0).total_memory
+            memory_info = self.get_gpu_memory_info()
+            utilization = memory_info['utilization'] 
             
-            return {
-                'used': allocated,
-                'reserved': reserved,
-                'total': total,
-                'utilization': allocated / total
-            }
+            if utilization >= self.critical_threshold:
+                return False, f"Critical GPU memory usage: {utilization*100:.1f}%"
+            elif utilization >= self.warning_threshold:
+                return True, f"High GPU memory usage: {utilization*100:.1f}%"
+            return True, None
+            
         except Exception as e:
-            self.logger.error(f"Error getting GPU memory info: {str(e)}")
-            return {'used': 0, 'total': 0, 'reserved': 0, 'utilization': 0}
-            
-    def check_memory_status(self) -> Tuple[bool, str]:
-        """Check memory status and return status with message."""
-        memory_info = self.get_gpu_memory_info()
-        utilization = memory_info['utilization']
-        
-        if utilization > self.critical_threshold:
-            self.warning_count += 1
-            if self.warning_count >= self.max_warnings:
-                return False, "CRITICAL: GPU memory usage exceeded safe limits. Stopping operation."
-            return False, f"WARNING: Very high GPU memory usage ({utilization:.2%})"
-            
-        if utilization > self.warning_threshold:
-            self.warning_count += 1
-            return True, f"WARNING: High GPU memory usage ({utilization:.2%})"
-            
-        # Reset warning count if memory usage is normal
-        self.warning_count = 0
-        return True, "OK"
-        
+            self.logger.error(f"Error checking memory status: {e}")
+            return False, "Could not check memory status"
+
     def optimize_memory(self, force: bool = False) -> None:
         """Optimize GPU memory usage."""
-        if not torch.cuda.is_available():
+        if self.device.type != 'cuda':
             return
             
-        memory_info = self.get_gpu_memory_info()
-        
-        if force or memory_info['utilization'] > self.warning_threshold:
-            # Clear CUDA cache
-            torch.cuda.empty_cache()
+        try:
+            memory_info = self.get_gpu_memory_info()
+            if force or memory_info['utilization'] >= self.warning_threshold:
+                # Clear cache
+                torch.cuda.empty_cache()
+                
+                # Force garbage collection
+                import gc
+                gc.collect()
+                
+                self.logger.info("Memory optimization performed")
+                
+        except Exception as e:
+            self.logger.error(f"Error optimizing memory: {e}")
             
-            # Run garbage collection
-            gc.collect()
             
-            # Reset warning count after optimization
-            self.warning_count = 0
-            
-            self.logger.info("Memory optimization performed")
-    
     def get_system_memory_info(self) -> Dict[str, float]:
         """Get system RAM usage information."""
         try:
@@ -102,3 +183,11 @@ class GPUMemoryManager:
         
         return (gpu_memory['utilization'] < self.warning_threshold and 
                 system_memory['utilization'] < 0.90)  # 90% RAM threshold
+
+    def __del__(self):
+        """Cleanup NVIDIA SMI"""
+        if self.nvml_initialized:
+            try:
+                self.nvidia_smi.nvmlShutdown()
+            except:
+                pass
