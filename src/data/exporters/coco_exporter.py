@@ -6,6 +6,7 @@ import shutil
 import logging
 from datetime import datetime
 from typing import List, Dict, Any
+from collections import Counter
 from .base_exporter import BaseExporter
 
 class CocoExporter(BaseExporter):
@@ -47,6 +48,22 @@ class CocoExporter(BaseExporter):
             'class_id': class_id,
             'points': points
         }
+
+    def _calculate_class_distribution(self, annotated_images: List[str]) -> Dict[str, int]:
+        """Calculate the distribution of classes in the dataset."""
+        class_counts = Counter()
+        
+        for image_file in annotated_images:
+            annotation_file = self._get_annotation_file(image_file)
+            with open(annotation_file, 'r') as f:
+                for line in f:
+                    try:
+                        class_id = int(line.strip().split()[0])
+                        class_counts[f'class_{class_id}'] += 1
+                    except (ValueError, IndexError):
+                        continue
+        
+        return dict(class_counts)
     
     def export(self) -> str:
         """Export dataset to COCO format."""
@@ -56,19 +73,9 @@ class CocoExporter(BaseExporter):
             export_dir = os.path.join(self.dataset_path, 'exports', f'coco_export_{timestamp}')
             os.makedirs(export_dir, exist_ok=True)
             
-            # Create images directory in export
-            images_export_dir = os.path.join(export_dir, 'images')
-            os.makedirs(images_export_dir, exist_ok=True)
-            
-            coco_data = {
-                'info': {
-                    'description': 'SAM Annotator Export',
-                    'date_created': datetime.now().isoformat()
-                },
-                'images': [],
-                'annotations': [],
-                'categories': []
-            }
+            # Create labels directory
+            labels_dir = os.path.join(export_dir, 'labels')
+            os.makedirs(labels_dir, exist_ok=True)
             
             # Get list of annotated images
             annotated_images = self._get_annotated_images()
@@ -77,6 +84,33 @@ class CocoExporter(BaseExporter):
             if not annotated_images:
                 self.logger.warning("No annotated images found!")
                 return export_dir
+
+            # Calculate class distribution
+            class_distribution = self._calculate_class_distribution(annotated_images)
+            
+            coco_data = {
+                'info': {
+                    'description': 'SAM Annotator Export',
+                    'date_created': datetime.now().isoformat(),
+                    'year': datetime.now().year,
+                    'version': '1.0',
+                    'contributor': 'SAM Annotator Tool',
+                    'url': 'your_project_url',
+                    'license': {
+                        'name': 'Your License',
+                        'url': 'license_url'
+                    },
+                    'dataset_stats': {
+                        'total_images': len(annotated_images),
+                        'total_annotations': 0,  # Will be updated later
+                        'annotated_images': len(annotated_images),
+                        'classes_distribution': class_distribution
+                    }
+                },
+                'images': [],
+                'annotations': [],
+                'categories': []
+            }
             
             # Load class names from annotations
             class_ids = set()
@@ -104,10 +138,7 @@ class CocoExporter(BaseExporter):
                 try:
                     image_path = os.path.join(self.dataset_path, 'images', image_file)
                     
-                    # Copy image to export directory
-                    shutil.copy2(image_path, images_export_dir)
-                    
-                    # Get image info
+                    # Get image info without copying the image
                     img = cv2.imread(image_path)
                     if img is None:
                         self.logger.warning(f"Could not read image: {image_path}")
@@ -162,13 +193,16 @@ class CocoExporter(BaseExporter):
                 except Exception as e:
                     self.logger.warning(f"Error processing image {image_file}: {str(e)}")
                     continue
+
+            # Update total annotations count in dataset stats
+            coco_data['info']['dataset_stats']['total_annotations'] = len(coco_data['annotations'])
             
-            # Save COCO JSON
-            json_path = os.path.join(export_dir, 'annotations.json')
+            # Save COCO JSON in labels directory
+            json_path = os.path.join(labels_dir, 'annotations.json')
             with open(json_path, 'w') as f:
                 json.dump(coco_data, f, indent=4)
             
-            self.logger.info(f"Exported {len(coco_data['images'])} images and {len(coco_data['annotations'])} annotations")
+            self.logger.info(f"Exported annotations for {len(coco_data['images'])} images with {len(coco_data['annotations'])} annotations")
             return export_dir
             
         except Exception as e:

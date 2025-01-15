@@ -1,6 +1,6 @@
 import argparse
 import logging
-from src.core import SAMAnnotator
+from src.core import SAMAnnotator 
 
 def main():
     parser = argparse.ArgumentParser(description='SAM Multi-Object Annotation Tool')

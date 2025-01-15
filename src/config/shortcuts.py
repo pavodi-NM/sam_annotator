@@ -6,11 +6,11 @@ SHORTCUTS = {
     'next_image': 'n',
     'prev_image': 'p',
     'save': 's',
-    'clear_selection': 'r', 
+    'clear_selection': 'x', 
     'add_annotation': 'a',
     'undo': 'z',  # Add undo shortcut
     'redo': 'y',  # Add redo shortcut
-    'clear_all': 'c',
+    'clear_all': 'c', 
     
     # View controls
     'toggle_masks': 'm',

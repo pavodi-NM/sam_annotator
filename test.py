@@ -70,7 +70,13 @@ def _on_annotation_delete(self, idx: int) -> None:
             16. _get_label_path 
             17. _save_annotations_to_file
             18. on_annotation_delete
-            19. run
+            19. _handle_undo
+            20. _handle_redo
+            21. _handle_export
+            22. _get_last_annotated_index
+            23. _create_predictor
+            24. _load_annotation
+            25. run
 
     ui - class EventHandler
         List of Methods

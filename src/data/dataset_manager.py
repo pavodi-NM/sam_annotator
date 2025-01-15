@@ -135,7 +135,7 @@ class DatasetManager:
             self.logger.error(f"Error loading image: {str(e)}")
             raise
             
-    def _queue_next_images(self, current_path: str):
+    def _queue_next_images(self, current_path: str): 
         """Queue next few images for preloading."""
         if not self.preload_enabled:
             return

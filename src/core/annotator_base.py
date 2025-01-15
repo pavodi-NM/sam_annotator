@@ -7,7 +7,6 @@ import logging
 from typing import Optional, List, Dict, Tuple
 import pandas as pd
 
-from .file_manager import FileManager
 from ..ui.window_manager import WindowManager
 from ..ui.event_handler import EventHandler
 from ..utils.visualization import VisualizationManager
@@ -51,42 +50,67 @@ class SAMAnnotator:
         self.model_type = model_type or ('vit_h' if sam_version == 'sam1' else 'small_v2')
         self.logger.info(f"Using SAM version: {sam_version} with model type: {self.model_type}")
         
-        # Initialize file manager first (replaces direct DatasetManager initialization)
-        self.file_manager = FileManager(category_path, logger=self.logger)
-        
-        # Initialize image processor
+        # Initialize image processor (add this)
         self.image_processor = ImageProcessor(target_size=1024, min_size=600)
+            
         
         # Initialize managers
         self.window_manager = WindowManager(logger=self.logger)
         self.event_handler = EventHandler(self.window_manager, logger=self.logger)
         self.vis_manager = VisualizationManager()
+        
+        # Initialize dataset manager and validation manager
+        self.dataset_manager = DatasetManager(category_path)
         self.validation_manager = ValidationManager(self.vis_manager)
+             
         
         # Load SAM model
+        #self._initialize_model(checkpoint_path)
         self._create_predictor(checkpoint_path)
         
-        # Load classes through file manager
-        self.class_names = self.file_manager.load_classes(classes_csv)
+        # Load classes and setup paths
+        self._load_classes(classes_csv)
+        self._setup_paths(category_path)
         
-        # Get image files through file manager
-        self.dataset_manager = DatasetManager(category_path)
-        self.image_files = self.file_manager.get_image_list()
-        self.total_images = len(self.image_files)
+        # get image files 
+        self.image_files = [f for f in os.listdir(self.images_path)
+                            if f.lower().endswith(('.png', '.jpg', 'jpeg'))]
+        self.image_files.sort()
         
         # Initialize state
+        self.total_images = len(self.image_files)
         self.current_idx = 0
         self.current_image_path: Optional[str] = None
         self.image: Optional[np.ndarray] = None
         self.annotations: List[Dict] = []
         self.current_class_id = 0
         
-        # Add command manager
+        # add command manager
         self.command_manager = CommandManager()
+        
         
         # Setup callbacks
         self._setup_callbacks()
         
+    def _get_last_annotated_index(self) -> int:
+        """Find the index of the last image that has annotations."""
+        try:
+            # Start from the beginning
+            for idx in range(len(self.image_files)):
+                img_path = os.path.join(self.images_path, self.image_files[idx])
+                base_name = os.path.splitext(self.image_files[idx])[0]
+                label_path = os.path.join(self.annotations_path, f"{base_name}.txt")
+                
+                # If this image doesn't have annotations, this is where we should start
+                if not os.path.exists(label_path):
+                    return idx
+                    
+            # If all images are annotated, return the last index
+            return len(self.image_files) - 1
+                
+        except Exception as e:
+            self.logger.error(f"Error finding last annotated image: {str(e)}")
+            return 0
         
         
     def _create_predictor(self, checkpoint_path: str) -> None:
@@ -322,7 +346,7 @@ class SAMAnnotator:
     def _load_image(self, image_path: str) -> None:
         """Load image and its existing annotations."""
         try:
-            # Load original image through DatasetManager via FileManager
+            # Load original image
             original_image = cv2.imread(image_path)
             if original_image is None:
                 raise ValueError(f"Could not load image: {image_path}")
@@ -333,20 +357,47 @@ class SAMAnnotator:
             self.image = display_image
             self.current_image_path = image_path
             
-            # Clear current state
+            # Load existing annotations if they exist
             self.annotations = []  # Clear current annotations
             self.window_manager.set_mask(None)
             
-            # Load annotations through FileManager which delegates to DatasetManager
-            loaded_annotations = self.file_manager.load_annotations(
-                image_path=image_path,
-                original_dimensions=(original_image.shape[0], original_image.shape[1]),
-                display_dimensions=(display_image.shape[0], display_image.shape[1])
-            )
-            
+            # Load annotations through dataset manager
+            loaded_annotations = self.dataset_manager.load_annotations(image_path)
             if loaded_annotations:
-                self.annotations = loaded_annotations
                 self.logger.info(f"Loaded {len(loaded_annotations)} existing annotations")
+                
+                # Process and add each annotation
+                for ann in loaded_annotations:
+                    # Scale contour points to display size
+                    display_height, display_width = self.image.shape[:2]
+                    orig_height, orig_width = original_image.shape[:2]
+                    
+                    scale_x = display_width / orig_width
+                    scale_y = display_height / orig_height
+                    
+                    contour = ann['contour_points'].copy()
+                    contour = contour.astype(np.float32)
+                    contour[:, :, 0] *= scale_x
+                    contour[:, :, 1] *= scale_y
+                    contour = contour.astype(np.int32)
+                    
+                    # Create mask at display size
+                    mask = np.zeros((display_height, display_width), dtype=bool)
+                    cv2.fillPoly(mask.astype(np.uint8), [contour], 1)
+                    mask = mask.astype(bool)
+                    
+                    # Calculate display box
+                    x, y, w, h = cv2.boundingRect(contour)
+                    
+                    # Add to annotations list
+                    self.annotations.append({
+                        'class_id': ann['class_id'],
+                        'class_name': self.class_names[ann['class_id']],
+                        'mask': mask,
+                        'contour_points': contour,
+                        'box': [x, y, x + w, y + h],
+                        'original_contour': ann['contour_points']
+                    })
             
             # Set image in predictor
             self.predictor.set_image(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
@@ -362,8 +413,8 @@ class SAMAnnotator:
                 current_class=self.class_names[self.current_class_id],
                 current_class_id=self.current_class_id,
                 current_image_path=self.current_image_path,
-                current_idx=self.current_idx,
-                total_images=self.total_images
+                current_idx=self.current_idx, #  current_idx=self.current_idx + 1,
+                total_images= self.total_images #len(self.image_files)
             )
             
             # Update review panel
@@ -500,7 +551,7 @@ class SAMAnnotator:
             self.logger.error(traceback.format_exc())
     
     def _save_annotations(self) -> bool:
-        """Save annotations using FileManager."""
+        """Save annotations with proper scaling for export formats."""
         try:
             self.logger.info(f"Starting save_annotations. Number of annotations: {len(self.annotations)}")
             
@@ -520,49 +571,125 @@ class SAMAnnotator:
                     status=f"Warning: {summary['invalid_annotations']} invalid annotations"
                 )
             
-            # Get original image dimensions
+            # Get image dimensions and base paths
             original_image = cv2.imread(self.current_image_path)
-            if original_image is None:
-                raise ValueError(f"Could not load original image: {self.current_image_path}")
-                
-            success = self.file_manager.save_annotations(
-                annotations=self.annotations,
-                image_name=os.path.basename(self.current_image_path),
-                original_dimensions=original_image.shape[:2],
-                display_dimensions=self.image.shape[:2],
-                class_names=self.class_names,
-                save_visualization=True
-            )
+            original_height, original_width = original_image.shape[:2]
+            base_name = os.path.splitext(os.path.basename(self.current_image_path))[0]
+            original_ext = os.path.splitext(self.current_image_path)[1]
             
-            if success:
-                self.logger.info("Successfully saved annotations")
-                self.window_manager.update_main_window(
-                    image=self.image,
-                    annotations=self.annotations,
-                    current_class=self.class_names[self.current_class_id],
-                    current_class_id=self.current_class_id,
-                    current_image_path=self.current_image_path,
-                    current_idx=self.current_idx,
-                    total_images=self.total_images,
-                    status="Annotations saved successfully"
-                )
-                return True
+            # Setup directories
+            masks_dir = os.path.join(os.path.dirname(self.annotations_path), 'masks')
+            metadata_dir = os.path.join(os.path.dirname(self.annotations_path), 'metadata')
+            os.makedirs(masks_dir, exist_ok=True)
+            os.makedirs(metadata_dir, exist_ok=True)
+            
+            # 1. Save normalized contour coordinates to labels/*.txt
+            label_path = os.path.join(self.annotations_path, f"{base_name}.txt")
+            with open(label_path, 'w') as f:
+                for annotation in self.annotations:
+                    # Get display contour and scale it to original size
+                    display_contour = annotation['contour_points']
+                    
+                    # Scale contour points to original image space
+                    scale_x = original_width / self.image.shape[1]
+                    scale_y = original_height / self.image.shape[0]
+                    
+                    original_contour = display_contour.copy()
+                    original_contour = original_contour.astype(np.float32)
+                    original_contour[:, :, 0] *= scale_x
+                    original_contour[:, :, 1] *= scale_y
+                    original_contour = original_contour.astype(np.int32)
+                    
+                    # Write class_id and normalized coordinates
+                    line = f"{annotation['class_id']}"
+                    for point in original_contour:
+                        x, y = point[0]
+                        x_norm = x / original_width
+                        y_norm = y / original_height
+                        line += f" {x_norm:.6f} {y_norm:.6f}"
+                    f.write(line + '\n')
+            
+            # 2. Create visualization at original size
+            combined_mask = np.zeros((original_height, original_width), dtype=np.uint8)
+            overlay = original_image.copy()
+            
+            for annotation in self.annotations:
+                # Scale display contour to original size for visualization
+                display_contour = annotation['contour_points']
+                original_contour = display_contour.copy()
+                original_contour = original_contour.astype(np.float32)
+                original_contour[:, :, 0] *= scale_x
+                original_contour[:, :, 1] *= scale_y
+                original_contour = original_contour.astype(np.int32)
                 
-            return False
+                # Create mask using the scaled contour
+                mask = np.zeros((original_height, original_width), dtype=np.uint8)
+                cv2.fillPoly(mask, [original_contour], 1)
+                
+                # Update combined mask
+                combined_mask = np.logical_or(combined_mask, mask)
+                
+                # Create green overlay
+                mask_area = mask > 0
+                green_overlay = overlay.copy()
+                green_overlay[mask_area] = (0, 255, 0)
+                overlay = cv2.addWeighted(overlay, 0.7, green_overlay, 0.3, 0)
+            
+            # Convert binary mask to RGB for visualization
+            combined_mask_rgb = cv2.cvtColor(combined_mask.astype(np.uint8) * 255, 
+                                        cv2.COLOR_GRAY2BGR)
+            
+            # Create side-by-side visualization
+            side_by_side = np.hstack((combined_mask_rgb, overlay))
+            
+            # Add separator line
+            separator_x = original_width
+            cv2.line(side_by_side, 
+                    (separator_x, 0), 
+                    (separator_x, original_height),
+                    (0, 0, 255),  # Red line
+                    2)
+            
+            # Save visualization
+            mask_path = os.path.join(masks_dir, f"{base_name}_mask{original_ext}")
+            cv2.imwrite(mask_path, side_by_side)
+            
+            # 3. Save metadata with scaling information
+            metadata = {
+                'num_annotations': len(self.annotations),
+                'class_distribution': {str(i): 0 for i in range(len(self.class_names))},
+                'image_dimensions': {
+                    'original': (original_width, original_height),
+                    'display': self.image.shape[:2]
+                },
+                'scale_factors': {
+                    'x': scale_x,
+                    'y': scale_y
+                }
+            }
+            
+            # Count instances of each class
+            for annotation in self.annotations:
+                class_id = str(annotation['class_id'])
+                metadata['class_distribution'][class_id] = \
+                    metadata['class_distribution'].get(class_id, 0) + 1
+            
+            metadata_path = os.path.join(metadata_dir, f"{base_name}.txt")
+            with open(metadata_path, 'w') as f:
+                for key, value in metadata.items():
+                    f.write(f"{key}: {value}\n")
+            
+            self.logger.info(f"Successfully saved annotations to {label_path}")
+            self.logger.info(f"Saved mask and overlay to {masks_dir}")
+            self.logger.info(f"Saved metadata to {metadata_path}")
+            
+            return True
             
         except Exception as e:
             self.logger.error(f"Error in save_annotations: {str(e)}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False
-            
-        except Exception as e:
-            self.logger.error(f"Error in save_annotations: {str(e)}")
-            import traceback
-            self.logger.error(traceback.format_exc())
-            return False
-    
-    
     
     def _load_annotations(self, image_path: str) -> List[Dict]:
         """Load annotations from label file and reconstruct masks."""
@@ -642,11 +769,7 @@ class SAMAnnotator:
             # Move to the previous iamge
             self.current_idx -= 1
             #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            # Use file_manager's structure to get the full path
-            image_path = str(self.file_manager.structure['images'] / self.image_files[self.current_idx])
-            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            
-            self._load_image(image_path)
+            self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
 
             
     def _next_image(self) -> None:
@@ -660,11 +783,7 @@ class SAMAnnotator:
             # move to the next image 
             self.current_idx +=1
             #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            # Use file_manager's structure to get the full path
-            image_path = str(self.file_manager.structure['images'] / self.image_files[self.current_idx])
-            
-            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            self._load_image(image_path)
+            self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
         
      
     def _remove_last_annotation(self) -> None:
@@ -779,13 +898,13 @@ class SAMAnnotator:
    
     """ New export """
     def _handle_export(self, format: str = 'coco') -> None:
-        """Handle dataset export using delegating FileManager."""
+        """Handle dataset export request."""
         try:
             # Save current annotations if any
             if self.annotations:
                 self._save_annotations()
                 
-            # Update status before export
+            # Update status
             self.window_manager.update_main_window(
                 image=self.image,
                 annotations=self.annotations,
@@ -793,24 +912,26 @@ class SAMAnnotator:
                 current_class_id=self.current_class_id,
                 current_image_path=self.current_image_path,
                 current_idx=self.current_idx,
-                total_images=self.total_images,
+                total_images=len(self.image_files),
                 status=f"Exporting dataset to {format.upper()} format..."
             )
             
-            # Export through FileManager
-            export_path = self.file_manager.handle_export(
-                format=format,
-                class_names=self.class_names
-            )
+            # Get base path (directory containing images/labels folders)
+            base_path = os.path.dirname(os.path.dirname(self.current_image_path))
             
-            if export_path:
-                status_msg = f"Dataset exported to: {export_path}"
-                self.logger.info(status_msg)
+            if format.lower() == 'coco':
+                from ..data.exporters.coco_exporter import CocoExporter
+                exporter = CocoExporter(base_path)
+            elif format.lower() == 'yolo':
+                from ..data.exporters.yolo_exporter import YoloExporter
+                exporter = YoloExporter(base_path)
             else:
-                status_msg = "Export failed"
-                self.logger.error(status_msg)
+                raise ValueError(f"Unsupported export format: {format}")
                 
-            # Update status after export
+            # Perform export
+            export_path = exporter.export()
+            
+            # Update status
             self.window_manager.update_main_window(
                 image=self.image,
                 annotations=self.annotations,
@@ -818,9 +939,11 @@ class SAMAnnotator:
                 current_class_id=self.current_class_id,
                 current_image_path=self.current_image_path,
                 current_idx=self.current_idx,
-                total_images=self.total_images,
-                status=status_msg
+                total_images=len(self.image_files),
+                status=f"Dataset exported to: {export_path}"
             )
+            
+            self.logger.info(f"Successfully exported dataset to {export_path}")
             
         except Exception as e:
             self.logger.error(f"Error exporting dataset: {str(e)}")
@@ -831,118 +954,124 @@ class SAMAnnotator:
                 current_class_id=self.current_class_id,
                 current_image_path=self.current_image_path,
                 current_idx=self.current_idx,
-                total_images=self.total_images,
+                total_images=len(self.image_files),
                 status=f"Export failed: {str(e)}"
             )
     
     def run(self) -> None:
-        """Run the main annotation loop with FileManager integration."""
-        try:
-            # Get image files through FileManager
-            self.image_files = self.file_manager.get_image_list()
-            if not self.image_files:
-                self.logger.error(f"No images found in {self.file_manager.structure['images']}")
-                return
-            
-            # Find the first unannotated image or last image if all are annotated
-            self.current_idx = self.file_manager.get_last_annotated_index()
-            
-            # Load first image
-            self._load_image(str(self.file_manager.structure['images'] / self.image_files[self.current_idx]))
-            
-            # Initialize windows
-            self.window_manager.update_class_window(
-                self.class_names,
-                self.current_class_id
-            )
-            
-            # Initialize review panel with current annotations
-            self.window_manager.update_review_panel(self.annotations)
-            
-            while True:
-                # Periodically check memory usage
-                if hasattr(self.image_processor, 'get_memory_usage'):
-                    memory_usage = self.image_processor.get_memory_usage()
-                    if memory_usage > 1e9:  # More than 1GB
-                        self.logger.info("Clearing image cache due to high memory usage")
-                        self.image_processor.clear_cache()
-                        
-                # Check GPU memory periodically
-                if hasattr(self.predictor, 'get_memory_usage'):
-                    gpu_memory = self.predictor.get_memory_usage()
-                    if gpu_memory > 0.8:  # Over 80% GPU memory
-                        self.predictor.optimize_memory()
-                        
-                # Update display
-                self.window_manager.update_main_window(
-                    image=self.image,
-                    annotations=self.annotations,
-                    current_class=self.class_names[self.current_class_id],
-                    current_class_id=self.current_class_id,
-                    current_image_path=self.current_image_path,
-                    current_idx=self.current_idx,
-                    total_images=self.total_images,
-                    box_start=self.event_handler.box_start,
-                    box_end=self.event_handler.box_end
+            """Run the main annotation loop."""
+            try:
+                # Get image files
+                self.image_files = [f for f in os.listdir(self.images_path)
+                                if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                if not self.image_files:
+                    self.logger.error(f"No images found in {self.images_path}")
+                    return
+                
+                
+                # Find the first unannotated image or last image if all are annotated
+                self.current_idx = self._get_last_annotated_index()
+                # Load first image
+                self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
+                
+                # Initialize windows
+                self.window_manager.update_class_window(
+                    self.class_names,
+                    self.current_class_id
                 )
                 
-                # Handle keyboard input
-                key = cv2.waitKey(1) & 0xFF
-                if key == -1:
-                    continue
-                    
-                action = self.event_handler.handle_keyboard_event(key)
-                self.logger.debug(f"Keyboard action: {action}")
+                """ Handle the review annotation panel """
+
+                # Initialize review panel with current annotations
+                self.window_manager.update_review_panel(self.annotations)
+                """ End """
                 
-                # Process actions
-                if action == "update_view":
-                    self.logger.info("Updating view based on control change")
-                    # Force a refresh of the main window
+                while True:
+                    # Periodically check memory usage
+                    if hasattr(self.image_processor, 'get_memory_usage'):
+                        memory_usage = self.image_processor.get_memory_usage()
+                        if memory_usage > 1e9:  # More than 1GB
+                            self.logger.info("Clearing image cache due to high memory usage")
+                            self.image_processor.clear_cache()
+                            
+                    # Check GPU memory periodically
+                    if hasattr(self.predictor, 'get_memory_usage'):
+                        gpu_memory = self.predictor.get_memory_usage()
+                        if gpu_memory > 0.8:  # Over 80% GPU memory
+                            self.predictor.optimize_memory()
+                            
+                    
+                    # Update display
                     self.window_manager.update_main_window(
                         image=self.image,
                         annotations=self.annotations,
                         current_class=self.class_names[self.current_class_id],
                         current_class_id=self.current_class_id,
                         current_image_path=self.current_image_path,
-                        current_idx=self.current_idx,
-                        total_images=len(self.image_files),
+                        current_idx=self.current_idx, #  current_idx=self.current_idx + 1,
+                        total_images=self.total_images,
                         box_start=self.event_handler.box_start,
                         box_end=self.event_handler.box_end
                     )
-                elif action == 'quit':
-                    break
-                elif action == 'next':
-                    self._next_image()
-                elif action == 'prev':
-                    self._prev_image()
-                elif action == 'save':
-                    self._save_annotations()
-                elif action == 'clear_selection':
-                    self.event_handler.reset_state()
-                    self.window_manager.set_mask(None)
-                elif action == 'add':
-                    self._add_annotation()
-                elif action == 'undo':
-                    self._handle_undo()
-                elif action == "redo":
-                    self._handle_redo()
-                elif action == 'clear_all':
-                    self.annotations = []
-                elif action == "export_coco":
-                    self.logger.info("Starting COCO export")
-                    self._handle_export('coco')
-                elif action == "export_yolo":
-                    self.logger.info("Starting YOLO export")
-                    self._handle_export('yolo')
                     
-        except Exception as e:
-            self.logger.error(f"Error in main loop: {str(e)}")
-        finally:
-            # Cleanup
-            try:
-                self.window_manager.destroy_windows()
+                    # Handle keyboard input
+                    key = cv2.waitKey(1) & 0xFF
+                    if key == -1:
+                        continue
+                        
+                    action = self.event_handler.handle_keyboard_event(key)
+                    self.logger.debug(f"Keyboard action: {action}")
+                    
+                    # Process actions
+                    if action == "update_view":
+                        self.logger.info("Updating view based on control change")
+                        # Force a refresh of the main window
+                        self.window_manager.update_main_window(
+                            image=self.image,
+                            annotations=self.annotations,
+                            current_class=self.class_names[self.current_class_id],
+                            current_class_id=self.current_class_id,
+                            current_image_path=self.current_image_path,
+                            current_idx=self.current_idx,
+                            total_images=len(self.image_files),
+                            box_start=self.event_handler.box_start,
+                            box_end=self.event_handler.box_end
+                        )
+                    elif action == 'quit':
+                        break
+                    elif action == 'next':
+                        self._next_image()
+                    elif action == 'prev':
+                        self._prev_image()
+                    elif action == 'save':
+                        self._save_annotations()
+                    elif action == 'clear_selection':
+                        self.event_handler.reset_state()
+                        self.window_manager.set_mask(None)
+                    elif action == 'add':
+                        self._add_annotation()
+                    elif action == 'undo':
+                        self._handle_undo()
+                        #self._remove_last_annotation()
+                    elif action == "redo":
+                        self._handle_redo()
+                    elif action == 'clear_all':
+                        self.annotations = []
+                    elif action == "export_coco":
+                        self.logger.info("Starting COCO export")
+                        self._handle_export('coco')
+                    elif action == "export_yolo":
+                        self.logger.info("Starting YOLO export")
+                        self._handle_export('yolo')
+                        
             except Exception as e:
-                self.logger.error(f"Error while cleaning up: {str(e)}")
+                self.logger.error(f"Error in main loop: {str(e)}")
+            finally:
+                # Cleanup
+                try:
+                    self.window_manager.destroy_windows()
+                except Exception as e:
+                    self.logger.error(f"Error while cleaning up: {str(e)}")
 
     
     

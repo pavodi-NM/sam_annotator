@@ -69,7 +69,7 @@ class EventHandler:
             if self.on_class_selection:
                 self.on_class_selection(selected_class)
  
-    def handle_keyboard_event(self, key: int) -> Optional[str]:
+    def handle_keyboard_event(self, key: int) -> Optional[str]: 
         """Handle keyboard events and return action string."""
         try:
             # Handle function keys
