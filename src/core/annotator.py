@@ -27,6 +27,7 @@ from .command_manager import (
 
 from .base_predictor import BaseSAMPredictor 
 from .predictor import SAM1Predictor, SAM2Predictor
+from .session_manager import SessionManager
 
 
 class SAMAnnotator:
@@ -83,6 +84,14 @@ class SAMAnnotator:
         
         # Add command manager
         self.command_manager = CommandManager()
+        
+         # Initialize session manager with minimal dependencies
+        self.session_manager = SessionManager(
+            file_manager=self.file_manager,
+            window_manager=self.window_manager,
+            event_handler=self.event_handler,
+            logger=self.logger
+        )
         
         # Setup callbacks
         self._setup_callbacks()
@@ -597,38 +606,23 @@ class SAMAnnotator:
 
     def _prev_image(self) -> None:
         """Move to previous image."""
-        if self.current_idx > 0: # check if we can move backward
-            # clear current state 
-            self.event_handler.reset_state()
-            self.window_manager.set_mask(None)
-            self.annotations = [] # clear annotations for previous image
+        if next_path := self.session_manager.prev_image():
+            # Clear local annotations
+            self.annotations = []
             
-            # Move to the previous iamge
-            self.current_idx -= 1
-            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            # Use file_manager's structure to get the full path
-            image_path = str(self.file_manager.structure['images'] / self.image_files[self.current_idx])
-            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            
-            self._load_image(image_path)
+            # Update index and load new image
+            self.current_idx = self.session_manager.current_idx
+            self._load_image(next_path)
 
-            
     def _next_image(self) -> None:
-        """ Move to the next image """
-        if self.current_idx < len(self.image_files) - 1: # check if we can move forward
-            # clear current state 
-            self.event_handler.reset_state()
-            self.window_manager.set_mask(None)
-            self.annotations = [] # clear annotations 
+        """Move to next image."""
+        if next_path := self.session_manager.next_image():
+            # Clear local annotations
+            self.annotations = []
             
-            # move to the next image 
-            self.current_idx +=1
-            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            # Use file_manager's structure to get the full path
-            image_path = str(self.file_manager.structure['images'] / self.image_files[self.current_idx])
-            
-            #self._load_image(os.path.join(self.images_path, self.image_files[self.current_idx]))
-            self._load_image(image_path)
+            # Update index and load new image
+            self.current_idx = self.session_manager.current_idx
+            self._load_image(next_path)
         
      
     def _remove_last_annotation(self) -> None:
