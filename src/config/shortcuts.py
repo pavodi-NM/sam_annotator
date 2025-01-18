@@ -10,7 +10,7 @@ SHORTCUTS = {
     'add_annotation': 'a',
     'undo': 'z',  # Add undo shortcut
     'redo': 'y',  # Add redo shortcut
-    'clear_all': 'c', 
+    'clear_all': 'c',  
     
     # View controls
     'toggle_masks': 'm',
@@ -25,7 +25,7 @@ SHORTCUTS = {
     # Export shortcuts (new)
     'export_coco': 'e',  # Press 'e' then 'c' for COCO export
     'export_yolo': 'e',  # Press 'e' then 'y' for YOLO export
-    
+    'export_pascal': 'e', # Press e then 'p' for pascal export     
     # Zoom controls
     'zoom_in': '=',    # Plus key
     'zoom_out': '-',   # Minus key

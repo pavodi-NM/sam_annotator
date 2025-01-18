@@ -17,8 +17,8 @@ from ..data.dataset_manager import DatasetManager  # From same directory as File
 from ..utils.image_utils import ImageProcessor  # From utils directory
 from ..utils.visualization import VisualizationManager  # From utils directory
 
-# Optional imports for type hints
-from typing_extensions import TypedDict  # If you need complex type hints
+# Optional imports for complex type hints
+from typing_extensions import TypedDict  
 
 class ImageMetadata(TypedDict):
     dimensions: Tuple[int, int, int]
@@ -269,30 +269,47 @@ class FileManager:
             import traceback
             self.logger.error(traceback.format_exc())
             return False
-    
-    
         
-            
     def handle_export(self, format: str, class_names: List[str]) -> Optional[str]:
         """Handle dataset export in various formats."""
         try:
+            self.logger.info(f"Starting export to {format} format")  # Debug log
             base_path = str(self.base_path)
+            self.logger.info(f"Base path: {base_path}")  # Debug log
 
+            exporter = None
             if format.lower() == 'coco':
                 from ..data.exporters.coco_exporter import CocoExporter
+                self.logger.info("Initializing COCO exporter")  # Debug log
                 exporter = CocoExporter(base_path)
             elif format.lower() == 'yolo':
                 from ..data.exporters.yolo_exporter import YoloExporter
+                self.logger.info("Initializing YOLO exporter")  # Debug log
                 exporter = YoloExporter(base_path)
+            elif format.lower() == 'pascal':
+                from ..data.exporters.pascal_exporter import PascalVOCExporter
+                self.logger.info("Initializing Pascal VOC exporter")  # Debug log
+                exporter = PascalVOCExporter(base_path)
             else:
                 raise ValueError(f"Unsupported export format: {format}")
 
+            if exporter is None:
+                raise ValueError(f"Failed to initialize exporter for format: {format}")
+
             # Perform export
+            self.logger.info("Starting export operation")  # Debug log
             export_path = exporter.export()
+            self.logger.info(f"Export completed. Path: {export_path}")  # Debug log
             return export_path
 
+        except ImportError as e:
+            self.logger.error(f"Import error during export: {str(e)}")
+            self.logger.error("Make sure all required exporter modules are available")
+            return None
         except Exception as e:
             self.logger.error(f"Error exporting dataset: {str(e)}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")  # Add full traceback
             return None
 
     def get_last_annotated_index(self) -> int:
@@ -324,3 +341,5 @@ class FileManager:
         except Exception as e:
             self.logger.error(f"Error creating backup: {str(e)}")
             return False
+        
+        

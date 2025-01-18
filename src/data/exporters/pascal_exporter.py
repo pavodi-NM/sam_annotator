@@ -5,27 +5,69 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Any, Tuple
 from .base_exporter import BaseExporter
+import numpy as np
+
+# """Exports dataset to Pascal VOC format with segmentation support."""
+
 
 class PascalVOCExporter(BaseExporter):
-    """Exports dataset to Pascal VOC format."""
-    
-    def __init__(self, dataset_path: str):
-        """Initialize the Pascal VOC exporter."""
+    def __init__(self, dataset_path: str, copy_images: bool = False):
+        """Initialize the Pascal VOC exporter. Exports dataset to Pascal VOC format with segmentation support.
+        
+        Args:
+            dataset_path: Path to dataset
+            copy_images: Whether to copy images to export directory (default: False)
+        """
         super().__init__(dataset_path)
         self.logger = logging.getLogger(__name__)
+        self.copy_images = copy_images
+
+    def _get_annotated_images(self) -> List[str]:
+        """Get list of images that have corresponding annotation files."""
+        image_files = self._get_image_files()
+        annotated_images = []
+        
+        for image_file in image_files:
+            annotation_file = self._get_annotation_file(image_file)
+            if os.path.exists(annotation_file):
+                if os.path.getsize(annotation_file) > 0:
+                    annotated_images.append(image_file)
+        
+        return annotated_images
+
+    def _parse_yolo_line(self, line: str, image_width: int, image_height: int) -> Dict[str, Any]:
+        """Parse a line from YOLO format and convert to absolute coordinates."""
+        try:
+            parts = line.strip().split()
+            class_id = int(parts[0])
+            points = []
+            
+            # Parse normalized coordinates and convert to absolute pixels
+            for i in range(1, len(parts), 2):
+                if i + 1 < len(parts):
+                    x = float(parts[i]) * image_width
+                    y = float(parts[i + 1]) * image_height
+                    points.append([round(x), round(y)])  # Round to nearest pixel
+            
+            # Calculate bounding box from points
+            points_array = np.array(points)
+            x_min = np.min(points_array[:, 0])
+            y_min = np.min(points_array[:, 1])
+            x_max = np.max(points_array[:, 0])
+            y_max = np.max(points_array[:, 1]) 
+            
+            return {
+                'class_id': class_id,
+                'points': points,
+                'bbox': [x_min, y_min, x_max, y_max]
+            }
+        except Exception as e:
+            self.logger.error(f"Error parsing YOLO line: {str(e)}")
+            return None
 
     def _create_voc_xml(self, image_file: str, image_size: Tuple[int, int, int], 
                        annotations: List[Dict[str, Any]]) -> ET.Element:
-        """Create Pascal VOC XML structure for an image.
-        
-        Args:
-            image_file: Name of the image file
-            image_size: Tuple of (height, width, channels)
-            annotations: List of annotation dictionaries containing bounding boxes
-            
-        Returns:
-            ET.Element: Root element of the XML tree
-        """
+        """Create Pascal VOC XML structure for an image with segmentation support."""
         root = ET.Element("annotation")
         
         # Add basic image information
@@ -34,6 +76,11 @@ class PascalVOCExporter(BaseExporter):
         
         filename = ET.SubElement(root, "filename")
         filename.text = image_file
+        
+        # Add source information
+        source = ET.SubElement(root, "source")
+        database = ET.SubElement(source, "database")
+        database.text = "SAM Annotator Export"
         
         # Add image size information
         size = ET.SubElement(root, "size")
@@ -44,12 +91,15 @@ class PascalVOCExporter(BaseExporter):
         depth = ET.SubElement(size, "depth")
         depth.text = str(image_size[2])
         
-        # Add segmented flag (0 for object detection)
+        # Set segmented flag to 1 since we have segmentation data
         segmented = ET.SubElement(root, "segmented")
-        segmented.text = "0"
+        segmented.text = "1"
         
         # Add each object annotation
         for ann in annotations:
+            if ann is None or 'points' not in ann:
+                continue
+                
             obj = ET.SubElement(root, "object")
             
             name = ET.SubElement(obj, "name")
@@ -64,85 +114,51 @@ class PascalVOCExporter(BaseExporter):
             difficult = ET.SubElement(obj, "difficult")
             difficult.text = "0"
             
+            # Add bounding box
             bndbox = ET.SubElement(obj, "bndbox")
             xmin = ET.SubElement(bndbox, "xmin")
             xmin.text = str(int(ann['bbox'][0]))
             ymin = ET.SubElement(bndbox, "ymin")
             ymin.text = str(int(ann['bbox'][1]))
             xmax = ET.SubElement(bndbox, "xmax")
-            xmax.text = str(int(ann['bbox'][0] + ann['bbox'][2]))
+            xmax.text = str(int(ann['bbox'][2]))
             ymax = ET.SubElement(bndbox, "ymax")
-            ymax.text = str(int(ann['bbox'][1] + ann['bbox'][3]))
+            ymax.text = str(int(ann['bbox'][3]))
+            
+            # Add polygon points for segmentation
+            polygon = ET.SubElement(obj, "polygon")
+            points_str = ' '.join([f"{int(pt[0])},{int(pt[1])}" for pt in ann['points']])
+            points_elem = ET.SubElement(polygon, "points")
+            points_elem.text = points_str
         
         return root
 
-    def _parse_yolo_line(self, line: str, image_width: int, image_height: int) -> Dict[str, Any]:
-        """Parse a line from YOLO format and convert to Pascal VOC format.
-        
-        Args:
-            line: Single line from YOLO annotation file
-            image_width: Width of the image
-            image_height: Height of the image
-            
-        Returns:
-            Dictionary containing class_id and bounding box coordinates
-        """
-        parts = line.strip().split()
-        class_id = int(parts[0])
-        points = []
-        
-        # Parse normalized coordinates and convert to absolute pixels
-        for i in range(1, len(parts), 2):
-            if i + 1 < len(parts):
-                x = float(parts[i]) * image_width
-                y = float(parts[i + 1]) * image_height
-                points.append([x, y])
-        
-        # Convert points to bounding box
-        if points:
-            x_coords = [p[0] for p in points]
-            y_coords = [p[1] for p in points]
-            xmin = min(x_coords)
-            ymin = min(y_coords)
-            width = max(x_coords) - xmin
-            height = max(y_coords) - ymin
-            
-            return {
-                'class_id': class_id,
-                'bbox': [xmin, ymin, width, height]
-            }
-        return None
-
     def export(self) -> str:
-        """Export dataset to Pascal VOC format.
-        
-        Returns:
-            str: Path to exported dataset
-        """
+        """Export dataset to Pascal VOC format."""
         try:
-            # Create export directory with timestamp
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             export_dir = os.path.join(self.dataset_path, 'exports', f'voc_export_{timestamp}')
             os.makedirs(export_dir, exist_ok=True)
             
-            # Create necessary subdirectories
+            # Create Annotations directory
             annotations_dir = os.path.join(export_dir, 'Annotations')
-            images_dir = os.path.join(export_dir, 'JPEGImages')
             os.makedirs(annotations_dir, exist_ok=True)
-            os.makedirs(images_dir, exist_ok=True)
             
-            # Get list of annotated images
+            # Only create JPEGImages directory if copying images
+            if self.copy_images:
+                images_dir = os.path.join(export_dir, 'JPEGImages')
+                os.makedirs(images_dir, exist_ok=True)
+            
             annotated_images = self._get_annotated_images()
             self.logger.info(f"Found {len(annotated_images)} annotated images")
             
             if not annotated_images:
                 self.logger.warning("No annotated images found!")
                 return export_dir
-            
-            # Process each annotated image
+
             for image_file in annotated_images:
                 try:
-                    # Read image to get dimensions
+                    # Read image just to get dimensions
                     image_path = os.path.join(self.dataset_path, 'images', image_file)
                     img = cv2.imread(image_path)
                     if img is None:
@@ -151,7 +167,7 @@ class PascalVOCExporter(BaseExporter):
                     
                     height, width, channels = img.shape
                     
-                    # Parse annotations
+                    # Process annotations and create XML
                     annotations = []
                     annotation_file = self._get_annotation_file(image_file)
                     
@@ -165,7 +181,6 @@ class PascalVOCExporter(BaseExporter):
                                 self.logger.warning(f"Error processing annotation in {annotation_file}: {str(e)}")
                                 continue
                     
-                    # Create XML annotation
                     xml_root = self._create_voc_xml(image_file, (height, width, channels), annotations)
                     
                     # Save XML file
@@ -173,17 +188,21 @@ class PascalVOCExporter(BaseExporter):
                     tree = ET.ElementTree(xml_root)
                     tree.write(xml_path, encoding='utf-8', xml_declaration=True)
                     
-                    # Copy image to export directory
-                    dst_path = os.path.join(images_dir, image_file)
-                    cv2.imwrite(dst_path, img)
+                    # Copy image only if specified
+                    if self.copy_images:
+                        dst_path = os.path.join(images_dir, image_file)
+                        cv2.imwrite(dst_path, img)
                     
                 except Exception as e:
                     self.logger.warning(f"Error processing image {image_file}: {str(e)}")
                     continue
             
-            self.logger.info(f"Successfully exported {len(annotated_images)} images to Pascal VOC format")
+            self.logger.info(f"Successfully exported annotations for {len(annotated_images)} images")
             return export_dir
             
         except Exception as e:
             self.logger.error(f"Error during Pascal VOC export: {str(e)}")
             raise
+        
+        
+    

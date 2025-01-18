@@ -23,7 +23,7 @@ from .command_manager import (
     AddAnnotationCommand,
     DeleteAnnotationCommand,
     ModifyAnnotationCommand
-) 
+)
 
 from .base_predictor import BaseSAMPredictor 
 from .predictor import SAM1Predictor, SAM2Predictor
@@ -64,7 +64,7 @@ class SAMAnnotator:
         self.validation_manager = ValidationManager(self.vis_manager)
         
         # Load SAM model
-        self._initialize_model(checkpoint_path)
+        self._create_predictor(checkpoint_path)
         
         # Load classes through file manager
         self.class_names = self.file_manager.load_classes(classes_csv)
@@ -87,8 +87,9 @@ class SAMAnnotator:
         # Setup callbacks
         self._setup_callbacks()
         
-          
-    def _initialize_model(self, checkpoint_path: str) -> None:
+        
+        
+    def _create_predictor(self, checkpoint_path: str) -> None:
         """Create and initialize appropriate SAM predictor based on version."""
         try:
             # Initialize weight manager
@@ -114,6 +115,43 @@ class SAMAnnotator:
             self.logger.error(f"Error Initializing SAM model: {str(e)}")
             raise
    
+    """ Similar method being used by _create_predictor"""
+    def _initialize_model(self, checkpoint_path: str) -> None:
+        """Initialize SAM model based on version."""
+        try:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.logger.info(f"Using device: {device}")
+
+            if self.sam_version == 'sam1':
+                # Initialize original SAM
+                weight_manager = SAMWeightManager()
+                verified_checkpoint_path = weight_manager.get_checkpoint_path(checkpoint_path)
+                
+                sam = sam_model_registry["vit_h"](checkpoint=verified_checkpoint_path)
+                sam.to(device=device)
+                self.predictor = SamPredictor(sam)
+                
+            else:  # sam2
+                # Initialize SAM2 through Ultralytics
+                self.predictor = SAM2(checkpoint_path)
+                self.latest_results = None  # Store latest SAM2 results
+
+            self.logger.info(f"SAM{self.sam_version[-1]} model initialized successfully!")
+            
+        except Exception as e:
+            self.logger.error(f"Error initializing SAM model: {str(e)}")
+            raise
+    
+    """ _load_classes function moved to file_manager. This one is unused"""
+    def _load_classes(self, classes_csv: str) -> None:
+        """Load class names from CSV."""
+        try:
+            df = pd.read_csv(classes_csv)
+            self.class_names = df['class_name'].tolist()[:15]
+            self.logger.info(f"Loaded {len(self.class_names)} classes")
+        except Exception as e:
+            self.logger.error(f"Error loading classes: {str(e)}")
+            raise
     
     """ _setup_paths is an unused method """
     def _setup_paths(self, category_path: str) -> None:

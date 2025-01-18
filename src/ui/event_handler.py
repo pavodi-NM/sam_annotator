@@ -87,6 +87,10 @@ class EventHandler:
                     self.logger.info("YOLO export selected")
                     return "export_yolo"
                 
+                elif second_key == ord('p'):
+                    self.logger.info("Pascal export selected")
+                    return "export_pascal"  # Make sure this is being returned
+                
             # Let view controls handle their keys first
             if self.window_manager.view_controls.handle_keyboard(key):
                 return "update_view"

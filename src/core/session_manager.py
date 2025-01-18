@@ -118,7 +118,7 @@ class SessionManager:
             raise
     
     
-    def next_image(self) -> bool:
+    def next_image(self) -> bool: 
         """Move to next image.
         
         Returns:

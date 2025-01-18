@@ -50,7 +50,7 @@ class LazyImageLoader:
     
     def clear(self):
         with self._lock:
-            self._image = None
+            self._image = None 
 
 
 
@@ -234,6 +234,10 @@ class DatasetManager:
             elif format == 'yolo':
                 from .exporters.yolo_exporter import YoloExporter
                 exporter = YoloExporter(self.dataset_path, export_path)
+                return exporter.export()
+            elif format == 'pascal':
+                from .exporters.pascal_exporter import PascalVOCExporter
+                exporter = PascalVOCExporter(self.dataset_path, export_path)
                 return exporter.export()
             else:
                 raise ValueError(f"Unsupported export format: {format}")
