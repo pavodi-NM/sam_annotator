@@ -623,8 +623,7 @@ class SAMAnnotator:
             # Update index and load new image
             self.current_idx = self.session_manager.current_idx
             self._load_image(next_path)
-        
-     
+         
     def _remove_last_annotation(self) -> None:
         """Remove the last added annotation."""
         if self.annotations:

@@ -1,0 +1,6 @@
+Features being implemented
+
+ - I am currently working on refactoring the code, to keep the sam2-based annotation logic for 
+ segmentation in annotator.py file only.
+ - Next step is about integrating tasks, such as segmentation, classification, object detection, keypoint detection.
+ 
