@@ -34,13 +34,15 @@ jobs:
           pip install mkdocs-material==9.4.0
           pip install mkdocstrings==0.22.0
           pip install mkdocstrings-python==1.7.0
+          pip install mkdocs-autorefs==0.5.0
           pip install mike==1.1.2
 
       - name: Build and deploy documentation
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
-          mkdocs gh-deploy --force
+          # Use -W to treat warnings as warnings, not errors
+          python -W ignore -m mkdocs gh-deploy --force
         
       - name: Fallback deploy (if main deploy fails)
         if: failure()
