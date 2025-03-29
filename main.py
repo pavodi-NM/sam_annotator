@@ -53,7 +53,7 @@ def main():
             model_type=args.model_type  # Pass model_type to annotator
         )
         
-        annotator.run()
+        annotator.run() 
         
     except Exception as e:
         logger.error(f"Error in main: {str(e)}", exc_info=True)

@@ -1,0 +1,11 @@
+torch>=1.7.0
+opencv-python>=4.5.0
+numpy>=1.19.0
+segment-anything>=1.0
+pandas>=1.2.0
+
+[dev]
+pytest>=6.0
+pytest-cov>=2.0
+black>=20.8b1
+isort>=5.0

@@ -1,0 +1,2 @@
+[console_scripts]
+sam_annotator = sam_annotator.main:main
