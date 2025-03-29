@@ -1,10 +1,15 @@
+DOCUMENTATION.md
 MANIFEST.in
 README.md
+mkdocs.yml
 pyproject.toml
 requirements-dev.txt
 requirements.txt
 setup.cfg
 setup.py
+.github/workflows/docs.yml
+.github/workflows/publish.yml
+.github/workflows/tests.yml
 docs/README.md
 docs/index.md
 docs/placeholder.md
