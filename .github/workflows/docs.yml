@@ -31,10 +31,43 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mkdocs-material mkdocstrings[python] mike
+          pip install mkdocs-material==9.4.0
+          pip install mkdocstrings==0.22.0
+          pip install mkdocstrings-python==1.7.0
+          pip install mike==1.1.2
 
       - name: Build and deploy documentation
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
-          mkdocs gh-deploy --force 
+          mkdocs gh-deploy --force
+        
+      - name: Fallback deploy (if main deploy fails)
+        if: failure()
+        run: |
+          # Create a simpler temporary mkdocs config without problematic plugins
+          cat > mkdocs.simple.yml << EOF
+          site_name: SAM Annotator
+          site_url: https://pavodi-nm.github.io/sam_annotator/
+          repo_name: pavodi-nm/sam_annotator
+          repo_url: https://github.com/pavodi-nm/sam_annotator
+          
+          theme:
+            name: material
+            palette:
+              primary: indigo
+          
+          nav:
+            - Home: index.md
+            - User Guide:
+              - Keyboard Shortcuts: shortcuts.md
+            - API Reference: placeholder.md
+          
+          plugins:
+            - search
+          EOF
+          
+          # Try deploying with the simplified config
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          mkdocs gh-deploy --force --config-file mkdocs.simple.yml 
