@@ -1,9 +1,9 @@
 site_name: SAM Annotator
 site_description: A general-purpose image annotation tool based on Segment Anything Model (SAM)
 site_author: Pavodi NDOYI MANIAMFU
-site_url: https://pavoodi-nm.github.io/sam_annotator/
+site_url: https://pavodi-nm.github.io/sam_annotator/
 
-repo_name: yourusername/sam_annotator
+repo_name: pavodi-nm/sam_annotator
 repo_url: https://github.com/pavodi-nm/sam_annotator
 edit_uri: edit/main/docs/
 
@@ -39,7 +39,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/yourusername/sam_annotator
+      link: https://github.com/pavodi-nm/sam_annotator
   version:
     provider: mike
 

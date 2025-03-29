@@ -7,7 +7,7 @@ This file explains how to build, view, and contribute to the SAM Annotator docum
 ### Online Documentation
 
 The official documentation is available online at:
-- https://yourusername.github.io/sam_annotator/
+- https://pavodi-nm.github.io/sam_annotator/
 
 ### Documentation on PyPI
 

@@ -49,6 +49,10 @@ SAM Annotator can also be used programmatically through its Python API:
 - [Building from Source](placeholder.md) (coming soon)
 - [Architecture Overview](placeholder.md) (coming soon)
 
+## Repository
+
+The source code is available on GitHub: [pavodi-nm/sam_annotator](https://github.com/pavodi-nm/sam_annotator)
+
 ## License
 
 SAM Annotator is available under the MIT License. See the LICENSE file for more details. 

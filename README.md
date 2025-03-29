@@ -41,7 +41,7 @@ sam_annotator --category_path /path/to/categories --classes_csv /path/to/classes
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/sam_annotator.git
+   git clone https://github.com/pavodi-nm/sam_annotator.git
    cd sam_annotator
    ```
 
@@ -97,13 +97,13 @@ SAM Annotator provides numerous keyboard shortcuts to make your annotation workf
 | Undo | <kbd>Z</kbd> | Undo the last action |
 | Redo | <kbd>Y</kbd> | Redo the previously undone action |
 
-For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documentation](https://github.com/yourusername/sam_annotator/blob/main/docs/shortcuts.md).
+For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documentation](https://pavodi-nm.github.io/sam_annotator/shortcuts/).
 
 ## Documentation
 
-- [Getting Started](https://github.com/yourusername/sam_annotator/blob/main/docs/index.md)
-- [Keyboard Shortcuts](https://github.com/yourusername/sam_annotator/blob/main/docs/shortcuts.md)
-- [API Reference](https://github.com/yourusername/sam_annotator/blob/main/docs/placeholder.md) (coming soon)
+- [Getting Started](https://pavodi-nm.github.io/sam_annotator/)
+- [Keyboard Shortcuts](https://pavodi-nm.github.io/sam_annotator/shortcuts/)
+- [API Reference](https://pavodi-nm.github.io/sam_annotator/placeholder/) (coming soon)
 
 ## Features
 

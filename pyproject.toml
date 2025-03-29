@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sam_annotator"
-version = "0.1.0.dev4"
+version = "0.1.0.dev5"
 description = "A general-purpose image annotation tool based on Segment Anything Model (SAM)"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -47,9 +47,9 @@ docs = [
 sam_annotator = "sam_annotator.main:main"
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/sam_annotator"
-"Bug Tracker" = "https://github.com/yourusername/sam_annotator/issues"
-"Documentation" = "https://yourusername.github.io/sam_annotator/"
+"Homepage" = "https://github.com/pavodi-nm/sam_annotator"
+"Bug Tracker" = "https://github.com/pavodi-nm/sam_annotator/issues"
+"Documentation" = "https://pavodi-nm.github.io/sam_annotator/"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"] 
