@@ -1,14 +1,14 @@
 Metadata-Version: 2.4
 Name: sam_annotator
-Version: 0.1.0.dev5
+Version: 0.1.0.dev8
 Summary: A general-purpose image annotation tool based on Segment Anything Model (SAM)
 Author-email: Pavodi NDOYI MANIAMFU <pavodi.mani@fingervision.biz>
+License: MIT
 Project-URL: Homepage, https://github.com/pavodi-nm/sam_annotator
 Project-URL: Bug Tracker, https://github.com/pavodi-nm/sam_annotator/issues
 Project-URL: Documentation, https://pavodi-nm.github.io/sam_annotator/
 Classifier: Development Status :: 3 - Alpha
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
@@ -16,11 +16,17 @@ Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
 Classifier: Topic :: Scientific/Engineering :: Image Processing
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: torch>=1.7.0
 Requires-Dist: opencv-python>=4.5.0
 Requires-Dist: numpy>=1.19.0
 Requires-Dist: segment-anything>=1.0
 Requires-Dist: pandas>=1.2.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: psutil>=5.9.0
+Requires-Dist: requests>=2.28.0
+Requires-Dist: tqdm>=4.64.0
+Requires-Dist: ultralytics>=8.0.0
 Provides-Extra: dev
 Requires-Dist: pytest>=6.0; extra == "dev"
 Requires-Dist: pytest-cov>=2.0; extra == "dev"
@@ -31,6 +37,7 @@ Requires-Dist: mkdocs>=1.4.0; extra == "docs"
 Requires-Dist: mkdocs-material>=9.0.0; extra == "docs"
 Requires-Dist: mkdocstrings[python]>=0.20.0; extra == "docs"
 Requires-Dist: mike>=1.1.2; extra == "docs"
+Dynamic: license-file
 
 # SAM Annotator
 
@@ -56,13 +63,18 @@ SAM Annotator leverages Meta AI's Segment Anything Model to help users quickly a
 ### Installation via pip
 
 ```bash
+# Install the latest stable version (when available)
 pip install sam_annotator
 ```
 
 For the latest development version:
 
 ```bash
-pip install --pre sam_annotator
+# For the latest development version from TestPyPI (specify exact version)
+pip install -i https://test.pypi.org/simple/ sam-annotator==0.1.0.dev8
+
+# If you experience dependency issues, add PyPI as an extra index
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.1.0.dev8
 ```
 
 After installation, you can run the tool using:
@@ -160,6 +172,15 @@ For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documenta
 ## License
 
 [MIT License](LICENSE)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+When using this software, please cite or acknowledge:
+
+```
+SAM Annotator by Pavodi NDOYI MANIAMFU
+https://github.com/pavodi-nm/sam_annotator
+```
 
 ## Acknowledgements
 

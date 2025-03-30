@@ -22,13 +22,18 @@ SAM Annotator leverages Meta AI's Segment Anything Model to help users quickly a
 ### Installation via pip
 
 ```bash
+# Install the latest stable version (when available)
 pip install sam_annotator
 ```
 
 For the latest development version:
 
 ```bash
-pip install --pre sam_annotator
+# For the latest development version from TestPyPI (specify exact version)
+pip install -i https://test.pypi.org/simple/ sam-annotator==0.1.0.dev8
+
+# If you experience dependency issues, add PyPI as an extra index
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.1.0.dev8
 ```
 
 After installation, you can run the tool using:
@@ -121,11 +126,19 @@ For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documenta
 - OpenCV
 - NumPy
 - Segment Anything Model (SAM)
-- PyQt5/PySide6 (for the GUI)
 
 ## License
 
 [MIT License](LICENSE)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+When using this software, please cite or acknowledge:
+
+```
+SAM Annotator by Pavodi NDOYI MANIAMFU
+https://github.com/pavodi-nm/sam_annotator
+```
 
 ## Acknowledgements
 

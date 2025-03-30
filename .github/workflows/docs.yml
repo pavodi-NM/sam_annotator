@@ -42,7 +42,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
           # Use -W to treat warnings as warnings, not errors
-          python -W ignore -m mkdocs gh-deploy --force
+          python -W ignore -m mkdocs gh-deploy --force --remote-branch gh-pages
         
       - name: Fallback deploy (if main deploy fails)
         if: failure()
@@ -72,4 +72,4 @@ jobs:
           # Try deploying with the simplified config
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
-          mkdocs gh-deploy --force --config-file mkdocs.simple.yml 
+          mkdocs gh-deploy --force --config-file mkdocs.simple.yml --remote-branch gh-pages 
