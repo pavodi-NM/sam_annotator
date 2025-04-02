@@ -543,8 +543,9 @@ class DatasetManager:
                         # Convert points to numpy array
                         contour = np.array(polygon_points, dtype=np.int32)
                         
-                        # Calculate bounding box
+                        # Calculate bounding box directly from the contour
                         x, y, w, h = cv2.boundingRect(contour)
+                        box = [x, y, x + w, y + h]
                         
                         # Create mask using uint8 instead of bool
                         mask = np.zeros((orig_height, orig_width), dtype=np.uint8)
@@ -553,12 +554,33 @@ class DatasetManager:
                         # Convert mask to boolean after filling
                         mask_bool = mask.astype(bool)
                         
+                        # Create flattened contour list for visualization
+                        contour_list = contour.tolist()
+                        flattened_contour = []
+                        for point in contour_list:
+                            if len(point) == 1 and isinstance(point[0], list) and len(point[0]) == 2:
+                                flattened_contour.append(point[0])
+                            else:
+                                flattened_contour.append(point)
+                        
+                        # Calculate area
+                        area = cv2.contourArea(contour)
+                        
                         annotations.append({
+                            'id': len(annotations),
                             'class_id': class_id,
-                            'contour_points': contour,
-                            'box': [x, y, x + w, y + h],
+                            'class_name': f'Class {class_id}',  # Default class name
+                            'contour_points': contour,  # Original cv2 contour format
+                            'contour': flattened_contour,  # Flattened points for visualization
+                            'box': box,
+                            'display_box': box,  # Same as box initially
                             'mask': mask_bool,
-                            'original_shape': (orig_height, orig_width)
+                            'area': area,
+                            'original_shape': (orig_height, orig_width),
+                            'metadata': {
+                                'annotation_mode': 'imported',
+                                'timestamp': time.time()
+                            }
                         })
                         
                     except Exception as e:

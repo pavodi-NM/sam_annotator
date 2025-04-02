@@ -1,3 +1,4 @@
+Annotation_Implementation.md
 DOCUMENTATION.md
 LICENSE
 MANIFEST.in
@@ -12,6 +13,7 @@ setup.py
 .github/workflows/publish.yml
 .github/workflows/tests.yml
 docs/README.md
+docs/implementation.md
 docs/index.md
 docs/placeholder.md
 docs/shortcuts.md
@@ -72,7 +74,6 @@ sam_annotator/ui/widgets/class_selector.py
 sam_annotator/ui/widgets/status_overlay.py
 sam_annotator/ui/widgets/view_controls.py
 sam_annotator/utils/__init__.py
-sam_annotator/utils/download_weights.py
 sam_annotator/utils/file_utils.py
 sam_annotator/utils/image_utils.py
 sam_annotator/utils/scaling.py

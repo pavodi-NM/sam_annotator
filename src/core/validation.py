@@ -12,7 +12,7 @@ class ValidationManager:
         self.validation_rules = {
             'min_size': 100,  # Minimum area in pixels
             'max_overlap': 0.3,  # Maximum allowed overlap ratio
-            'required_fields': ['class_id', 'contour_points', 'box'],
+            'required_fields': ['class_id', 'mask', 'box'],  # Updated to use mask instead of contour_points
             'max_annotations_per_class': 50,
             'min_annotations_per_class': 1
         }
@@ -28,37 +28,99 @@ class ValidationManager:
             if field not in annotation:
                 return False, f"Missing required field: {field}"
         
-        # Validate contour size
-        if 'contour_points' in annotation:
+        # Validate mask size
+        if 'mask' in annotation:
+            area = np.count_nonzero(annotation['mask'])
+            if area < self.validation_rules['min_size']:
+                return False, f"Annotation too small: {area} pixels"
+        # For backward compatibility, also check contour_points
+        elif 'contour_points' in annotation:
             mask = np.zeros(image_shape[:2], dtype=np.uint8)
             cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
             area = cv2.countNonZero(mask)
-            
             if area < self.validation_rules['min_size']:
                 return False, f"Annotation too small: {area} pixels"
+        # For new structure, check contour
+        elif 'contour' in annotation:
+            mask = np.zeros(image_shape[:2], dtype=np.uint8)
+            try:
+                contour_array = np.array(annotation['contour'], dtype=np.int32)
+                # Handle different possible shapes
+                if len(contour_array.shape) == 2:  # [x,y] format
+                    contour_array = contour_array.reshape(-1, 1, 2)
+                cv2.drawContours(mask, [contour_array], -1, 255, -1)
+                area = cv2.countNonZero(mask)
+                if area < self.validation_rules['min_size']:
+                    return False, f"Annotation too small: {area} pixels"
+            except Exception as e:
+                return False, f"Invalid contour format: {str(e)}"
         
         return True, "Valid annotation"
     
     def check_overlap(self, annotations: List[Dict], new_annotation: Dict, 
                      image_shape: Tuple[int, int]) -> Tuple[bool, float]:
         """Check overlap ratio between annotations."""
-        if not annotations or 'contour_points' not in new_annotation:
+        # Create mask for new annotation
+        new_mask = None
+        
+        # Check if we already have a mask
+        if 'mask' in new_annotation and new_annotation['mask'] is not None:
+            new_mask = new_annotation['mask'].astype(np.uint8) * 255
+            if new_mask.shape[:2] != image_shape[:2]:
+                new_mask = cv2.resize(new_mask, (image_shape[1], image_shape[0]), 
+                                    interpolation=cv2.INTER_NEAREST)
+        # For backward compatibility, check contour_points
+        elif 'contour_points' in new_annotation:
+            new_mask = np.zeros(image_shape[:2], dtype=np.uint8)
+            cv2.drawContours(new_mask, [new_annotation['contour_points']], -1, 255, -1)
+        # For new structure, check contour
+        elif 'contour' in new_annotation:
+            new_mask = np.zeros(image_shape[:2], dtype=np.uint8)
+            try:
+                contour_array = np.array(new_annotation['contour'], dtype=np.int32)
+                # Handle different possible shapes
+                if len(contour_array.shape) == 2:  # [x,y] format
+                    contour_array = contour_array.reshape(-1, 1, 2)
+                cv2.drawContours(new_mask, [contour_array], -1, 255, -1)
+            except Exception:
+                return False, 0.0
+        
+        if new_mask is None:
             return True, 0.0
             
-        # Create mask for new annotation
-        new_mask = np.zeros(image_shape[:2], dtype=np.uint8)
-        cv2.drawContours(new_mask, [new_annotation['contour_points']], -1, 255, -1)
         new_area = cv2.countNonZero(new_mask)
+        if new_area == 0:
+            return True, 0.0
         
         max_overlap_ratio = 0.0
         for existing in annotations:
-            if 'contour_points' not in existing:
+            existing_mask = None
+            
+            # Check if we already have a mask
+            if 'mask' in existing and existing['mask'] is not None:
+                existing_mask = existing['mask'].astype(np.uint8) * 255
+                if existing_mask.shape[:2] != image_shape[:2]:
+                    existing_mask = cv2.resize(existing_mask, (image_shape[1], image_shape[0]), 
+                                            interpolation=cv2.INTER_NEAREST)
+            # For backward compatibility, check contour_points
+            elif 'contour_points' in existing:
+                existing_mask = np.zeros(image_shape[:2], dtype=np.uint8)
+                cv2.drawContours(existing_mask, [existing['contour_points']], -1, 255, -1)
+            # For new structure, check contour
+            elif 'contour' in existing:
+                existing_mask = np.zeros(image_shape[:2], dtype=np.uint8)
+                try:
+                    contour_array = np.array(existing['contour'], dtype=np.int32)
+                    # Handle different possible shapes
+                    if len(contour_array.shape) == 2:  # [x,y] format
+                        contour_array = contour_array.reshape(-1, 1, 2)
+                    cv2.drawContours(existing_mask, [contour_array], -1, 255, -1)
+                except Exception:
+                    continue
+            
+            if existing_mask is None:
                 continue
                 
-            # Create mask for existing annotation
-            existing_mask = np.zeros(image_shape[:2], dtype=np.uint8)
-            cv2.drawContours(existing_mask, [existing['contour_points']], -1, 255, -1)
-            
             # Calculate overlap
             overlap = cv2.bitwise_and(new_mask, existing_mask)
             overlap_area = cv2.countNonZero(overlap)
@@ -157,6 +219,7 @@ class ValidationManager:
         # Check overlap between all pairs
         for i in range(len(annotations)):
             for j in range(i + 1, len(annotations)):
+                # Use the existing annotations and just check pairs
                 is_valid, overlap_ratio = self.check_overlap(
                     [annotations[i]], annotations[j], image_shape)
                 if not is_valid:

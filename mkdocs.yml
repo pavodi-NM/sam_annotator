@@ -33,6 +33,7 @@ nav:
   - Home: index.md
   - User Guide:
     - Keyboard Shortcuts: shortcuts.md
+    - Implementation Details: implementation.md
   - API Reference: placeholder.md
   - Contributing: placeholder.md
 

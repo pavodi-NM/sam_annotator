@@ -20,6 +20,11 @@ class VisualizationManager:
         
         self.colors = self._generate_colors(100)  # Pre-generate colors for classes
         
+        # Point colors for prompts
+        self.foreground_point_color = (0, 255, 0)  # Green for foreground points
+        self.background_point_color = (255, 0, 0)  # Red for background points
+        self.point_radius = 5
+        self.point_thickness = 2
         
         # Visualization options
         self.show_grid = False
@@ -134,6 +139,43 @@ class VisualizationManager:
             x, y = point[0]
             cv2.circle(image, (int(x), int(y)), 2, color, -1)
         return image
+    
+    def draw_input_points(self, image: np.ndarray, points: List[List[int]], 
+                         point_labels: List[int]) -> np.ndarray:
+        """Draw input points for point-based annotation.
+        
+        Args:
+            image: The image to draw on
+            points: List of [x, y] point coordinates
+            point_labels: List of corresponding point labels (0=background, 1=foreground)
+            
+        Returns:
+            Image with input points drawn
+        """
+        if not points or len(points) == 0:
+            return image
+            
+        display = image.copy()
+        
+        for idx, (point, label) in enumerate(zip(points, point_labels)):
+            x, y = point
+            
+            # Draw point with different color based on label
+            color = self.foreground_point_color if label == 1 else self.background_point_color
+            
+            # Draw outer circle
+            cv2.circle(display, (int(x), int(y)), self.point_radius, self.outline_color, self.point_thickness)
+            
+            # Draw inner circle with label color
+            cv2.circle(display, (int(x), int(y)), self.point_radius - 2, color, -1)
+            
+            # Add small number to indicate click order
+            cv2.putText(display, str(idx + 1), (int(x) + 7, int(y) + 7), 
+                        self.font, 0.5, self.outline_color, 2)
+            cv2.putText(display, str(idx + 1), (int(x) + 7, int(y) + 7), 
+                        self.font, 0.5, (255, 255, 255), 1)
+            
+        return display
        
     def set_color_scheme(self, scheme: str = 'default') -> None:
         """Change color scheme."""
@@ -362,59 +404,84 @@ class VisualizationManager:
                             current_mask: Optional[np.ndarray] = None,
                             box_start: Optional[Tuple[int, int]] = None,
                             box_end: Optional[Tuple[int, int]] = None,
+                            input_points: Optional[List[List[int]]] = None,
+                            input_point_labels: Optional[List[int]] = None,
                             show_masks: bool = True,
                             show_boxes: bool = True,
                             show_labels: bool = True,
                             show_points: bool = True) -> np.ndarray:
         
         """Create composite view with all visualizations."""
-        display = image.copy()
-        img_h, img_w = display.shape[:2]
-        
-        # Draw saved annotations
-        for annotation in annotations:
-            class_id = annotation['class_id']
-            color = self.colors[class_id % len(self.colors)]
+        try:
+            display = image.copy()
+            img_h, img_w = display.shape[:2]
             
-            # Draw mask from contour points
-            if show_masks and 'contour_points' in annotation:
-                mask = np.zeros((img_h, img_w), dtype=np.uint8)
-                cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
-                display = self._draw_mask(display, mask, color)
+            # Draw saved annotations
+            for annotation in annotations:
+                class_id = annotation['class_id']
+                color = self.colors[class_id % len(self.colors)]
+                
+                # Draw mask from contour points (simplified approach from original)
+                if show_masks and 'contour_points' in annotation:
+                    # Create mask from contour points
+                    mask = np.zeros((img_h, img_w), dtype=np.uint8)
+                    cv2.drawContours(mask, [annotation['contour_points']], -1, 255, -1)
+                    display = self._draw_mask(display, mask, color)
+                    
+                    # Calculate bounding box from contour for consistent display
+                    if show_boxes or show_labels:
+                        x, y, w, h = cv2.boundingRect(annotation['contour_points'])
+                        box = [x, y, x + w, y + h]
+                        
+                        # Draw bounding box
+                        if show_boxes:
+                            display = self._draw_box(display, box, color)
+                        
+                        # Draw class label
+                        if show_labels:
+                            label_pos = (box[0], box[1] - 5)
+                            class_name = annotation.get('class_name', f'Class {class_id}')
+                            label_text = f"{class_name} ({class_id})"
+                            display = self._draw_label(display, label_text, label_pos, color)
+                
+                # Draw contour points
+                if show_points and 'contour_points' in annotation:
+                    display = self._draw_points(display, annotation['contour_points'], color)
             
-            # Draw bounding box
-            if show_boxes and 'box' in annotation:
-                display = self._draw_box(display, annotation['box'], color)
-            
-            # Draw class label with class name and ID
-            if show_labels and 'box' in annotation:
-                label_pos = (int(annotation['box'][0]), int(annotation['box'][1]) - 5)
-                class_name = annotation.get('class_name', f'Class {class_id}')
-                label_text = f"{class_name} ({class_id})"
-                display = self._draw_label(display, label_text, label_pos, color)
-            
-            # Draw contour points
-            if show_points and 'contour_points' in annotation:
-                display = self._draw_points(display, annotation['contour_points'], color)
-        
-        # Draw current selection
-        if current_mask is not None and show_masks:
-            # Ensure the mask matches image dimensions
-            if current_mask.shape[:2] != (img_h, img_w):
-                current_mask = cv2.resize(current_mask.astype(np.uint8), (img_w, img_h), 
-                                        interpolation=cv2.INTER_NEAREST)
-            display = self._draw_mask(display, current_mask, (0, 255, 0))
-            
-        if box_start and box_end and show_boxes:
-            current_box = [
-                min(box_start[0], box_end[0]),
-                min(box_start[1], box_end[1]),
-                max(box_start[0], box_end[0]),
-                max(box_start[1], box_end[1])
-            ]
-            display = self._draw_box(display, current_box, (0, 255, 0))
-            
-        return display
+            # Draw current selection (active mask being created)
+            if current_mask is not None and show_masks:
+                # Convert to uint8 if needed
+                if current_mask.dtype == bool:
+                    current_mask = current_mask.astype(np.uint8)
+                
+                # Ensure the mask matches image dimensions
+                if current_mask.shape[:2] != (img_h, img_w):
+                    current_mask = cv2.resize(current_mask, (img_w, img_h), interpolation=cv2.INTER_NEAREST)
+                
+                display = self._draw_mask(display, current_mask, (0, 255, 0))
+                
+            # Draw current box if drawing
+            if box_start and box_end and show_boxes:
+                current_box = [
+                    min(box_start[0], box_end[0]),
+                    min(box_start[1], box_end[1]),
+                    max(box_start[0], box_end[0]),
+                    max(box_start[1], box_end[1])
+                ]
+                display = self._draw_box(display, current_box, (0, 255, 0))
+                
+            # Draw input points for point-based annotation
+            if input_points and input_point_labels and show_points:
+                display = self.draw_input_points(display, input_points, input_point_labels)
+                
+            return display
+        except Exception as e:
+            import logging
+            logging.error(f"Error in create_composite_view: {str(e)}")
+            import traceback
+            logging.error(traceback.format_exc())
+            # Return original image if there's an error
+            return image.copy()
         
     
     
@@ -455,3 +522,56 @@ class VisualizationManager:
             overlay = self._add_text_with_background(overlay, status, (w//2 - 100, 30))
             
         return overlay
+
+    def _format_contour_for_drawing(self, contour_data) -> np.ndarray:
+        """Format contour data in the format expected by cv2.drawContours.
+        
+        This method handles various input formats:
+        - List of [x, y] points
+        - List of [[x, y]] points
+        - NumPy array with different shapes
+        
+        Returns:
+            np.ndarray with shape (-1, 1, 2) suitable for cv2.drawContours
+        """
+        try:
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            # If already NumPy array
+            if isinstance(contour_data, np.ndarray):
+                # Check shape and format accordingly
+                if len(contour_data.shape) == 3 and contour_data.shape[1] == 1 and contour_data.shape[2] == 2:
+                    # Already in correct format: (-1, 1, 2)
+                    return contour_data
+                elif len(contour_data.shape) == 2 and contour_data.shape[1] == 2:
+                    # Format is (-1, 2), reshape to (-1, 1, 2)
+                    return contour_data.reshape(-1, 1, 2)
+            
+            # Convert from list formats
+            points = []
+            
+            # Handle different list formats
+            if isinstance(contour_data, list):
+                for point in contour_data:
+                    if isinstance(point, list):
+                        if len(point) == 2 and all(isinstance(p, (int, float)) for p in point):
+                            # Format [x, y]
+                            points.append([point])
+                        elif len(point) == 1 and isinstance(point[0], list) and len(point[0]) == 2:
+                            # Format [[x, y]]
+                            points.append(point)
+                        else:
+                            logger.warning(f"Unexpected point format: {point}")
+                    else:
+                        logger.warning(f"Point is not a list: {point}")
+            
+            if len(points) < 3:
+                logger.warning(f"Not enough valid points for a contour: {len(points)} points")
+                raise ValueError("Not enough valid points for contour")
+                
+            return np.array(points, dtype=np.int32)
+        except Exception as e:
+            logging.error(f"Error formatting contour: {e}")
+            # Return empty contour
+            return np.array([[[0, 0]], [[0, 1]], [[1, 1]]], dtype=np.int32)

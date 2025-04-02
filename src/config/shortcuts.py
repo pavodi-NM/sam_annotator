@@ -26,6 +26,10 @@ SHORTCUTS = {
     'export_coco': 'e',  # Press 'e' then 'c' for COCO export
     'export_yolo': 'e',  # Press 'e' then 'y' for YOLO export
     'export_pascal': 'e', # Press e then 'p' for pascal export     
+    
+    # Annotation modes
+    'toggle_mode': 'w',  # Toggle between box and point annotation modes
+    
     # Zoom controls
     'zoom_in': '=',    # Plus key
     'zoom_out': '-',   # Minus key

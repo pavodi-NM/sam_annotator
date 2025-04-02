@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd 
 import yaml
 from threading import Lock
+import time
 
 
 # Project-specific imports
@@ -93,36 +94,112 @@ class FileManager:
                          display_dimensions: Tuple[int, int]) -> List[Dict]:
         
         """Scale annotations from original to display dimensions."""
+        self.logger.info(f"Scaling annotations from {original_dimensions} to {display_dimensions}")
         orig_height, orig_width = original_dimensions
         display_height, display_width = display_dimensions
         
         scale_x = display_width / orig_width
         scale_y = display_height / orig_height
         
-        scaled_annotations = []
-        for ann in annotations:
-            contour = ann['contour_points'].copy()
-            contour = contour.astype(np.float32)
-            contour[:, :, 0] *= scale_x
-            contour[:, :, 1] *= scale_y
-            contour = contour.astype(np.int32)
-            
-            # Create mask at display size
-            mask = np.zeros((display_height, display_width), dtype=bool)
-            cv2.fillPoly(mask.astype(np.uint8), [contour], 1)
-            mask = mask.astype(bool)
-            
-            # Calculate display box
-            x, y, w, h = cv2.boundingRect(contour)
-            
-            scaled_annotations.append({
-                'class_id': ann['class_id'],
-                'mask': mask,
-                'contour_points': contour,
-                'box': [x, y, x + w, y + h],
-                'original_contour': ann['contour_points']  # Keep original contour
-            })
+        self.logger.info(f"Using scale factors: scale_x={scale_x}, scale_y={scale_y}")
         
+        scaled_annotations = []
+        for idx, ann in enumerate(annotations):
+            try:
+                # Check if contour_points exists and has valid data
+                if 'contour_points' not in ann or ann['contour_points'] is None:
+                    self.logger.warning(f"Missing contour_points in annotation {idx}")
+                    continue
+                
+                # Clone and scale contour points to display dimensions
+                contour = ann['contour_points'].copy()
+                contour = contour.astype(np.float32)
+                contour[:, :, 0] *= scale_x
+                contour[:, :, 1] *= scale_y
+                contour = contour.astype(np.int32)
+                
+                # Calculate display box directly from the scaled contour
+                x, y, w, h = cv2.boundingRect(contour)
+                display_box = [x, y, x + w, y + h]
+                
+                # Create mask at display size
+                mask = np.zeros((display_height, display_width), dtype=np.uint8)
+                cv2.fillPoly(mask, [contour], 1)
+                
+                # Verify mask is valid and contains data
+                mask_sum = np.sum(mask)
+                if mask_sum == 0:
+                    self.logger.warning(f"Generated empty mask for annotation {idx}")
+                    
+                    # Try to create a simpler mask from the bounding box as fallback
+                    if 'box' in ann:
+                        self.logger.info(f"Attempting to create mask from bounding box for annotation {idx}")
+                        box = ann['box']
+                        # Scale box to display dimensions
+                        scaled_box = [
+                            int(box[0] * scale_x),
+                            int(box[1] * scale_y),
+                            int(box[2] * scale_x), 
+                            int(box[3] * scale_y)
+                        ]
+                        # Create a mask from the box
+                        cv2.rectangle(mask, 
+                                    (scaled_box[0], scaled_box[1]), 
+                                    (scaled_box[2], scaled_box[3]), 
+                                    1, -1)  # -1 means filled rectangle
+                
+                # Convert to boolean mask
+                mask_bool = mask.astype(bool)
+                
+                # Create flattened contour list for visualization
+                contour_list = contour.tolist()
+                flattened_contour = []
+                for point in contour_list:
+                    if len(point) == 1 and isinstance(point[0], list) and len(point[0]) == 2:
+                        flattened_contour.append(point[0])
+                    else:
+                        flattened_contour.append(point)
+                
+                # Calculate area
+                area = cv2.contourArea(contour)
+                
+                # Ensure we have class_name
+                class_name = ann.get('class_name', f'Class {ann["class_id"]}')
+                
+                # Create the annotation with all required fields
+                scaled_annotation = {
+                    'id': ann.get('id', len(scaled_annotations)),
+                    'class_id': ann['class_id'],
+                    'class_name': class_name,
+                    'mask': mask_bool,
+                    'contour_points': contour,  # Original cv2 contour format
+                    'contour': flattened_contour,  # Flattened points for new format
+                    'box': ann.get('box', [0, 0, 0, 0]),  # Original box
+                    'display_box': display_box,  # Box in display coordinates
+                    'area': area,
+                    'original_contour': ann['contour_points'],  # Keep original contour
+                    'metadata': ann.get('metadata', {
+                        'annotation_mode': 'imported',
+                        'timestamp': time.time()
+                    })
+                }
+                
+                # Log info about the scaled annotation
+                self.logger.info(f"Created scaled annotation {idx+1}: " +
+                                f"class_id={scaled_annotation['class_id']}, " +
+                                f"mask_size={mask.shape}, " +
+                                f"has_data={np.sum(mask) > 0}, " +
+                                f"display_box={display_box}")
+                
+                scaled_annotations.append(scaled_annotation)
+                
+            except Exception as e:
+                self.logger.error(f"Error scaling annotation {idx}: {str(e)}")
+                import traceback
+                self.logger.error(traceback.format_exc())
+                continue
+        
+        self.logger.info(f"Scaled {len(scaled_annotations)} annotations successfully")
         return scaled_annotations
 
     def load_annotations(self, 

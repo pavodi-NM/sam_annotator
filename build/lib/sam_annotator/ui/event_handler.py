@@ -16,6 +16,9 @@ class EventHandler:
         self.points: List[List[int]] = []
         self.point_labels: List[int] = []
         
+        # Annotation mode (box or point)
+        self.mode = 'box'  # Default to box mode
+        
         # View control constants
         self.ZOOM_STEP = 0.1
         self.OPACITY_STEP = 0.1
@@ -23,43 +26,70 @@ class EventHandler:
         # Callback storage
         self.on_mask_prediction: Optional[Callable] = None
         self.on_class_selection: Optional[Callable] = None
+        self.on_point_prediction: Optional[Callable] = None
         
     def register_callbacks(self, 
                          on_mask_prediction: Callable,
-                         on_class_selection: Callable) -> None: 
+                         on_class_selection: Callable,
+                         on_point_prediction: Optional[Callable] = None) -> None: 
         """Register callback functions."""
         self.on_mask_prediction = on_mask_prediction
         self.on_class_selection = on_class_selection
+        self.on_point_prediction = on_point_prediction
 
     def handle_mouse_event(self, event: int, x: int, y: int, flags: int, param: any) -> None:
         """Handle mouse events for the main window."""
         try:
-            if event == cv2.EVENT_LBUTTONDOWN:
-                self.drawing = True
-                self.box_start = (x, y)
-                
-            elif event == cv2.EVENT_MOUSEMOVE and self.drawing:
-                self.box_end = (x, y)
-                if self.on_mask_prediction:
-                    self.on_mask_prediction(self.box_start, self.box_end, drawing=True)
-                
-            elif event == cv2.EVENT_LBUTTONUP:
-                self.drawing = False
-                self.box_end = (x, y)
-                self.points = []
-                self.point_labels = []
-                
-                # Add center point of the box
-                center_x = (self.box_start[0] + x) // 2
-                center_y = (self.box_start[1] + y) // 2
-                self.points.append([center_x, center_y])
-                self.point_labels.append(1)
-                
-                if self.on_mask_prediction:
-                    self.on_mask_prediction(self.box_start, self.box_end)
-                    
+            if self.mode == 'box':
+                self._handle_box_mode(event, x, y)
+            elif self.mode == 'point':
+                self._handle_point_mode(event, x, y)
         except Exception as e:
-            print(f"Error in mouse callback: {str(e)}")
+            self.logger.error(f"Error in mouse callback: {str(e)}")
+            
+    def _handle_box_mode(self, event: int, x: int, y: int) -> None:
+        """Handle mouse events in box annotation mode."""
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.drawing = True
+            self.box_start = (x, y)
+            
+        elif event == cv2.EVENT_MOUSEMOVE and self.drawing:
+            self.box_end = (x, y)
+            if self.on_mask_prediction:
+                self.on_mask_prediction(self.box_start, self.box_end, drawing=True)
+            
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.drawing = False
+            self.box_end = (x, y)
+            self.points = []
+            self.point_labels = []
+            
+            # Add center point of the box
+            center_x = (self.box_start[0] + x) // 2
+            center_y = (self.box_start[1] + y) // 2
+            self.points.append([center_x, center_y])
+            self.point_labels.append(1)
+            
+            if self.on_mask_prediction:
+                self.on_mask_prediction(self.box_start, self.box_end)
+                
+    def _handle_point_mode(self, event: int, x: int, y: int) -> None:
+        """Handle mouse events in point annotation mode."""
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # Left-click: Add foreground point (label=1)
+            self.points.append([x, y])
+            self.point_labels.append(1)
+            
+            if self.on_point_prediction:
+                self.on_point_prediction(self.points, self.point_labels)
+                
+        elif event == cv2.EVENT_RBUTTONDOWN:
+            # Right-click: Add background point (label=0)
+            self.points.append([x, y])
+            self.point_labels.append(0)
+            
+            if self.on_point_prediction:
+                self.on_point_prediction(self.points, self.point_labels)
 
     def handle_class_window_event(self, event: int, x: int, y: int, flags: int, param: any) -> None:
         """Handle mouse events for the class selection window."""
@@ -107,6 +137,17 @@ class EventHandler:
                 self.logger.debug(f"Special key pressed: {key}")
                 return None
             
+            # Toggle annotation mode
+            if char == SHORTCUTS['toggle_mode']:
+                if self.mode == 'box':
+                    self.mode = 'point'
+                    self.logger.info("Switched to point annotation mode")
+                    return 'switch_mode_point'
+                else:
+                    self.mode = 'box'
+                    self.logger.info("Switched to box annotation mode")
+                    return 'switch_mode_box'
+            
             # Basic navigation shortcuts
             if char == SHORTCUTS['quit']:
                 self.logger.info("Quit command received")
@@ -149,3 +190,16 @@ class EventHandler:
         self.box_end = None
         self.points = []
         self.point_labels = []
+        
+    def toggle_mode(self) -> str:
+        """Toggle between box and point annotation modes."""
+        if self.mode == 'box':
+            self.mode = 'point'
+            mode_name = 'point'
+        else:
+            self.mode = 'box'
+            mode_name = 'box'
+        
+        self.reset_state()
+        self.logger.info(f"Switched to {mode_name} annotation mode")
+        return mode_name

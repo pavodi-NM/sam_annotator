@@ -117,7 +117,10 @@ class WindowManager:
                           total_images: int,
                           box_start: Optional[Tuple[int, int]] = None,
                           box_end: Optional[Tuple[int, int]] = None,
-                          status: str = "") -> None:
+                          input_points: Optional[List[List[int]]] = None,
+                          input_point_labels: Optional[List[int]] = None,
+                          status: str = "",
+                          annotation_mode: str = "box") -> None:
         """Update main window with current state."""
         try:
             # Store current arguments for state updates
@@ -131,6 +134,8 @@ class WindowManager:
                 current_mask=self.current_mask,
                 box_start=box_start,
                 box_end=box_end,
+                input_points=input_points,
+                input_point_labels=input_point_labels,
                 show_masks=self.window_state['show_masks'],
                 show_boxes=self.window_state['show_boxes'],
                 show_labels=self.window_state['show_labels'],
@@ -146,7 +151,8 @@ class WindowManager:
                 current_image_path=current_image_path,
                 current_idx=current_idx,
                 total_images=total_images,
-                num_annotations=len(annotations)
+                num_annotations=len(annotations),
+                annotation_mode=annotation_mode
             )
             
             # Apply zoom
@@ -207,6 +213,17 @@ class WindowManager:
         """Toggle visibility options."""
         if option in self.window_state:
             self.window_state[option] = not self.window_state[option]
+            
+            # Force update if we have current data
+            if hasattr(self, '_current_update_args') and self._current_update_args:
+                if self.logger:
+                    self.logger.debug("Forcing window update after toggling view option")
+                try:
+                    temp_args = self._current_update_args.copy()
+                    self.update_main_window(**temp_args)
+                except Exception as e:
+                    if self.logger:
+                        self.logger.error(f"Error updating window after toggling view option: {e}")
     
     def set_image_scale(self, scale: float) -> None:
         """Set image scale factor."""

@@ -22,7 +22,7 @@ class StatusOverlay:
     def _add_text_with_background(self, 
                                 image: np.ndarray,
                                 text: str,
-                                position: tuple,
+                                position: tuple,  
                                 alpha: float = 0.5) -> np.ndarray:
         """Add text with semi-transparent background."""
         # Get text size
@@ -54,7 +54,8 @@ class StatusOverlay:
               current_image_path: str,
               current_idx: int,
               total_images: int,
-              num_annotations: int) -> np.ndarray:
+              num_annotations: int,
+              annotation_mode: str = "box") -> np.ndarray:
         """
         Render the status overlay on the image.
         
@@ -67,12 +68,20 @@ class StatusOverlay:
             current_idx: Current image index
             total_images: Total number of images
             num_annotations: Number of annotations on current image
+            annotation_mode: Current annotation mode ("box" or "point")
             
         Returns:
             Image with rendered overlay
         """
         height, width = image.shape[:2]
         result = image.copy()
+        
+        # Annotation mode
+        result = self._add_text_with_background(
+            result,
+            f"Mode: {annotation_mode.capitalize()}",
+            (self.padding, 30)
+        )
         
         # Status line
         if status:
