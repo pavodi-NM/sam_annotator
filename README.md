@@ -83,6 +83,8 @@ Or if installed via pip:
 sam_annotator --category_path /path/to/categories --classes_csv /path/to/classes.csv
 ```
 
+For a complete list of command-line arguments and configuration options, see the [Configuration Options](https://pavodi-nm.github.io/sam_annotator/configuration/) documentation.
+
 ### Directory Structure
 
 Create a directory structure for your dataset:
@@ -95,14 +97,16 @@ category_path/
 └── exports/    # Exported annotations in various formats
 ```
 
+For more details on how annotations are stored and loaded, see the [Loading and Saving Annotations](https://pavodi-nm.github.io/sam_annotator/loading_saving/) documentation.
+
 ### Class Definition
 
 Create a CSV file with class definitions:
 ```csv
-class_id,class_name,color
-0,background,"0,0,0"
-1,person,"255,0,0"
-2,car,"0,255,0"
+class_name
+background
+person
+car
 ...
 ```
 
@@ -155,8 +159,11 @@ For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documenta
 
 - [Getting Started](https://pavodi-nm.github.io/sam_annotator/)
 - [Keyboard Shortcuts](https://pavodi-nm.github.io/sam_annotator/shortcuts/)
+- [Loading and Saving Annotations](https://pavodi-nm.github.io/sam_annotator/loading_saving/)
+- [Annotation Formats](https://pavodi-nm.github.io/sam_annotator/annotation_formats/)
+- [Configuration Options](https://pavodi-nm.github.io/sam_annotator/configuration/)
 - [Implementation Details](https://pavodi-nm.github.io/sam_annotator/implementation/)
-- [API Reference](https://pavodi-nm.github.io/sam_annotator/placeholder/) (coming soon)
+- [API Reference](https://pavodi-nm.github.io/sam_annotator/api_reference/)
 
 ## Windows and Controls
 
@@ -189,6 +196,8 @@ Press the corresponding key to export annotations in your preferred format:
 - 'v' - Export to Pascal VOC format
 
 Exports will be saved in the `exports/` directory within your category path.
+
+For more details on supported export formats and their structure, see the [Annotation Formats](https://pavodi-nm.github.io/sam_annotator/annotation_formats/) documentation.
 
 ## Advanced Usage
 

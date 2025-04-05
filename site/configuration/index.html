@@ -12,13 +12,13 @@
         <meta name="author" content="Pavodi NDOYI MANIAMFU">
       
       
-        <link rel="canonical" href="https://pavodi-nm.github.io/sam_annotator/implementation/">
+        <link rel="canonical" href="https://pavodi-nm.github.io/sam_annotator/configuration/">
       
       
-        <link rel="prev" href="../configuration/">
+        <link rel="prev" href="../annotation_formats/">
       
       
-        <link rel="next" href="../api_reference/">
+        <link rel="next" href="../implementation/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Implementation Details - SAM Annotator</title>
+        <title>Configuration Options - SAM Annotator</title>
       
     
     
@@ -79,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#implementation-details" class="md-skip">
+        <a href="#configuration-options" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Implementation Details
+              Configuration Options
             
           </span>
         </div>
@@ -359,26 +359,6 @@
                 
   
   
-  
-    <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Configuration Options
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -394,7 +374,7 @@
           
   
   <span class="md-ellipsis">
-    Implementation Details
+    Configuration Options
   </span>
   
 
@@ -405,7 +385,7 @@
         
   
   <span class="md-ellipsis">
-    Implementation Details
+    Configuration Options
   </span>
   
 
@@ -427,44 +407,23 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#table-of-contents" class="md-nav__link">
-    Table of Contents
+  <a href="#command-line-arguments" class="md-nav__link">
+    Command Line Arguments
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#components" class="md-nav__link">
-    Components
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#box-based-annotation" class="md-nav__link">
-    Box-Based Annotation
-  </a>
-  
-    <nav class="md-nav" aria-label="Box-Based Annotation">
+    <nav class="md-nav" aria-label="Command Line Arguments">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#implementation-flow" class="md-nav__link">
-    Implementation Flow
+  <a href="#required-arguments" class="md-nav__link">
+    Required Arguments
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#key-functions" class="md-nav__link">
-    Key Functions:
+  <a href="#optional-arguments" class="md-nav__link">
+    Optional Arguments
   </a>
   
 </li>
@@ -475,23 +434,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#point-based-annotation" class="md-nav__link">
-    Point-Based Annotation
+  <a href="#class-definition-file" class="md-nav__link">
+    Class Definition File
   </a>
   
-    <nav class="md-nav" aria-label="Point-Based Annotation">
+    <nav class="md-nav" aria-label="Class Definition File">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#implementation-flow_1" class="md-nav__link">
-    Implementation Flow
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-functions_1" class="md-nav__link">
-    Key Functions:
+  <a href="#fields" class="md-nav__link">
+    Fields
   </a>
   
 </li>
@@ -502,37 +454,37 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotation-data-structure" class="md-nav__link">
-    Annotation Data Structure
+  <a href="#configuration-files-coming-soon" class="md-nav__link">
+    Configuration Files (Coming Soon)
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#mask-processing" class="md-nav__link">
-    Mask Processing
+  <a href="#environment-variables" class="md-nav__link">
+    Environment Variables
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#saving-and-loading-annotations" class="md-nav__link">
-    Saving and Loading Annotations
+  <a href="#model-configuration" class="md-nav__link">
+    Model Configuration
   </a>
   
-    <nav class="md-nav" aria-label="Saving and Loading Annotations">
+    <nav class="md-nav" aria-label="Model Configuration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#saving-process" class="md-nav__link">
-    Saving Process
+  <a href="#sam-version-1" class="md-nav__link">
+    SAM Version 1
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#loading-process" class="md-nav__link">
-    Loading Process
+  <a href="#sam-version-2" class="md-nav__link">
+    SAM Version 2
   </a>
   
 </li>
@@ -543,15 +495,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#visualization" class="md-nav__link">
-    Visualization
+  <a href="#view-configuration" class="md-nav__link">
+    View Configuration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#command-pattern-implementation" class="md-nav__link">
-    Command Pattern Implementation
+  <a href="#performance-considerations" class="md-nav__link">
+    Performance Considerations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    Best Practices
   </a>
   
 </li>
@@ -560,6 +519,26 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementation Details
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -637,44 +616,23 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#table-of-contents" class="md-nav__link">
-    Table of Contents
+  <a href="#command-line-arguments" class="md-nav__link">
+    Command Line Arguments
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#components" class="md-nav__link">
-    Components
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#box-based-annotation" class="md-nav__link">
-    Box-Based Annotation
-  </a>
-  
-    <nav class="md-nav" aria-label="Box-Based Annotation">
+    <nav class="md-nav" aria-label="Command Line Arguments">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#implementation-flow" class="md-nav__link">
-    Implementation Flow
+  <a href="#required-arguments" class="md-nav__link">
+    Required Arguments
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#key-functions" class="md-nav__link">
-    Key Functions:
+  <a href="#optional-arguments" class="md-nav__link">
+    Optional Arguments
   </a>
   
 </li>
@@ -685,23 +643,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#point-based-annotation" class="md-nav__link">
-    Point-Based Annotation
+  <a href="#class-definition-file" class="md-nav__link">
+    Class Definition File
   </a>
   
-    <nav class="md-nav" aria-label="Point-Based Annotation">
+    <nav class="md-nav" aria-label="Class Definition File">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#implementation-flow_1" class="md-nav__link">
-    Implementation Flow
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-functions_1" class="md-nav__link">
-    Key Functions:
+  <a href="#fields" class="md-nav__link">
+    Fields
   </a>
   
 </li>
@@ -712,37 +663,37 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotation-data-structure" class="md-nav__link">
-    Annotation Data Structure
+  <a href="#configuration-files-coming-soon" class="md-nav__link">
+    Configuration Files (Coming Soon)
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#mask-processing" class="md-nav__link">
-    Mask Processing
+  <a href="#environment-variables" class="md-nav__link">
+    Environment Variables
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#saving-and-loading-annotations" class="md-nav__link">
-    Saving and Loading Annotations
+  <a href="#model-configuration" class="md-nav__link">
+    Model Configuration
   </a>
   
-    <nav class="md-nav" aria-label="Saving and Loading Annotations">
+    <nav class="md-nav" aria-label="Model Configuration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#saving-process" class="md-nav__link">
-    Saving Process
+  <a href="#sam-version-1" class="md-nav__link">
+    SAM Version 1
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#loading-process" class="md-nav__link">
-    Loading Process
+  <a href="#sam-version-2" class="md-nav__link">
+    SAM Version 2
   </a>
   
 </li>
@@ -753,15 +704,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#visualization" class="md-nav__link">
-    Visualization
+  <a href="#view-configuration" class="md-nav__link">
+    View Configuration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#command-pattern-implementation" class="md-nav__link">
-    Command Pattern Implementation
+  <a href="#performance-considerations" class="md-nav__link">
+    Performance Considerations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    Best Practices
   </a>
   
 </li>
@@ -784,210 +742,260 @@
   
 
 
-<h1 id="implementation-details">Implementation Details</h1>
-<p>This document provides an in-depth explanation of how the point-based and box-based annotation features are implemented in the SAM Annotator tool.</p>
-<h2 id="table-of-contents">Table of Contents</h2>
-<ol>
-<li><a href="#overview">Overview</a></li>
-<li><a href="#components">Components</a></li>
-<li><a href="#box-based-annotation">Box-Based Annotation</a></li>
-<li><a href="#point-based-annotation">Point-Based Annotation</a></li>
-<li><a href="#annotation-data-structure">Annotation Data Structure</a></li>
-<li><a href="#mask-processing">Mask Processing</a></li>
-<li><a href="#saving-and-loading-annotations">Saving and Loading Annotations</a></li>
-<li><a href="#visualization">Visualization</a></li>
-</ol>
-<h2 id="overview">Overview</h2>
-<p>The SAM Annotator is built around the Segment Anything Model (SAM), developed by Meta AI. SAM is designed to generate segmentation masks from various prompts including points and bounding boxes. Our application provides an interface to interact with SAM for efficient image annotation.</p>
-<p>Two primary annotation methods are implemented:
-1. <strong>Box-based annotation</strong>: Drawing a bounding box around an object to generate a segmentation mask
-2. <strong>Point-based annotation</strong>: Placing foreground and background points to guide the segmentation</p>
-<h2 id="components">Components</h2>
-<p>The annotation system is composed of several interacting components:</p>
-<ul>
-<li><strong>SAMAnnotator</strong>: Main orchestrator class that coordinates the entire annotation workflow</li>
-<li><strong>EventHandler</strong>: Manages user interactions with the interface</li>
-<li><strong>WindowManager</strong>: Handles window operations and visualization</li>
-<li><strong>Predictor</strong>: Interfaces with the SAM model to generate masks</li>
-<li><strong>FileManager</strong>: Manages loading and saving of annotations</li>
-<li><strong>CommandManager</strong>: Implements undo/redo functionality for annotation operations</li>
-</ul>
-<h2 id="box-based-annotation">Box-Based Annotation</h2>
-<h3 id="implementation-flow">Implementation Flow</h3>
-<ol>
-<li><strong>User Interaction</strong>:</li>
-<li>The user draws a box by clicking and dragging</li>
-<li><code>EventHandler.handle_mouse_event()</code> captures the mouse events</li>
-<li>
-<p>Box coordinates are stored in <code>box_start</code> and <code>box_end</code> variables</p>
-</li>
-<li>
-<p><strong>Mask Prediction</strong>:</p>
-</li>
-<li>Upon mouse release, <code>_handle_mask_prediction()</code> is called</li>
-<li>The method scales the box coordinates from display size to original image size</li>
-<li>A center point is calculated from the box for additional reference</li>
-<li>
-<p>The predictor is called with both the box and center point:
-     <div class="highlight"><pre><span></span><code><span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-    <span class="n">point_coords</span><span class="o">=</span><span class="n">input_points</span><span class="p">,</span>
-    <span class="n">point_labels</span><span class="o">=</span><span class="n">input_labels</span><span class="p">,</span>
-    <span class="n">box</span><span class="o">=</span><span class="n">input_box</span><span class="p">,</span>
-    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Processing Results</strong>:</p>
-</li>
-<li>The best mask is selected based on confidence scores</li>
-<li>The mask is resized to match display dimensions</li>
-<li>The mask is set in WindowManager: <code>self.window_manager.set_mask(display_mask)</code></li>
-<li>The interface is updated to show the predicted mask</li>
-</ol>
-<h3 id="key-functions">Key Functions:</h3>
-<ul>
-<li><code>_handle_mask_prediction()</code>: Processes the box input and generates a mask</li>
-<li><code>EventHandler.handle_mouse_event()</code>: Captures mouse interactions for drawing the box</li>
-<li><code>EventHandler.reset_state()</code>: Clears the current selection state</li>
-</ul>
-<h2 id="point-based-annotation">Point-Based Annotation</h2>
-<h3 id="implementation-flow_1">Implementation Flow</h3>
-<ol>
-<li><strong>User Interaction</strong>:</li>
-<li>The mode is switched to 'point' (using 'w' key)</li>
-<li>The user clicks to place foreground points (left click) or background points (right click)</li>
-<li><code>EventHandler.handle_mouse_event()</code> captures these points and their labels</li>
-<li>
-<p>Points are stored in the <code>points</code> list and labels in the <code>point_labels</code> list</p>
-</li>
-<li>
-<p><strong>Mask Prediction</strong>:</p>
-</li>
-<li>After points are placed, pressing 'space' triggers <code>_handle_point_prediction()</code></li>
-<li>The method scales the point coordinates from display size to original image size</li>
-<li>
-<p>The predictor is called with the points and their labels:
-     <div class="highlight"><pre><span></span><code><span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-    <span class="n">point_coords</span><span class="o">=</span><span class="n">input_points</span><span class="p">,</span>
-    <span class="n">point_labels</span><span class="o">=</span><span class="n">input_labels</span><span class="p">,</span>
-    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Processing Results</strong>:</p>
-</li>
-<li>The best mask is selected based on confidence scores</li>
-<li>The mask is resized to match display dimensions</li>
-<li>The mask is set in WindowManager: <code>self.window_manager.set_mask(display_mask)</code></li>
-<li>The interface is updated to show the predicted mask with the input points</li>
-</ol>
-<h3 id="key-functions_1">Key Functions:</h3>
-<ul>
-<li><code>_handle_point_prediction()</code>: Processes the point inputs and generates a mask</li>
-<li><code>EventHandler.handle_mouse_event()</code>: Captures mouse interactions for placing points</li>
-<li><code>VisualizationManager.draw_input_points()</code>: Draws the points with appropriate colors (green for foreground, red for background)</li>
-</ul>
-<h2 id="annotation-data-structure">Annotation Data Structure</h2>
-<p>When an annotation is added using 'a' key, it is converted to a structured format:</p>
-<div class="highlight"><pre><span></span><code><span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">),</span>
-    <span class="s1">&#39;class_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_class_id</span><span class="p">,</span>
-    <span class="s1">&#39;class_name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_class_id</span><span class="p">],</span>
-    <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="n">original_box</span><span class="p">,</span>            <span class="c1"># Box in original image coordinates</span>
-    <span class="s1">&#39;display_box&#39;</span><span class="p">:</span> <span class="n">display_box</span><span class="p">,</span>     <span class="c1"># Box in display coordinates</span>
-    <span class="s1">&#39;contour_points&#39;</span><span class="p">:</span> <span class="n">contour_points</span><span class="p">,</span>  <span class="c1"># OpenCV contour format</span>
-    <span class="s1">&#39;contour&#39;</span><span class="p">:</span> <span class="n">contour_list</span><span class="p">,</span>        <span class="c1"># Flattened points for visualization</span>
-    <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="n">clean_mask</span><span class="p">,</span>             <span class="c1"># Boolean mask</span>
-    <span class="s1">&#39;area&#39;</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">contourArea</span><span class="p">(</span><span class="n">display_contour</span><span class="p">),</span>
-    <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;annotation_mode&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_handler</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
-        <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<h1 id="configuration-options">Configuration Options</h1>
+<p>SAM Annotator provides various configuration options to customize its behavior. This guide explains the available options, how to set them, and their effects on the annotation process.</p>
+<h2 id="command-line-arguments">Command Line Arguments</h2>
+<p>When running SAM Annotator, you can provide several command line arguments to configure its behavior:</p>
+<div class="highlight"><pre><span></span><code>sam_annotator<span class="w"> </span>--category_path<span class="w"> </span>&lt;path&gt;<span class="w"> </span>--classes_csv<span class="w"> </span>&lt;path&gt;<span class="w"> </span><span class="o">[</span>--sam_version<span class="w"> </span>sam1<span class="p">|</span>sam2<span class="o">]</span><span class="w"> </span><span class="o">[</span>--model_type<span class="w"> </span>&lt;type&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--checkpoint<span class="w"> </span>&lt;path&gt;<span class="o">]</span>
 </code></pre></div>
-<h2 id="mask-processing">Mask Processing</h2>
-<p>After a mask is predicted, <code>_add_annotation()</code> handles the following steps:</p>
-<ol>
-<li><strong>Contour Extraction</strong>:</li>
-<li>The boolean mask is converted to uint8</li>
-<li>Contours are extracted using <code>cv2.findContours()</code></li>
-<li>
-<p>The largest contour is selected</p>
-</li>
-<li>
-<p><strong>Bounding Box Calculation</strong>:</p>
-</li>
-<li>A bounding box is calculated from the contour using <code>cv2.boundingRect()</code></li>
-<li>
-<p>The box is scaled for both display and original image dimensions</p>
-</li>
-<li>
-<p><strong>Mask Cleaning</strong>:</p>
-</li>
-<li>A clean boolean mask is created</li>
-<li>The contour is processed into two formats:<ul>
-<li><code>contour_points</code>: Original cv2 contour format</li>
-<li><code>contour</code>: Flattened list for visualization</li>
+<h3 id="required-arguments">Required Arguments</h3>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--category_path</code></td>
+<td>Path to the root directory for your annotation project</td>
+</tr>
+<tr>
+<td><code>--classes_csv</code></td>
+<td>Path to the CSV file containing class definitions</td>
+</tr>
+</tbody>
+</table>
+<h3 id="optional-arguments">Optional Arguments</h3>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--sam_version</code></td>
+<td>SAM version to use ('sam1' or 'sam2')</td>
+<td>'sam1'</td>
+</tr>
+<tr>
+<td><code>--model_type</code></td>
+<td>Model type for the selected SAM version</td>
+<td>'vit_h' (SAM1) or 'small_v2' (SAM2)</td>
+</tr>
+<tr>
+<td><code>--checkpoint</code></td>
+<td>Path to a custom SAM model checkpoint</td>
+<td>Default weights for selected model</td>
+</tr>
+</tbody>
+</table>
+<h2 id="class-definition-file">Class Definition File</h2>
+<p>The class definition file is a CSV file that defines the annotation classes available in your project. The file should have the following format:</p>
+<div class="highlight"><pre><span></span><code>class_id,class_name,color
+0,background,&quot;0,0,0&quot;
+1,person,&quot;255,0,0&quot;
+2,car,&quot;0,255,0&quot;
+...
+</code></pre></div>
+<h3 id="fields">Fields</h3>
+<ul>
+<li><code>class_id</code>: Numeric ID for the class (starts at 0)</li>
+<li><code>class_name</code>: Display name for the class</li>
+<li><code>color</code>: RGB color values for the class visualization (comma-separated)</li>
 </ul>
-</li>
-</ol>
-<h2 id="saving-and-loading-annotations">Saving and Loading Annotations</h2>
-<blockquote>
-<p>For a user-friendly guide on how annotations are stored and loaded, see the <a href="../loading_saving/">Loading and Saving Annotations</a> documentation.</p>
-</blockquote>
-<h3 id="saving-process">Saving Process</h3>
-<p>The <code>_save_annotations()</code> method handles saving annotations to disk:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>SAM Annotator currently supports a maximum of 15 classes (including background).</p>
+</div>
+<h2 id="configuration-files-coming-soon">Configuration Files (Coming Soon)</h2>
+<p>Support for configuration files to customize additional aspects of SAM Annotator is planned for a future release. This will include:</p>
+<ul>
+<li>UI customization options</li>
+<li>Default visualization settings</li>
+<li>Performance optimization settings</li>
+<li>Custom keyboard shortcuts</li>
+</ul>
+<h2 id="environment-variables">Environment Variables</h2>
+<p>SAM Annotator supports the following environment variables for advanced configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SAM_CACHE_DIR</code></td>
+<td>Directory for caching model weights</td>
+<td><code>~/.cache/sam_annotator</code></td>
+</tr>
+<tr>
+<td><code>SAM_LOG_LEVEL</code></td>
+<td>Logging verbosity level</td>
+<td><code>INFO</code></td>
+</tr>
+<tr>
+<td><code>SAM_DEVICE</code></td>
+<td>Device to run inference on</td>
+<td><code>cuda</code> if available, otherwise <code>cpu</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="model-configuration">Model Configuration</h2>
+<h3 id="sam-version-1">SAM Version 1</h3>
+<p>When using SAM version 1 (<code>--sam_version sam1</code>), the following model types are available:</p>
+<table>
+<thead>
+<tr>
+<th>Model Type</th>
+<th>Description</th>
+<th>Size</th>
+<th>Memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vit_h</code></td>
+<td>ViT-Huge backbone</td>
+<td>~2.4GB</td>
+<td>~16GB VRAM</td>
+</tr>
+<tr>
+<td><code>vit_l</code></td>
+<td>ViT-Large backbone</td>
+<td>~1.2GB</td>
+<td>~8GB VRAM</td>
+</tr>
+<tr>
+<td><code>vit_b</code></td>
+<td>ViT-Base backbone</td>
+<td>~375MB</td>
+<td>~4GB VRAM</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sam-version-2">SAM Version 2</h3>
+<p>When using SAM version 2 (<code>--sam_version sam2</code>), the following model types are available:</p>
+<table>
+<thead>
+<tr>
+<th>Model Type</th>
+<th>Description</th>
+<th>Size</th>
+<th>Memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tiny</code></td>
+<td>Super-lightweight model</td>
+<td>~36MB</td>
+<td>~2GB VRAM</td>
+</tr>
+<tr>
+<td><code>small</code></td>
+<td>Small model</td>
+<td>~47MB</td>
+<td>~3GB VRAM</td>
+</tr>
+<tr>
+<td><code>base</code></td>
+<td>Base model</td>
+<td>~93MB</td>
+<td>~5GB VRAM</td>
+</tr>
+<tr>
+<td><code>large</code></td>
+<td>Large model</td>
+<td>~312MB</td>
+<td>~8GB VRAM</td>
+</tr>
+<tr>
+<td><code>tiny_v2</code></td>
+<td>Enhanced tiny model</td>
+<td>~46MB</td>
+<td>~3GB VRAM</td>
+</tr>
+<tr>
+<td><code>small_v2</code></td>
+<td>Enhanced small model</td>
+<td>~86MB</td>
+<td>~4GB VRAM</td>
+</tr>
+<tr>
+<td><code>base_v2</code></td>
+<td>Enhanced base model</td>
+<td>~166MB</td>
+<td>~6GB VRAM</td>
+</tr>
+<tr>
+<td><code>large_v2</code></td>
+<td>Enhanced large model</td>
+<td>~637MB</td>
+<td>~10GB VRAM</td>
+</tr>
+</tbody>
+</table>
+<h2 id="view-configuration">View Configuration</h2>
+<p>SAM Annotator allows you to customize the visualization of annotations during the annotation process:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Keyboard Shortcut</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mask Visibility</td>
+<td><code>M</code></td>
+<td>Show/hide segmentation masks</td>
+</tr>
+<tr>
+<td>Box Visibility</td>
+<td><code>B</code></td>
+<td>Show/hide bounding boxes</td>
+</tr>
+<tr>
+<td>Label Visibility</td>
+<td><code>L</code></td>
+<td>Show/hide class labels</td>
+</tr>
+<tr>
+<td>Point Visibility</td>
+<td><code>T</code></td>
+<td>Show/hide prompt points</td>
+</tr>
+<tr>
+<td>Mask Opacity</td>
+<td><code>[</code> / <code>]</code></td>
+<td>Decrease/increase mask opacity</td>
+</tr>
+</tbody>
+</table>
+<h2 id="performance-considerations">Performance Considerations</h2>
+<p>When configuring SAM Annotator, consider the following performance trade-offs:</p>
 <ol>
-<li>Annotations are validated to ensure they have required fields</li>
-<li>Original image dimensions are obtained</li>
-<li>The FileManager's <code>save_annotations()</code> method is called with:</li>
-<li>The annotations list</li>
-<li>Image name</li>
-<li>Original and display dimensions</li>
-<li>Class names</li>
+<li><strong>Model Selection</strong>: Larger models (vit_h, large_v2) provide better segmentation quality but require more VRAM and are slower.</li>
+<li><strong>Image Size</strong>: Larger images will consume more memory and slow down processing.</li>
+<li><strong>Batch Processing</strong>: SAM Annotator processes images one at a time, so CPU/GPU utilization may not be optimal for all configurations.</li>
 </ol>
-<p>The FileManager then:
-1. Scales contour points back to original image space
-2. Writes normalized coordinates to a text file
-3. Creates visualization images of the masks
-4. Saves metadata about the annotations</p>
-<h3 id="loading-process">Loading Process</h3>
-<p>When loading an image with existing annotations via <code>_load_image()</code>:</p>
+<h2 id="best-practices">Best Practices</h2>
 <ol>
-<li>The image is loaded and processed to display dimensions</li>
-<li>The FileManager's <code>load_annotations()</code> method is called to fetch existing annotations</li>
-<li>Annotations are scaled to match the display dimensions</li>
-<li>The interface is updated to show the annotations</li>
+<li><strong>Start Small</strong>: Begin with a smaller model if you're unsure about your hardware capabilities.</li>
+<li><strong>Test Performance</strong>: Try different configurations on a small subset of your data before starting large annotation projects.</li>
+<li><strong>Consider Image Resolution</strong>: Downscaling very high-resolution images before annotation can improve performance.</li>
+<li><strong>Monitor Memory Usage</strong>: Watch for out-of-memory errors, especially when using larger models.</li>
+<li><strong>Save Frequently</strong>: Remember to save annotations frequently regardless of your configuration. </li>
 </ol>
-<h2 id="visualization">Visualization</h2>
-<p>The <code>VisualizationManager</code> handles all rendering of annotations:</p>
-<ol>
-<li><strong>create_composite_view()</strong>: Main method that creates a visualization with:</li>
-<li>Original image as background</li>
-<li>Colored mask overlays with adjustable opacity</li>
-<li>Bounding boxes</li>
-<li>Class labels</li>
-<li>
-<p>Interactive points (when in point mode)</p>
-</li>
-<li>
-<p><strong>Drawing Functions</strong>:</p>
-</li>
-<li><code>_draw_mask()</code>: Renders a mask with the class color and proper opacity</li>
-<li><code>_draw_box()</code>: Draws a bounding box with the class color</li>
-<li><code>_draw_label()</code>: Adds a class label with a semi-transparent background</li>
-<li><code>draw_input_points()</code>: Visualizes input points with numbers and colors indicating foreground/background</li>
-</ol>
-<h2 id="command-pattern-implementation">Command Pattern Implementation</h2>
-<p>Annotation operations use a command pattern for undo/redo functionality:</p>
-<ol>
-<li><strong>Add Annotation</strong>: <code>AddAnnotationCommand</code> adds a new annotation to the list</li>
-<li><strong>Delete Annotation</strong>: <code>DeleteAnnotationCommand</code> removes an annotation</li>
-<li><strong>Modify Annotation</strong>: <code>ModifyAnnotationCommand</code> changes properties of an annotation</li>
-</ol>
-<p>Each command handles both the execution and its reverse operation, allowing for robust undo/redo capabilities. </p>
 
 
 

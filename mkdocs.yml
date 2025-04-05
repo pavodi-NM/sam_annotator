@@ -33,8 +33,11 @@ nav:
   - Home: index.md
   - User Guide:
     - Keyboard Shortcuts: shortcuts.md
+    - Loading and Saving Annotations: loading_saving.md
+    - Annotation Formats: annotation_formats.md
+    - Configuration Options: configuration.md
     - Implementation Details: implementation.md
-  - API Reference: placeholder.md
+  - API Reference: api_reference.md
   - Contributing: placeholder.md
 
 extra:

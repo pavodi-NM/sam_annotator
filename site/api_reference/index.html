@@ -1,0 +1,1662 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A general-purpose image annotation tool based on Segment Anything Model (SAM)">
+      
+      
+        <meta name="author" content="Pavodi NDOYI MANIAMFU">
+      
+      
+        <link rel="canonical" href="https://pavodi-nm.github.io/sam_annotator/api_reference/">
+      
+      
+        <link rel="prev" href="../implementation/">
+      
+      
+        <link rel="next" href="../placeholder/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.4.0">
+    
+    
+      
+        <title>API Reference - SAM Annotator</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.9f615399.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.649f08f9.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sam-annotator-api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SAM Annotator" class="md-header__button md-logo" aria-label="SAM Annotator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SAM Annotator
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/pavodi-nm/sam_annotator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    pavodi-nm/sam_annotator
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SAM Annotator" class="md-nav__button md-logo" aria-label="SAM Annotator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    SAM Annotator
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/pavodi-nm/sam_annotator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    pavodi-nm/sam_annotator
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Keyboard Shortcuts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../loading_saving/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Loading and Saving Annotations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotation_formats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Annotation Formats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration Options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementation Details
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-scripts" class="md-nav__link">
+    Example Scripts
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Scripts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-example" class="md-nav__link">
+    Simple Example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensive-example" class="md-nav__link">
+    Comprehensive Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-components" class="md-nav__link">
+    Core Components
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-samannotator" class="md-nav__link">
+    1. SAMAnnotator
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-predictor" class="md-nav__link">
+    2. Predictor
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-command-manager" class="md-nav__link">
+    3. Command Manager
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-sessionmanager" class="md-nav__link">
+    4. SessionManager
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-filemanager" class="md-nav__link">
+    5. FileManager
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    Basic Usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initializing-the-annotator" class="md-nav__link">
+    Initializing the Annotator
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loading-an-image" class="md-nav__link">
+    Loading an Image
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-a-mask-with-a-box-prompt" class="md-nav__link">
+    Generating a Mask with a Box Prompt
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-a-mask-with-point-prompts" class="md-nav__link">
+    Generating a Mask with Point Prompts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-an-annotation" class="md-nav__link">
+    Adding an Annotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-annotations" class="md-nav__link">
+    Saving Annotations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exporting-annotations" class="md-nav__link">
+    Exporting Annotations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    Advanced Usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-processing" class="md-nav__link">
+    Batch Processing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    API Reference
+  </a>
+  
+    <nav class="md-nav" aria-label="API Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#samannotator-class" class="md-nav__link">
+    SAMAnnotator Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predictor-classes" class="md-nav__link">
+    Predictor Classes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotationmanager-class" class="md-nav__link">
+    AnnotationManager Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filemanager-class" class="md-nav__link">
+    FileManager Class
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-custom-extensions" class="md-nav__link">
+    Building Custom Extensions
+  </a>
+  
+    <nav class="md-nav" aria-label="Building Custom Extensions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-predictor" class="md-nav__link">
+    Creating a Custom Predictor
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-exporter" class="md-nav__link">
+    Creating a Custom Exporter
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    Error Handling
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    Performance Considerations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coming-soon" class="md-nav__link">
+    Coming Soon
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../placeholder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-scripts" class="md-nav__link">
+    Example Scripts
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Scripts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-example" class="md-nav__link">
+    Simple Example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensive-example" class="md-nav__link">
+    Comprehensive Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-components" class="md-nav__link">
+    Core Components
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-samannotator" class="md-nav__link">
+    1. SAMAnnotator
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-predictor" class="md-nav__link">
+    2. Predictor
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-command-manager" class="md-nav__link">
+    3. Command Manager
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-sessionmanager" class="md-nav__link">
+    4. SessionManager
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-filemanager" class="md-nav__link">
+    5. FileManager
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    Basic Usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initializing-the-annotator" class="md-nav__link">
+    Initializing the Annotator
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loading-an-image" class="md-nav__link">
+    Loading an Image
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-a-mask-with-a-box-prompt" class="md-nav__link">
+    Generating a Mask with a Box Prompt
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-a-mask-with-point-prompts" class="md-nav__link">
+    Generating a Mask with Point Prompts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-an-annotation" class="md-nav__link">
+    Adding an Annotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-annotations" class="md-nav__link">
+    Saving Annotations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exporting-annotations" class="md-nav__link">
+    Exporting Annotations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    Advanced Usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-processing" class="md-nav__link">
+    Batch Processing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    API Reference
+  </a>
+  
+    <nav class="md-nav" aria-label="API Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#samannotator-class" class="md-nav__link">
+    SAMAnnotator Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predictor-classes" class="md-nav__link">
+    Predictor Classes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotationmanager-class" class="md-nav__link">
+    AnnotationManager Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filemanager-class" class="md-nav__link">
+    FileManager Class
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-custom-extensions" class="md-nav__link">
+    Building Custom Extensions
+  </a>
+  
+    <nav class="md-nav" aria-label="Building Custom Extensions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-predictor" class="md-nav__link">
+    Creating a Custom Predictor
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-exporter" class="md-nav__link">
+    Creating a Custom Exporter
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    Error Handling
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    Performance Considerations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coming-soon" class="md-nav__link">
+    Coming Soon
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="sam-annotator-api-reference">SAM Annotator API Reference</h1>
+<p>This document provides a comprehensive guide to the SAM Annotator API, enabling programmatic access to the annotation functionality.</p>
+<h2 id="overview">Overview</h2>
+<p>The SAM Annotator API allows you to:
+- Load and initialize the SAM model
+- Process images programmatically
+- Generate masks using box or point prompts
+- Manage annotations 
+- Export annotations to various formats</p>
+<h2 id="installation">Installation</h2>
+<p>To use the SAM Annotator API, install the package:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>sam-annotator
+</code></pre></div>
+<h2 id="example-scripts">Example Scripts</h2>
+<p>The SAM Annotator package includes example scripts to help you get started quickly:</p>
+<h3 id="simple-example">Simple Example</h3>
+<p><code>simple_api_example.py</code> demonstrates the core functionality in a minimal script:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMAnnotator</span>
+
+<span class="c1"># Initialize the annotator</span>
+<span class="n">annotator</span> <span class="o">=</span> <span class="n">SAMAnnotator</span><span class="p">(</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Will use default</span>
+    <span class="n">category_path</span><span class="o">=</span><span class="s2">&quot;work_dir&quot;</span><span class="p">,</span>
+    <span class="n">classes_csv</span><span class="o">=</span><span class="s2">&quot;classes.csv&quot;</span><span class="p">,</span>
+    <span class="n">sam_version</span><span class="o">=</span><span class="s2">&quot;sam1&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Load an image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set the image in the predictor</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">predictor</span>
+<span class="n">predictor</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Generate a mask using a box prompt</span>
+<span class="n">box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># [x1, y1, x2, y2]</span>
+<span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">point_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">point_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">=</span><span class="n">box</span><span class="p">,</span>
+    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Get the best mask</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
+
+<span class="c1"># Add the mask as an annotation</span>
+<span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="n">mask</span><span class="p">,</span>
+    <span class="s1">&#39;class_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s1">&#39;area&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">),</span>
+    <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;annotation_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;box&#39;</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="n">annotation_id</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">annotation_manager</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+
+<span class="c1"># Set the current image path (needed for saving)</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">current_image_path</span> <span class="o">=</span> <span class="s2">&quot;path/to/image.jpg&quot;</span>
+
+<span class="c1"># Save the annotation</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">save_annotations</span><span class="p">(</span>
+    <span class="n">annotations</span><span class="o">=</span><span class="p">[</span><span class="n">annotation</span><span class="p">],</span>
+    <span class="n">image_name</span><span class="o">=</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">,</span>
+    <span class="n">original_dimensions</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">display_dimensions</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">class_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;class1&quot;</span><span class="p">],</span>
+    <span class="n">save_visualization</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="comprehensive-example">Comprehensive Example</h3>
+<p><code>api_example.py</code> is a full-featured example that demonstrates:
+- Command-line argument handling
+- Multiple annotation methods (box and point prompts)
+- Working with multiple classes
+- Exporting to all supported formats
+- Creating visualizations</p>
+<p>These example scripts can be found in the <code>examples/</code> directory of the SAM Annotator repository.</p>
+<h2 id="core-components">Core Components</h2>
+<p>The API is organized into several core components:</p>
+<h3 id="1-samannotator">1. SAMAnnotator</h3>
+<p>The main class that coordinates the annotation functionality.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMAnnotator</span>
+
+<span class="c1"># Initialize the annotator</span>
+<span class="n">annotator</span> <span class="o">=</span> <span class="n">SAMAnnotator</span><span class="p">(</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;path/to/checkpoint.pth&quot;</span><span class="p">,</span>
+    <span class="n">category_path</span><span class="o">=</span><span class="s2">&quot;path/to/category&quot;</span><span class="p">,</span>
+    <span class="n">classes_csv</span><span class="o">=</span><span class="s2">&quot;path/to/classes.csv&quot;</span><span class="p">,</span>
+    <span class="n">sam_version</span><span class="o">=</span><span class="s2">&quot;sam1&quot;</span><span class="p">,</span>  <span class="c1"># or &quot;sam2&quot;</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;vit_h&quot;</span>   <span class="c1"># depends on the SAM version</span>
+<span class="p">)</span>
+
+<span class="c1"># Access to components</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">predictor</span>  <span class="c1"># The SAM model predictor</span>
+<span class="n">annotations</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">annotations</span>  <span class="c1"># List of annotations</span>
+<span class="n">file_manager</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span>  <span class="c1"># Handles file operations</span>
+<span class="n">session_manager</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">session_manager</span>  <span class="c1"># Manages the current session</span>
+<span class="n">command_manager</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">command_manager</span>  <span class="c1"># Manages undo/redo and commands</span>
+</code></pre></div>
+<h3 id="2-predictor">2. Predictor</h3>
+<p>The interface to the SAM model for generating masks.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Get the predictor from the annotator</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">predictor</span>
+
+<span class="c1"># Load an image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Important: Always set the image in the predictor before prediction</span>
+<span class="n">predictor</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Predict with a box</span>
+<span class="n">box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># [x1, y1, x2, y2]</span>
+<span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">logits</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">point_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">point_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">=</span><span class="n">box</span><span class="p">,</span>
+    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Predict with points</span>
+<span class="n">point_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">]])</span>
+<span class="n">point_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># 1 for foreground, 0 for background</span>
+<span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">logits</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">point_coords</span><span class="o">=</span><span class="n">point_coords</span><span class="p">,</span>
+    <span class="n">point_labels</span><span class="o">=</span><span class="n">point_labels</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="3-command-manager">3. Command Manager</h3>
+<p>Manages operations on annotations, including adding, deleting, and modifying annotations.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Import the necessary command</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core.command_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">AddAnnotationCommand</span>
+
+<span class="c1"># Create an annotation structure</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>  <span class="c1"># Get the best mask</span>
+
+<span class="c1"># Need to create contours from the mask</span>
+<span class="n">mask_uint8</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>
+<span class="n">contours</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">mask_uint8</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_EXTERNAL</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_TC89_KCOS</span><span class="p">)</span>
+<span class="n">contour</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">contourArea</span><span class="p">)</span>  <span class="c1"># Get largest contour</span>
+
+<span class="c1"># Create flattened contour list</span>
+<span class="n">contour_list</span> <span class="o">=</span> <span class="n">contour</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contour_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contour_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">contour_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">contour_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">contour_list</span><span class="p">]</span>
+
+<span class="c1"># Create annotation dictionary</span>
+<span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">annotator</span><span class="o">.</span><span class="n">annotations</span><span class="p">),</span>  <span class="c1"># Next available ID</span>
+    <span class="s1">&#39;class_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;class_name&#39;</span><span class="p">:</span> <span class="n">annotator</span><span class="o">.</span><span class="n">class_names</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span>
+    <span class="s1">&#39;contour&#39;</span><span class="p">:</span> <span class="n">contour_list</span><span class="p">,</span>  <span class="c1"># Flattened points</span>
+    <span class="s1">&#39;contour_points&#39;</span><span class="p">:</span> <span class="n">contour</span><span class="p">,</span>  <span class="c1"># Original OpenCV contour</span>
+    <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="n">mask</span><span class="p">,</span>  <span class="c1"># Boolean numpy array</span>
+    <span class="s1">&#39;display_box&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span>
+    <span class="s1">&#39;area&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">),</span>
+    <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;annotation_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;box&#39;</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># Add annotation using the command manager</span>
+<span class="n">command</span> <span class="o">=</span> <span class="n">AddAnnotationCommand</span><span class="p">(</span><span class="n">annotator</span><span class="o">.</span><span class="n">annotations</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">annotator</span><span class="o">.</span><span class="n">window_manager</span><span class="p">)</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">command_manager</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+<span class="c1"># Note: There&#39;s no direct &quot;annotation_manager&quot; - annotations are stored directly in annotator.annotations</span>
+</code></pre></div>
+<h3 id="4-sessionmanager">4. SessionManager</h3>
+<p>Manages the current annotation session, including storing current image path and navigating between images.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Get the session manager from the annotator</span>
+<span class="n">session_manager</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">session_manager</span>
+
+<span class="c1"># Set the current image path (required for saving)</span>
+<span class="n">session_manager</span><span class="o">.</span><span class="n">current_image_path</span> <span class="o">=</span> <span class="s2">&quot;path/to/image.jpg&quot;</span>
+
+<span class="c1"># Save annotations for the current image</span>
+<span class="n">session_manager</span><span class="o">.</span><span class="n">save_annotations</span><span class="p">()</span>
+
+<span class="c1"># Navigate to next/previous image</span>
+<span class="n">next_path</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">next_image</span><span class="p">()</span>
+<span class="n">prev_path</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">previous_image</span><span class="p">()</span>
+
+<span class="c1"># Check if navigation is possible</span>
+<span class="n">can_go_next</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">can_move_next</span><span class="p">()</span>
+<span class="n">can_go_prev</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">can_move_prev</span><span class="p">()</span>
+
+<span class="c1"># Get the current image path</span>
+<span class="n">current_path</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">get_current_image_path</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="5-filemanager">5. FileManager</h3>
+<p>Handles file operations like loading/saving annotations and exporting to different formats.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Get the file manager from the annotator</span>
+<span class="n">file_manager</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span>
+
+<span class="c1"># Export annotations to different formats</span>
+<span class="n">coco_path</span> <span class="o">=</span> <span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;coco&quot;</span><span class="p">,</span> <span class="n">class_names</span><span class="p">)</span>
+<span class="n">yolo_path</span> <span class="o">=</span> <span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;yolo&quot;</span><span class="p">,</span> <span class="n">class_names</span><span class="p">)</span>
+<span class="n">pascal_path</span> <span class="o">=</span> <span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;pascal&quot;</span><span class="p">,</span> <span class="n">class_names</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="basic-usage">Basic Usage</h2>
+<h3 id="initializing-the-annotator">Initializing the Annotator</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMAnnotator</span>
+
+<span class="c1"># Initialize the annotator</span>
+<span class="n">annotator</span> <span class="o">=</span> <span class="n">SAMAnnotator</span><span class="p">(</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;path/to/checkpoint.pth&quot;</span><span class="p">,</span>
+    <span class="n">category_path</span><span class="o">=</span><span class="s2">&quot;path/to/category&quot;</span><span class="p">,</span>
+    <span class="n">classes_csv</span><span class="o">=</span><span class="s2">&quot;path/to/classes.csv&quot;</span><span class="p">,</span>
+    <span class="n">sam_version</span><span class="o">=</span><span class="s2">&quot;sam1&quot;</span><span class="p">,</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;vit_h&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="loading-an-image">Loading an Image</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set the current image path in session manager</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">current_image_path</span> <span class="o">=</span> <span class="s2">&quot;path/to/image.jpg&quot;</span>
+
+<span class="c1"># Or load directly for prediction</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="generating-a-mask-with-a-box-prompt">Generating a Mask with a Box Prompt</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define a bounding box [x1, y1, x2, y2]</span>
+<span class="n">box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="c1"># Set the image in the predictor</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">predictor</span>
+<span class="n">predictor</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Generate masks</span>
+<span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">point_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">point_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">=</span><span class="n">box</span><span class="p">,</span>
+    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Get the best mask</span>
+<span class="n">mask_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="n">mask_idx</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="generating-a-mask-with-point-prompts">Generating a Mask with Point Prompts</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define foreground points [[x1, y1], [x2, y2], ...]</span>
+<span class="n">foreground_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">150</span><span class="p">,</span> <span class="mi">150</span><span class="p">],</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">]])</span>
+<span class="n">foreground_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># 1 for foreground</span>
+
+<span class="c1"># Define background points (optional)</span>
+<span class="n">background_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span> <span class="p">[</span><span class="mi">350</span><span class="p">,</span> <span class="mi">350</span><span class="p">]])</span>
+<span class="n">background_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># 0 for background</span>
+
+<span class="c1"># Combine points and labels</span>
+<span class="n">point_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">foreground_points</span><span class="p">,</span> <span class="n">background_points</span><span class="p">))</span>
+<span class="n">point_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">foreground_labels</span><span class="p">,</span> <span class="n">background_labels</span><span class="p">))</span>
+
+<span class="c1"># Generate masks</span>
+<span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">point_coords</span><span class="o">=</span><span class="n">point_coords</span><span class="p">,</span>
+    <span class="n">point_labels</span><span class="o">=</span><span class="n">point_labels</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Get the best mask</span>
+<span class="n">mask_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="n">mask_idx</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="adding-an-annotation">Adding an Annotation</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core.command_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">AddAnnotationCommand</span>
+
+<span class="c1"># Create contours from the mask</span>
+<span class="n">mask_uint8</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>
+<span class="n">contours</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">mask_uint8</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_EXTERNAL</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_TC89_KCOS</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">contours</span><span class="p">:</span>
+    <span class="n">contour</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">contourArea</span><span class="p">)</span>
+
+    <span class="c1"># Create flattened contour list</span>
+    <span class="n">contour_list</span> <span class="o">=</span> <span class="n">contour</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contour_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contour_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">contour_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">contour_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">contour_list</span><span class="p">]</span>
+
+    <span class="c1"># Create an annotation structure</span>
+    <span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">annotator</span><span class="o">.</span><span class="n">annotations</span><span class="p">),</span>
+        <span class="s1">&#39;class_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s1">&#39;class_name&#39;</span><span class="p">:</span> <span class="n">annotator</span><span class="o">.</span><span class="n">class_names</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span>
+        <span class="s1">&#39;contour&#39;</span><span class="p">:</span> <span class="n">contour_list</span><span class="p">,</span>
+        <span class="s1">&#39;contour_points&#39;</span><span class="p">:</span> <span class="n">contour</span><span class="p">,</span>
+        <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="n">mask</span><span class="p">,</span>
+        <span class="s1">&#39;display_box&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span>
+        <span class="s1">&#39;area&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">),</span>
+        <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;annotation_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;box&#39;</span><span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Add the annotation using the command manager</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="n">AddAnnotationCommand</span><span class="p">(</span><span class="n">annotator</span><span class="o">.</span><span class="n">annotations</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">annotator</span><span class="o">.</span><span class="n">window_manager</span><span class="p">)</span>
+    <span class="n">annotator</span><span class="o">.</span><span class="n">command_manager</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="saving-annotations">Saving Annotations</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Make sure the session manager knows about the current image</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">current_image_path</span> <span class="o">=</span> <span class="s2">&quot;path/to/image.jpg&quot;</span>
+
+<span class="c1"># Save annotations</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">save_annotations</span><span class="p">(</span>
+    <span class="n">annotations</span><span class="o">=</span><span class="p">[</span><span class="n">annotation</span><span class="p">],</span>
+    <span class="n">image_name</span><span class="o">=</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">,</span>
+    <span class="n">original_dimensions</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">display_dimensions</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">class_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;class1&quot;</span><span class="p">],</span>
+    <span class="n">save_visualization</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="exporting-annotations">Exporting Annotations</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Export all annotations to COCO format</span>
+<span class="n">coco_path</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;coco&quot;</span><span class="p">,</span> <span class="n">annotator</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+
+<span class="c1"># Export to YOLO format</span>
+<span class="n">yolo_path</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;yolo&quot;</span><span class="p">,</span> <span class="n">annotator</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+
+<span class="c1"># Export to Pascal VOC format</span>
+<span class="n">pascal_path</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;pascal&quot;</span><span class="p">,</span> <span class="n">annotator</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="advanced-usage">Advanced Usage</h2>
+<h3 id="batch-processing">Batch Processing</h3>
+<p>Process multiple images in a folder:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMAnnotator</span>
+
+<span class="c1"># Initialize</span>
+<span class="n">annotator</span> <span class="o">=</span> <span class="n">SAMAnnotator</span><span class="p">(</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;path/to/checkpoint.pth&quot;</span><span class="p">,</span>
+    <span class="n">category_path</span><span class="o">=</span><span class="s2">&quot;path/to/category&quot;</span><span class="p">,</span>
+    <span class="n">classes_csv</span><span class="o">=</span><span class="s2">&quot;path/to/classes.csv&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Get all images in the images folder</span>
+<span class="n">image_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">annotator</span><span class="o">.</span><span class="n">category_path</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">)</span>
+<span class="n">image_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">image_folder</span><span class="p">)</span> 
+               <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="s1">&#39;.png&#39;</span><span class="p">))]</span>
+
+<span class="c1"># Get the predictor</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">predictor</span>
+
+<span class="k">for</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="n">image_files</span><span class="p">:</span>
+    <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">image_folder</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
+
+    <span class="c1"># Load image</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+    <span class="n">predictor</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="c1"># Set the current image path in the session manager</span>
+    <span class="n">annotator</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">current_image_path</span> <span class="o">=</span> <span class="n">image_path</span>
+
+    <span class="c1"># Example: generate a mask for center of the image</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">center_x</span><span class="p">,</span> <span class="n">center_y</span> <span class="o">=</span> <span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">height</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">box_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span>
+
+    <span class="n">box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="n">center_x</span> <span class="o">-</span> <span class="n">box_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> 
+        <span class="n">center_y</span> <span class="o">-</span> <span class="n">box_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">center_x</span> <span class="o">+</span> <span class="n">box_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> 
+        <span class="n">center_y</span> <span class="o">+</span> <span class="n">box_size</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="c1"># Generate mask</span>
+    <span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+        <span class="n">point_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">point_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">box</span><span class="o">=</span><span class="n">box</span><span class="p">,</span>
+        <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get the best mask</span>
+    <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">mask_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="n">mask_idx</span><span class="p">]</span>
+
+        <span class="c1"># Add annotation</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="n">mask</span><span class="p">,</span>
+            <span class="s1">&#39;class_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s1">&#39;area&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">),</span>
+            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;annotation_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;box&#39;</span><span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="n">annotator</span><span class="o">.</span><span class="n">annotation_manager</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+
+    <span class="c1"># Save annotations</span>
+    <span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">save_annotations</span><span class="p">(</span>
+        <span class="n">annotations</span><span class="o">=</span><span class="p">[</span><span class="n">annotation</span><span class="p">],</span>
+        <span class="n">image_name</span><span class="o">=</span><span class="n">image_file</span><span class="p">,</span>
+        <span class="n">original_dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span>
+        <span class="n">display_dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span>
+        <span class="n">class_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;class1&quot;</span><span class="p">],</span>
+        <span class="n">save_visualization</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+<span class="c1"># Export all annotations</span>
+<span class="n">annotator</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">handle_export</span><span class="p">(</span><span class="s2">&quot;coco&quot;</span><span class="p">,</span> <span class="n">annotator</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="api-reference">API Reference</h2>
+<h3 id="samannotator-class">SAMAnnotator Class</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SAMAnnotator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main class coordinating SAM-based image annotation.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">category_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">classes_csv</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">sam_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;sam1&#39;</span><span class="p">,</span>
+                <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SAM annotator with all components.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Internal method, not meant for direct API use:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal method to load image and its existing annotations.&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="predictor-classes">Predictor Classes</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BaseSAMPredictor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for SAM predictors.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the predictor with a model checkpoint.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+               <span class="n">point_coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">point_labels</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">box</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">multimask_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate masks from the provided prompts.&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="annotationmanager-class">AnnotationManager Class</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">AnnotationManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages annotations and their operations.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a new annotation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete an annotation by ID.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Select an annotation by ID.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify properties of an annotation.&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="filemanager-class">FileManager Class</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">FileManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages file operations for annotations.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load annotations for the specified image.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                        <span class="n">annotations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+                        <span class="n">image_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">original_dimensions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                        <span class="n">display_dimensions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                        <span class="n">class_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save annotations for the specified image.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">handle_export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">class_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export annotations to the specified format.&quot;&quot;&quot;</span>
+</code></pre></div>
+<h2 id="building-custom-extensions">Building Custom Extensions</h2>
+<h3 id="creating-a-custom-predictor">Creating a Custom Predictor</h3>
+<p>You can extend the predictor functionality by creating a custom predictor:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSAMPredictor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomPredictor</span><span class="p">(</span><span class="n">BaseSAMPredictor</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize with custom logic.&quot;&quot;&quot;</span>
+        <span class="c1"># Your custom initialization code</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+               <span class="n">point_coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">point_labels</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">box</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">multimask_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Custom prediction implementation.&quot;&quot;&quot;</span>
+        <span class="c1"># Your custom prediction logic</span>
+
+        <span class="c1"># Return format: (masks, scores, logits)</span>
+        <span class="k">return</span> <span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">logits</span>
+</code></pre></div>
+<h3 id="creating-a-custom-exporter">Creating a Custom Exporter</h3>
+<p>You can create a custom exporter for a new annotation format:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sam_annotator.data.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseExporter</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomExporter</span><span class="p">(</span><span class="n">BaseExporter</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">base_path</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export annotations to a custom format.&quot;&quot;&quot;</span>
+        <span class="c1"># Get annotation data</span>
+        <span class="n">annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_all_annotations</span><span class="p">()</span>
+
+        <span class="c1"># Process annotations into custom format</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># Save to file</span>
+        <span class="n">export_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_export_path</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="c1"># Write your custom format</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">export_path</span>
+</code></pre></div>
+<h2 id="error-handling">Error Handling</h2>
+<p>The API includes robust error handling for various common issues:</p>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Initialize the annotator</span>
+    <span class="n">annotator</span> <span class="o">=</span> <span class="n">SAMAnnotator</span><span class="p">(</span>
+        <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;path/to/checkpoint.pth&quot;</span><span class="p">,</span>
+        <span class="n">category_path</span><span class="o">=</span><span class="s2">&quot;path/to/category&quot;</span><span class="p">,</span>
+        <span class="n">classes_csv</span><span class="o">=</span><span class="s2">&quot;path/to/classes.csv&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Try to load an image that might not exist</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">load_image</span><span class="p">(</span><span class="s2">&quot;non_existent_image.jpg&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading image: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Try to generate a mask with invalid inputs</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">predict_mask_from_box</span><span class="p">([</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid box coordinates: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;General error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="performance-considerations">Performance Considerations</h2>
+<p>When using the API programmatically, consider the following for optimal performance:</p>
+<ol>
+<li><strong>Batch Processing</strong>: Process images in batches rather than one by one to amortize model loading time</li>
+<li><strong>Memory Management</strong>: Clear unused objects to free memory, especially after processing large images</li>
+<li><strong>GPU Utilization</strong>: SAM benefits significantly from GPU acceleration; ensure CUDA is properly configured</li>
+<li><strong>Image Sizing</strong>: Consider resizing large images before processing to improve performance</li>
+<li><strong>Error Handling</strong>: Implement robust error handling to avoid interruptions during batch processing</li>
+</ol>
+<h2 id="coming-soon">Coming Soon</h2>
+<p>The following API features are planned for future releases:</p>
+<ol>
+<li><strong>Automatic Annotation</strong>: Functionality for automatic annotation suggestions</li>
+<li><strong>Annotation Refinement</strong>: Methods to refine existing annotations</li>
+<li><strong>Multi-Model Support</strong>: Integration with additional segmentation models</li>
+<li><strong>Async Processing</strong>: Asynchronous processing for improved performance</li>
+<li><strong>Web API</strong>: REST API for remote access to annotation functionality </li>
+</ol>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/pavodi-nm/sam_annotator" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.expand", "navigation.indexes", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.4e0fa4ba.min.js"></script>
+      
+    
+  </body>
+</html>

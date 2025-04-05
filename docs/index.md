@@ -25,9 +25,10 @@ sam_annotator /path/to/images
 ## User Guide
 
 - [**Keyboard Shortcuts**](shortcuts.md): Complete guide to keyboard shortcuts for efficient annotation
-- [Loading and Saving Annotations](placeholder.md) (coming soon)
-- [Annotation Formats](placeholder.md) (coming soon)
-- [Configuration Options](placeholder.md) (coming soon)
+- [**Loading and Saving Annotations**](loading_saving.md): How annotations are stored and loaded
+- [**Annotation Formats**](annotation_formats.md): Details on supported export formats
+- [**Configuration Options**](configuration.md): Command-line arguments and configuration settings
+- [**Implementation Details**](implementation.md): Technical details about how SAM Annotator works
 
 ## Advanced Features
 
@@ -39,6 +40,7 @@ sam_annotator /path/to/images
 
 SAM Annotator can also be used programmatically through its Python API:
 
+- [**API Reference Guide**](api_reference.md): Comprehensive documentation of the SAM Annotator API
 - [Core Components](placeholder.md) (coming soon)
 - [Annotations Management](placeholder.md) (coming soon)
 - [Model Integration](placeholder.md) (coming soon)

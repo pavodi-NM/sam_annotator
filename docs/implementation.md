@@ -144,6 +144,8 @@ After a mask is predicted, `_add_annotation()` handles the following steps:
 
 ## Saving and Loading Annotations
 
+> For a user-friendly guide on how annotations are stored and loaded, see the [Loading and Saving Annotations](loading_saving.md) documentation.
+
 ### Saving Process
 
 The `_save_annotations()` method handles saving annotations to disk:
