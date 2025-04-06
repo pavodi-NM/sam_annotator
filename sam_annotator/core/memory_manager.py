@@ -92,7 +92,10 @@ class GPUMemoryManager:
         """Get detailed GPU memory information."""
         try:
             if self.device.type != 'cuda':
-                return {'used': 0, 'total': 0, 'utilization': 0}
+                # For CPU, return a dictionary with default values AND the formatted key
+                memory_info = {'used': 0, 'total': 0, 'utilization': 0}
+                memory_info['formatted'] = "Running on CPU - memory stats not available"
+                return memory_info
                 
             if self.nvml_initialized:
                 # Use NVIDIA SMI if available
@@ -120,7 +123,24 @@ class GPUMemoryManager:
                 
         except Exception as e:
             self.logger.error(f"Error getting GPU memory info: {e}")
+            # Even in case of exception, ensure formatted key is present
             return {'used': 0, 'total': 0, 'utilization': 0, 'formatted': 'Error getting memory info'}
+
+    def safe_get_memory_info(self) -> Dict[str, float]:
+        """
+        Safely get memory information with guaranteed 'formatted' key.
+        This method is designed to never fail and always return a valid dictionary.
+        """
+        try:
+            memory_info = self.get_gpu_memory_info()
+            # Double-check that formatted key exists
+            if 'formatted' not in memory_info:
+                memory_info['formatted'] = "Memory stats not available"
+            return memory_info
+        except Exception as e:
+            # Return a safe default in case of any error
+            self.logger.error(f"Error in safe_get_memory_info: {e}")
+            return {'used': 0, 'total': 0, 'utilization': 0, 'formatted': 'Memory stats not available (error)'}
 
     def check_memory_status(self) -> Tuple[bool, Optional[str]]:
         """Check memory status and return warning if needed."""

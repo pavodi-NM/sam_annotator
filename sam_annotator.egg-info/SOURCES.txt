@@ -13,8 +13,13 @@ setup.py
 .github/workflows/publish.yml
 .github/workflows/tests.yml
 docs/README.md
+docs/annotation_formats.md
+docs/api_reference.md
+docs/configuration.md
 docs/implementation.md
 docs/index.md
+docs/loading_saving.md
+docs/memory_management.md
 docs/placeholder.md
 docs/shortcuts.md
 sam_annotator/__init__.py

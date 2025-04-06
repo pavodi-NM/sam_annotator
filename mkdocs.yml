@@ -36,6 +36,7 @@ nav:
     - Loading and Saving Annotations: loading_saving.md
     - Annotation Formats: annotation_formats.md
     - Configuration Options: configuration.md
+    - Memory Management: memory_management.md
     - Implementation Details: implementation.md
   - API Reference: api_reference.md
   - Contributing: placeholder.md

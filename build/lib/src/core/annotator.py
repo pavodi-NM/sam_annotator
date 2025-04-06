@@ -191,7 +191,8 @@ class SAMAnnotator:
                           box_start: Tuple[int, int],
                           box_end: Tuple[int, int],
                           drawing: bool = False) -> None:
-        """Handle mask prediction from box input."""
+        """Handle mask prediction from box inputs."""
+        # If still drawing box, just update display
         if drawing:
             self.window_manager.update_main_window(
                 image=self.image,
@@ -208,9 +209,10 @@ class SAMAnnotator:
             return
         
         try:
-            # Get memory info before prediction
-            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            # Get memory info before prediction - use safe method
+            memory_info = self.predictor.memory_manager.safe_get_memory_info()
             self.logger.info(f"Memory before prediction: {memory_info['formatted']}")
+            
             # Get display and original dimensions
             display_height, display_width = self.image.shape[:2]
             original_image = cv2.imread(self.current_image_path)
@@ -279,8 +281,8 @@ class SAMAnnotator:
                     annotation_mode=self.event_handler.mode
                 )
                 
-            # Get memory info after prediction
-            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            # Get memory info after prediction - use safe method
+            memory_info = self.predictor.memory_manager.safe_get_memory_info()
             self.logger.info(f"Memory after prediction: {memory_info['formatted']}")
                 
         except Exception as e:
@@ -934,8 +936,8 @@ class SAMAnnotator:
             return
             
         try:
-            # Get memory info before prediction
-            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            # Get memory info before prediction - use safe method
+            memory_info = self.predictor.memory_manager.safe_get_memory_info()
             self.logger.info(f"Memory before prediction: {memory_info['formatted']}")
             
             # Get display and original dimensions
@@ -991,8 +993,8 @@ class SAMAnnotator:
                     annotation_mode=self.event_handler.mode
                 )
                 
-            # Get memory info after prediction
-            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            # Get memory info after prediction - use safe method
+            memory_info = self.predictor.memory_manager.safe_get_memory_info()
             self.logger.info(f"Memory after prediction: {memory_info['formatted']}")
                 
         except Exception as e:

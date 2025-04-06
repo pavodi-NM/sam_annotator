@@ -117,18 +117,20 @@ car
 1. Left-click and drag to draw a bounding box around an object
 2. Release to generate a segmentation mask
 3. Press 'a' to add the annotation with the current class
-4. Press 'Esc' to clear the current selection
+4. Press 's' to save all the annotations
+5. Press 'c' to clear all the annotations 
 
 ### Point-Based Annotation
 
-1. Press 'p' to switch to point mode
+1. Press 'w' to switch to point mode
 2. Left-click to add foreground points (green)
-3. Right-click to add background points (red)
-4. Press 'Space' to generate a segmentation mask
-5. Press 'a' to add the annotation with the current class
-6. Press 'Esc' to clear the current selection
+3. Press 'a' to add the annotation with the current class
+4. Press 's' to save all the annotations
+5. Press 'c' to clear all the annotations 
 
 ## Keyboard Shortcuts
+
+SAM Annotator provides a comprehensive set of keyboard shortcuts to improve your workflow efficiency:
 
 | Key           | Action                          |
 |---------------|----------------------------------|
@@ -136,24 +138,19 @@ car
 | s             | Save annotations                 |
 | n             | Next image                       |
 | p             | Previous image                   |
-| b             | Switch to box annotation mode    |
-| p             | Switch to point annotation mode  |
-| 0-9           | Select class (first 10 classes)  |
-| c             | Clear current selection          |
-| Esc           | Cancel current operation         |
+| w             | Toggle between annotation modes  |
+| x             | Clear current selection          |
+| c             | Clear all annotations            |
 | z             | Undo last action                 |
-| Shift+Z       | Redo last undone action          |
-| d             | Delete selected annotation       |
-| Space         | Generate mask (in point mode)    |
-| t             | Toggle mask visibility           |
-| r             | Toggle box visibility            |
+| y             | Redo last undone action          |
+| m             | Toggle mask visibility           |
+| b             | Toggle box visibility            |
 | l             | Toggle label visibility          |
-| e             | Export to COCO format            |
-| y             | Export to YOLO format            |
-| v             | Export to Pascal VOC format      |
+| r             | Toggle annotation review panel   |
+| e             | Enter export mode                |
 | q             | Quit application                 |
 
-For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documentation](https://pavodi-nm.github.io/sam_annotator/shortcuts/).
+For a complete list of keyboard shortcuts and detailed usage examples, see the [Keyboard Shortcuts Documentation](https://pavodi-nm.github.io/sam_annotator/shortcuts/).
 
 ## Documentation
 
@@ -162,6 +159,7 @@ For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documenta
 - [Loading and Saving Annotations](https://pavodi-nm.github.io/sam_annotator/loading_saving/)
 - [Annotation Formats](https://pavodi-nm.github.io/sam_annotator/annotation_formats/)
 - [Configuration Options](https://pavodi-nm.github.io/sam_annotator/configuration/)
+- [Memory Management](https://pavodi-nm.github.io/sam_annotator/memory_management/)
 - [Implementation Details](https://pavodi-nm.github.io/sam_annotator/implementation/)
 - [API Reference](https://pavodi-nm.github.io/sam_annotator/api_reference/)
 
