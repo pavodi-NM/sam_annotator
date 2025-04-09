@@ -121,3 +121,6 @@ src/utils/scaling.py
 src/utils/visualization - Copy.py
 src/utils/visualization.py
 tests/test_memory_manager.py
+tests/test_mode_toggle.py
+tests/test_mode_toggle_handler.py
+tests/test_mode_toggle_visual.py
