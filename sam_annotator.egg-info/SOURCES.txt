@@ -11,6 +11,7 @@ setup.cfg
 setup.py
 .github/workflows/docs.yml
 .github/workflows/publish.yml
+.github/workflows/publish_improved.yml
 .github/workflows/tests.yml
 docs/README.md
 docs/annotation_formats.md

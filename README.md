@@ -5,7 +5,7 @@ A powerful tool for semi-automatic image annotation based on Meta AI's Segment A
 > **⚠️ DEVELOPMENT VERSION NOTICE**
 >
 > This package is currently in early development (alpha stage). The API and functionality may change 
-> significantly between versions. Use in production environments is not recommended at this time.
+> significantly between versions. Please, contact the author for any feedback or suggestions.
 
 ## Features
 
