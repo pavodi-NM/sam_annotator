@@ -23,7 +23,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="SAM Annotator Team",
-    author_email="pacodi.mani@fingervision.biz",
+    author_email="pavodi.mani@fingervision.biz",
     url="https://github.com/pavodi-nm/sam_annotator",
     packages=find_packages(exclude=['test*', 'documentation', 'examples']),
     include_package_data=True,

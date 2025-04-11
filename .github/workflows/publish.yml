@@ -128,23 +128,36 @@ jobs:
         echo "Waiting for package to propagate to PyPI/TestPyPI..."
         sleep 30
         
-        # Get package name from pyproject.toml and convert underscores to hyphens for PyPI
-        PACKAGE_NAME=$(grep -oP 'name\s*=\s*"\K[^"]+' pyproject.toml || echo "sam_annotator")
-        # Convert underscores to hyphens for PyPI URL
-        PACKAGE_NAME_PYPI=${PACKAGE_NAME//_/-}
-        echo "Package name: $PACKAGE_NAME"
-        echo "Package name for PyPI/TestPyPI: $PACKAGE_NAME_PYPI"
+        # Use a simpler Python approach to extract just the package name
+        PACKAGE_NAME=$(python3 -c "import re; print(re.search(r'name\\s*=\\s*\"([^\"]+)\"', open('pyproject.toml').read()).group(1).strip())")
+        
+        # As a fallback if the above fails
+        if [ -z "$PACKAGE_NAME" ]; then
+          PACKAGE_NAME="sam_annotator"
+        fi
+        
+        # Convert underscores to hyphens for PyPI URL and ensure no extra characters
+        PACKAGE_NAME_PYPI=$(echo "${PACKAGE_NAME//_/-}" | tr -d '[:space:]')
+        
+        # Add extra checking to ensure we have a clean name
+        echo "Raw package name: '$PACKAGE_NAME'"
+        echo "Clean package name for PyPI: '$PACKAGE_NAME_PYPI'"
         
         # Determine which repository to check
         if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.repository }}" == "testpypi" ]] || [[ "${{ github.ref }}" == *-rc* ]] || [[ "${{ github.ref }}" == *-dev* ]] || [[ "${{ github.ref }}" == *-alpha* ]] || [[ "${{ github.ref }}" == *-beta* ]] || [[ "${{ github.ref }}" == *-test* ]]; then
-          REPO_URL="https://test.pypi.org/pypi/$PACKAGE_NAME_PYPI/json"
-          echo "Checking TestPyPI for package..."
+          REPO_URL="https://test.pypi.org/pypi/${PACKAGE_NAME_PYPI}/json"
+          REPO_TYPE="TestPyPI"
         else
-          REPO_URL="https://pypi.org/pypi/$PACKAGE_NAME_PYPI/json"
-          echo "Checking PyPI for package..."
+          REPO_URL="https://pypi.org/pypi/${PACKAGE_NAME_PYPI}/json"
+          REPO_TYPE="PyPI"
         fi
         
-        echo "Checking URL: $REPO_URL"
+        echo "Checking ${REPO_TYPE} for package..."
+        echo "Verification URL: '$REPO_URL'"
+        
+        # Try a direct curl first with verbose output to check the URL syntax
+        echo "Testing URL with verbose curl..."
+        curl -v "$REPO_URL" || true
         
         # Make multiple attempts to verify the package exists
         MAX_ATTEMPTS=5
@@ -162,4 +175,5 @@ jobs:
         
         echo "⚠️ Could not verify package upload after $MAX_ATTEMPTS attempts."
         echo "The package might still be propagating through the repository."
-        exit 0  # Don't fail the build, just warn
+        # Don't fail the build, just warn
+        exit 0
