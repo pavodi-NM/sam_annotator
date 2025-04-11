@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sam_annotator"
-version = "0.2.0.dev2"
+version = "0.1.0a2"
 description = "A general-purpose image annotation tool based on Segment Anything Model (SAM)"
 readme = "README.md"
 requires-python = ">=3.8"

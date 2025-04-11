@@ -103,7 +103,7 @@ jobs:
         fi
     
     - name: Publish to TestPyPI
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repository == 'testpypi' || contains(github.ref, '-rc') || contains(github.ref, '-dev') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-test')
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repository == 'testpypi' || contains(github.ref, '-rc') || contains(github.ref, '-dev') || contains(github.ref, '.dev') || contains(github.ref, '-alpha') || contains(github.ref, '.alpha') || contains(github.ref, '-beta') || contains(github.ref, '.beta') || contains(github.ref, '-test')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
@@ -113,7 +113,7 @@ jobs:
         verbose: true
     
     - name: Publish to PyPI
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repository == 'pypi' || (!contains(github.ref, '-rc') && !contains(github.ref, '-dev') && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '-test') && startsWith(github.ref, 'refs/tags/v'))
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repository == 'pypi' || (!contains(github.ref, '-rc') && !contains(github.ref, '.rc') && !contains(github.ref, '-dev') && !contains(github.ref, '.dev') && !contains(github.ref, '-alpha') && !contains(github.ref, '.alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '.beta') && !contains(github.ref, '-test') && startsWith(github.ref, 'refs/tags/v'))
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
@@ -144,7 +144,7 @@ jobs:
         echo "Clean package name for PyPI: '$PACKAGE_NAME_PYPI'"
         
         # Determine which repository to check
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.repository }}" == "testpypi" ]] || [[ "${{ github.ref }}" == *-rc* ]] || [[ "${{ github.ref }}" == *-dev* ]] || [[ "${{ github.ref }}" == *-alpha* ]] || [[ "${{ github.ref }}" == *-beta* ]] || [[ "${{ github.ref }}" == *-test* ]]; then
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.repository }}" == "testpypi" ]] || [[ "${{ github.ref }}" == *-rc* ]] || [[ "${{ github.ref }}" == *-dev* ]] || [[ "${{ github.ref }}" == *.dev* ]] || [[ "${{ github.ref }}" == *-alpha* ]] || [[ "${{ github.ref }}" == *.alpha* ]] || [[ "${{ github.ref }}" == *-beta* ]] || [[ "${{ github.ref }}" == *.beta* ]] || [[ "${{ github.ref }}" == *-test* ]]; then
           REPO_URL="https://test.pypi.org/pypi/${PACKAGE_NAME_PYPI}/json"
           REPO_TYPE="TestPyPI"
         else
@@ -177,3 +177,16 @@ jobs:
         echo "The package might still be propagating through the repository."
         # Don't fail the build, just warn
         exit 0
+
+    # Create GitHub Release if triggered by a tag push
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v') && success()
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: contains(github.ref, '-rc') || contains(github.ref, '-dev') || contains(github.ref, '.dev') || contains(github.ref, '-alpha') || contains(github.ref, '.alpha') || contains(github.ref, '-beta') || contains(github.ref, '.beta') || contains(github.ref, '-test')
+        files: |
+          dist/*.tar.gz
+          dist/*.whl
+        generate_release_notes: true

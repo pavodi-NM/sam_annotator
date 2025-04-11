@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 import time
 from src.core import SAMAnnotator 
+from sam_annotator import __version__
 
 def create_sample_csv(output_path, logger):
     """Create a sample CSV file with the correct format."""
@@ -227,6 +228,11 @@ def setup_debug_logging():
 
 def main():
     parser = argparse.ArgumentParser(description='SAM Multi-Object Annotation Tool')
+
+    # Version information
+    parser.add_argument('--version', action='version', 
+                       version=f'%(prog)s {__version__}',
+                       help='Show program version and exit')
     
     # Model configuration
     parser.add_argument('--sam_version', 
