@@ -1,26 +1,19 @@
-# Ignore weights directory (large model files)
+*.pth
+*.pt 
+test_data/s1
 weights/
-**/weights/
 
-# Ignore output directory (generated content)
-output/
-**/output/
 
-# Python cache files
+# Python bytecode
 __pycache__/
-*.py[cod]
-*.class
-*.so
+*.pyc
+*.pyo
+*.pyd
+.Python
 
 # Environment files
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+.env.* 
 
 # OS files
-.DS_Store
 Thumbs.db

@@ -5,7 +5,7 @@ A powerful tool for semi-automatic image annotation based on Meta AI's Segment A
 > **⚠️ DEVELOPMENT VERSION NOTICE**
 >
 > This package is currently in early development (alpha stage). The API and functionality may change 
-> significantly between versions. Please, contact the author for any feedback or suggestions.
+> significantly between versions. Use in production environments is not recommended at this time.
 
 ## Features
 
@@ -37,10 +37,10 @@ For the latest development version:
 
 ```bash
 # For the latest development version from TestPyPI (specify exact version)
-pip install -i https://test.pypi.org/simple/ sam-annotator==0.1.0.dev19
+pip install -i https://test.pypi.org/simple/ sam-annotator==0.1.0.dev8
 
 # If you experience dependency issues, add PyPI as an extra index
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.1.0.dev19
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.1.0.dev8
 ```
 
 ### Setup from source
@@ -61,7 +61,7 @@ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/
    pip install -e .
    ```
 
-3. Download SAM model weights (optional):
+3. Download SAM model weights:
    - For SAM version 1: [Download SAM ViT-H Model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth)
    - For SAM version 2: [Download SAM 2 Model](https://dl.fbaipublicfiles.com/segment_anything/sam2_b.pth)
 
@@ -70,67 +70,61 @@ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/
 ### Running the Application
 
 ```bash
-python main.py --sam_version [sam1|sam2] --model_type [vit_h|vit_l|vit_b|tiny|small|base|large|tiny_v2|small_v2|base_v2|large_v2] --category_path <path_to_category> --classes_csv <path_to_classes_csv> [--checkpoint <path_to_model_checkpoint>]
+python main.py --category <path_to_category> --classes <path_to_classes_csv> [--checkpoint <path_to_model_checkpoint>] [--sam_version sam1|sam2]
 ```
 
 Example:
 ```bash
-python main.py --sam_version sam1 --model_type vit_h --category_path test_data/s2 --classes_csv class_map_sam.csv
+python main.py --category test_data/s2 --classes class_map_sam.csv
 ```
 
 Or if installed via pip:
 ```
-sam_annotator --sam_version sam1 --model_type vit_h --category_path /path/to/categories --classes_csv /path/to/classes.csv
+sam_annotator --category_path /path/to/categories --classes_csv /path/to/classes.csv
 ```
-
-For a complete list of command-line arguments and configuration options, see the [Configuration Options](https://pavodi-nm.github.io/sam_annotator/configuration/) documentation.
 
 ### Directory Structure
 
 Create a directory structure for your dataset:
 ```
 category_path/
-├── images/     # Place your images here (mandatory)
-├── labels/     # Annotation files will be saved here (optional)
-├── masks/      # Visualization of masks will be saved here (optional)
-├── metadata/   # Metadata about annotations (optional)
-└── exports/    # Exported annotations in various formats (optional)
+├── images/     # Place your images here
+├── labels/     # Annotation files will be saved here
+├── masks/      # Visualization of masks will be saved here
+├── metadata/   # Metadata about annotations
+└── exports/    # Exported annotations in various formats
 ```
-
-For more details on how annotations are stored and loaded, see the [Loading and Saving Annotations](https://pavodi-nm.github.io/sam_annotator/loading_saving/) documentation.
 
 ### Class Definition
 
 Create a CSV file with class definitions:
 ```csv
-class_name
-background
-person
-car
+class_id,class_name,color
+0,background,"0,0,0"
+1,person,"255,0,0"
+2,car,"0,255,0"
 ...
 ```
 
 ## Annotation Methods
 
-### Box-Based Annotation (default)
+### Box-Based Annotation
 
 1. Left-click and drag to draw a bounding box around an object
 2. Release to generate a segmentation mask
 3. Press 'a' to add the annotation with the current class
-4. Press 's' to save all the annotations
-5. Press 'c' to clear all the annotations 
+4. Press 'Esc' to clear the current selection
 
 ### Point-Based Annotation
 
-1. Press 'w' to switch to point mode
+1. Press 'p' to switch to point mode
 2. Left-click to add foreground points (green)
-3. Press 'a' to add the annotation with the current class
-4. Press 's' to save all the annotations
-5. Press 'c' to clear all the annotations 
+3. Right-click to add background points (red)
+4. Press 'Space' to generate a segmentation mask
+5. Press 'a' to add the annotation with the current class
+6. Press 'Esc' to clear the current selection
 
 ## Keyboard Shortcuts
-
-SAM Annotator provides a comprehensive set of keyboard shortcuts to improve your workflow efficiency:
 
 | Key           | Action                          |
 |---------------|----------------------------------|
@@ -138,30 +132,31 @@ SAM Annotator provides a comprehensive set of keyboard shortcuts to improve your
 | s             | Save annotations                 |
 | n             | Next image                       |
 | p             | Previous image                   |
-| w             | Toggle between annotation modes  |
-| x             | Clear current selection          |
-| c             | Clear all annotations            |
+| b             | Switch to box annotation mode    |
+| p             | Switch to point annotation mode  |
+| 0-9           | Select class (first 10 classes)  |
+| c             | Clear current selection          |
+| Esc           | Cancel current operation         |
 | z             | Undo last action                 |
-| y             | Redo last undone action          |
-| m             | Toggle mask visibility           |
-| b             | Toggle box visibility            |
+| Shift+Z       | Redo last undone action          |
+| d             | Delete selected annotation       |
+| Space         | Generate mask (in point mode)    |
+| t             | Toggle mask visibility           |
+| r             | Toggle box visibility            |
 | l             | Toggle label visibility          |
-| r             | Toggle annotation review panel   |
-| e             | Enter export mode                |
+| e             | Export to COCO format            |
+| y             | Export to YOLO format            |
+| v             | Export to Pascal VOC format      |
 | q             | Quit application                 |
 
-For a complete list of keyboard shortcuts and detailed usage examples, see the [Keyboard Shortcuts Documentation](https://pavodi-nm.github.io/sam_annotator/shortcuts/)
+For a complete list of keyboard shortcuts, see the [Keyboard Shortcuts Documentation](https://pavodi-nm.github.io/sam_annotator/shortcuts/).
 
 ## Documentation
 
 - [Getting Started](https://pavodi-nm.github.io/sam_annotator/)
 - [Keyboard Shortcuts](https://pavodi-nm.github.io/sam_annotator/shortcuts/)
-- [Loading and Saving Annotations](https://pavodi-nm.github.io/sam_annotator/loading_saving/)
-- [Annotation Formats](https://pavodi-nm.github.io/sam_annotator/annotation_formats/)
-- [Configuration Options](https://pavodi-nm.github.io/sam_annotator/configuration/)
-- [Memory Management](https://pavodi-nm.github.io/sam_annotator/memory_management)
 - [Implementation Details](https://pavodi-nm.github.io/sam_annotator/implementation/)
-- [API Reference](https://pavodi-nm.github.io/sam_annotator/api_reference/)
+- [API Reference](https://pavodi-nm.github.io/sam_annotator/placeholder/) (coming soon)
 
 ## Windows and Controls
 
@@ -195,8 +190,6 @@ Press the corresponding key to export annotations in your preferred format:
 
 Exports will be saved in the `exports/` directory within your category path.
 
-For more details on supported export formats and their structure, see the [Annotation Formats](https://pavodi-nm.github.io/sam_annotator/annotation_formats/) documentation.
-
 ## Advanced Usage
 
 For more details on the implementation and advanced usage, see the [Implementation Details](https://pavodi-nm.github.io/sam_annotator/implementation/) documentation.
@@ -207,12 +200,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/pavodi-nm/sam_annotator/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 When using this software, please cite or acknowledge:
 
 ```
-SAM Annotator by Pavodi NDOYI MANIAMFU (FingerVision and University of Tsukuba)
+SAM Annotator by Pavodi NDOYI MANIAMFU
 https://github.com/pavodi-nm/sam_annotator
 ```
 
