@@ -16,6 +16,11 @@ on:
           - testpypi
           - pypi
 
+# Add permissions block at the workflow level for OIDC token
+permissions:
+  id-token: write # Required for PyPI trusted publishing
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -52,6 +57,10 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    # Add permissions to the job level as well for maximum compatibility
+    permissions:
+      id-token: write # Required for PyPI trusted publishing 
+      contents: read
     steps:
     - uses: actions/checkout@v3
       with:
