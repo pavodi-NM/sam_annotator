@@ -258,7 +258,7 @@ class SAMAnnotator:
         try:
             # Get memory info before prediction
             memory_info = self.predictor.memory_manager.get_gpu_memory_info()
-            self.logger.info(f"Memory before prediction: {memory_info['formatted']}")
+            self.logger.info(f"Memory before prediction: {memory_info.get('formatted', 'Memory stats not available')}")
             # Get display and original dimensions
             display_height, display_width = self.image.shape[:2]
             original_image = cv2.imread(self.current_image_path)
@@ -326,7 +326,7 @@ class SAMAnnotator:
                 
             # Get memory info after prediction
             memory_info = self.predictor.memory_manager.get_gpu_memory_info()
-            self.logger.info(f"Memory after prediction: {memory_info['formatted']}")
+            self.logger.info(f"Memory after prediction: {memory_info.get('formatted', 'Memory stats not available')}")
                 
         except Exception as e:
             self.logger.error(f"Error in mask prediction: {str(e)}")

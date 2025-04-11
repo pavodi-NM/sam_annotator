@@ -116,7 +116,16 @@ def validate_csv(csv_path, logger):
                 output_path = csv_path
                 
             if create_sample_csv(output_path, logger):
-                return output_path == csv_path  # Return True only if we used the original path
+                # Update the return logic - if we successfully created a sample CSV,
+                # return True and update args.classes_csv to the new file path
+                if output_path == csv_path:
+                    # If we overwrote the original file, return True
+                    return True
+                else:
+                    # If we created a new file, inform the user and return the path
+                    logger.info(f"Successfully created sample CSV at: {output_path}")
+                    logger.info(f"Please use this file with --classes_csv {output_path}")
+                    return output_path  # Return the path so main() can update args.classes_csv
         
         return False
         
@@ -179,7 +188,16 @@ def validate_csv(csv_path, logger):
                 output_path = csv_path
                 
             if create_sample_csv(output_path, logger):
-                return output_path == csv_path  # Return True only if we used the original path
+                # Update the return logic - if we successfully created a sample CSV,
+                # return True and update args.classes_csv to the new file path
+                if output_path == csv_path:
+                    # If we overwrote the original file, return True
+                    return True
+                else:
+                    # If we created a new file, inform the user and return the path
+                    logger.info(f"Successfully created sample CSV at: {output_path}")
+                    logger.info(f"Please use this file with --classes_csv {output_path}")
+                    return output_path  # Return the path so main() can update args.classes_csv
         
         return False
 
@@ -301,10 +319,18 @@ def main():
         # Validate CSV file unless skipped
         if not args.skip_validation:
             logger.info(f"Validating CSV file: {args.classes_csv}")
-            is_valid = validate_csv(args.classes_csv, logger)
-            if not is_valid:
-                logger.error("CSV validation failed. Fix the issues or use --skip_validation to bypass (not recommended).")
+            validation_result = validate_csv(args.classes_csv, logger)
+            
+            # Handle different return values from validate_csv
+            if isinstance(validation_result, str):
+                # If a string is returned, it's the path to a newly created CSV file
+                logger.info(f"Using newly created CSV file: {validation_result}")
+                args.classes_csv = validation_result
+            elif not validation_result:
+                # If False is returned, validation failed and no alternative was created
+                logger.error("CSV validation failed. Fix issues or use --skip_validation to bypass which is not recommended.")
                 sys.exit(1)
+            # If True, validation passed, continue with original file
         
         # Log start of SAMAnnotator initialization
         logger.info("Initializing SAMAnnotator...")

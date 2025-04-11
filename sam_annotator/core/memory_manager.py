@@ -126,22 +126,6 @@ class GPUMemoryManager:
             # Even in case of exception, ensure formatted key is present
             return {'used': 0, 'total': 0, 'utilization': 0, 'formatted': 'Error getting memory info'}
 
-    def safe_get_memory_info(self) -> Dict[str, float]:
-        """
-        Safely get memory information with guaranteed 'formatted' key.
-        This method is designed to never fail and always return a valid dictionary.
-        """
-        try:
-            memory_info = self.get_gpu_memory_info()
-            # Double-check that formatted key exists
-            if 'formatted' not in memory_info:
-                memory_info['formatted'] = "Memory stats not available"
-            return memory_info
-        except Exception as e:
-            # Return a safe default in case of any error
-            self.logger.error(f"Error in safe_get_memory_info: {e}")
-            return {'used': 0, 'total': 0, 'utilization': 0, 'formatted': 'Memory stats not available (error)'}
-
     def check_memory_status(self) -> Tuple[bool, Optional[str]]:
         """Check memory status and return warning if needed."""
         if self.device.type != 'cuda':
@@ -203,6 +187,22 @@ class GPUMemoryManager:
         
         return (gpu_memory['utilization'] < self.warning_threshold and 
                 system_memory['utilization'] < 0.90)  # 90% RAM threshold
+
+    def safe_get_memory_info(self) -> Dict[str, float]:
+        """
+        Safely get memory information with guaranteed 'formatted' key.
+        This method is designed to never fail and always return a valid dictionary.
+        """
+        try:
+            memory_info = self.get_gpu_memory_info()
+            # Double-check that formatted key exists
+            if 'formatted' not in memory_info:
+                memory_info['formatted'] = "Memory stats not available"
+            return memory_info
+        except Exception as e:
+            # Return a safe default in case of any error
+            self.logger.error(f"Error in safe_get_memory_info: {e}")
+            return {'used': 0, 'total': 0, 'utilization': 0, 'formatted': 'Memory stats not available (error)'}
 
     def __del__(self):
         """Cleanup NVIDIA SMI"""

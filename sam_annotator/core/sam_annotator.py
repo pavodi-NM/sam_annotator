@@ -181,9 +181,9 @@ class SAMAnnotator:
             return
             
         try:
-            # Get memory info before prediction - use safe method
-            memory_info = self.predictor.memory_manager.safe_get_memory_info()
-            self.logger.info(f"Memory before prediction: {memory_info['formatted']}")
+            # Get memory info before prediction
+            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            self.logger.info(f"Memory before prediction: {memory_info.get('formatted', 'Memory stats not available')}")
             
             # Get display and original dimensions
             display_height, display_width = self.window_manager.current_image.shape[:2]
@@ -251,9 +251,9 @@ class SAMAnnotator:
                     status="Mask predicted - press 'a' to add"
                 )
                 
-            # Get memory info after prediction - use safe method
-            memory_info = self.predictor.memory_manager.safe_get_memory_info()
-            self.logger.info(f"Memory after prediction: {memory_info['formatted']}")
+            # Get memory info after prediction
+            memory_info = self.predictor.memory_manager.get_gpu_memory_info()
+            self.logger.info(f"Memory after prediction: {memory_info.get('formatted', 'Memory stats not available')}")
             
         except Exception as e:
             self.logger.error(f"Error in mask prediction: {str(e)}")
