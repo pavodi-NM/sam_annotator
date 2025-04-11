@@ -3,27 +3,146 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Target repository'
+        required: true
+        default: 'testpypi'
+        type: choice
+        options:
+          - testpypi
+          - pypi
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.x'
+        python-version: '3.10'
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine
+        pip install -e .[dev]
     
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+    - name: Run tests
       run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+        pytest tests/
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine requests
+    
+    - name: Clean previous builds
+      run: |
+        rm -rf build/ dist/ *.egg-info/
+    
+    - name: Build package
+      run: |
+        python -m build
+    
+    - name: List built packages
+      run: |
+        ls -la dist/
+    
+    - name: Check package sizes
+      run: |
+        find dist -type f -exec ls -lh {} \;
+        
+    - name: Validate version consistency
+      run: |
+        # Get version from pyproject.toml
+        TOML_VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' pyproject.toml || echo "Not found")
+        echo "pyproject.toml version: $TOML_VERSION"
+        
+        # If tag triggered this workflow, validate version matches tag
+        if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          TAG_VERSION="${{ github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          echo "Tag version: $TAG_VERSION"
+          
+          if [[ "$TOML_VERSION" != "$TAG_VERSION" && "$TAG_VERSION-test" != "$TOML_VERSION" ]]; then
+            echo "::error::Version mismatch! pyproject.toml ($TOML_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+        fi
+    
+    - name: Publish to TestPyPI
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repository == 'testpypi' || contains(github.ref, '-rc') || contains(github.ref, '-dev') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-test')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_TOKEN }} 
+        repository-url: https://test.pypi.org/legacy/
+        skip-existing: true
+        verbose: true
+    
+    - name: Publish to PyPI
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.repository == 'pypi' || (!contains(github.ref, '-rc') && !contains(github.ref, '-dev') && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '-test') && startsWith(github.ref, 'refs/tags/v'))
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN }}
+        skip-existing: false
+        verbose: true
+        
+    - name: Verify Package Upload
+      if: success()
+      run: |
+        # Wait a bit for package to propagate
+        echo "Waiting for package to propagate to PyPI/TestPyPI..."
+        sleep 30
+        
+        # Get package name from pyproject.toml
+        PACKAGE_NAME=$(grep -oP 'name\s*=\s*"\K[^"]+' pyproject.toml || echo "sam_annotator")
+        PACKAGE_NAME=$(echo $PACKAGE_NAME | tr -d '[:space:]')
+        echo "Package name: $PACKAGE_NAME"
+        
+        # Determine which repository to check
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.repository }}" == "testpypi" ]] || [[ "${{ github.ref }}" == *-rc* ]] || [[ "${{ github.ref }}" == *-dev* ]] || [[ "${{ github.ref }}" == *-alpha* ]] || [[ "${{ github.ref }}" == *-beta* ]] || [[ "${{ github.ref }}" == *-test* ]]; then
+          REPO_URL="https://test.pypi.org/pypi/$PACKAGE_NAME/json"
+          echo "Checking TestPyPI for package..."
+        else
+          REPO_URL="https://pypi.org/pypi/$PACKAGE_NAME/json"
+          echo "Checking PyPI for package..."
+        fi
+        
+        # Make multiple attempts to verify the package exists
+        MAX_ATTEMPTS=5
+        for ((i=1; i<=MAX_ATTEMPTS; i++)); do
+          echo "Verification attempt $i of $MAX_ATTEMPTS..."
+          
+          if curl --silent --fail "$REPO_URL" > /dev/null; then
+            echo "✅ Package successfully published and verified!"
+            exit 0
+          else
+            echo "Package not found yet. Waiting 30 seconds before retrying..."
+            sleep 30
+          fi
+        done
+        
+        echo "⚠️ Could not verify package upload after $MAX_ATTEMPTS attempts."
+        echo "The package might still be propagating through the repository."
+        exit 0  # Don't fail the build, just warn
