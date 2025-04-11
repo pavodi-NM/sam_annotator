@@ -13,29 +13,80 @@ from .base_predictor import BaseSAMPredictor
 from .memory_manager import GPUMemoryManager
 from ..utils.visualization import VisualizationManager
 
-            
+# Add LRUCache implementation
+class LRUCache:
+    """Simple Least Recently Used (LRU) cache implementation."""
+    def __init__(self, max_size=50):
+        self.cache = {}
+        self.max_size = max_size
+        self.order = []
+        
+    def __getitem__(self, key):
+        if key in self.cache:
+            # Move to the end (most recently used)
+            self.order.remove(key)
+            self.order.append(key)
+            return self.cache[key]
+        raise KeyError(key)
+        
+    def __setitem__(self, key, value):
+        if key in self.cache:
+            # Update existing key
+            self.order.remove(key)
+        elif len(self.cache) >= self.max_size:
+            # Remove least recently used
+            oldest = self.order.pop(0)
+            del self.cache[oldest]
+        
+        # Add new item
+        self.cache[key] = value
+        self.order.append(key)
+        
+    def __contains__(self, key):
+        return key in self.cache 
+    
+    def __len__(self):
+        return len(self.cache)
+        
+    def clear(self):
+        self.cache.clear()
+        self.order.clear()
+        
+    def update(self, other_dict):
+        for key, value in other_dict.items():
+            self[key] = value
+
 class SAM1Predictor(BaseSAMPredictor):
-    """Original SAM implementation with advanced memory management."""
+    """Predictor for SAM1 model with direct SAM API."""
     
     def __init__(self, model_type: str = "vit_h"):
-        self.model_type = model_type
-        self.predictor = None
-        self.logger = logging.getLogger(__name__)
+        """Initialize the SAM1 predictor with the specified model type."""
+        super().__init__()
         
+        # Set SAM version to identify this predictor type
+        self.sam_version = 'sam1'
+        
+        # Store model type - ViT-H (default), ViT-L, or ViT-B
+        self.model_type = model_type
+        
+        # Create placeholder for model (will be initialized later)
+        self.model = None
+        self.predictor = None
+        
+        # Determine device (CUDA if available, else CPU)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.logger = logging.getLogger(__name__)
+        if self.device.type == "cpu":
+            self.logger.warning("Running on CPU. Performance may be limited.")
+            
         # Initialize memory manager
         self.memory_manager = GPUMemoryManager()
         
         # Cache settings
-        self.current_image_embedding = None
+        self.current_image = None
         self.current_image_hash = None
-        self.prediction_cache = {}
-        self.max_cache_size = 50
+        self.prediction_cache = LRUCache(max_size=50)
         
-        # Initialize device
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if self.device.type == 'cpu':
-            self.logger.warning("Running on CPU. Performance may be limited.")
-            
     def initialize(self, checkpoint_path: str) -> None:
         """Initialize the SAM model with memory optimizations."""
         try:
@@ -132,7 +183,7 @@ class SAM1Predictor(BaseSAMPredictor):
                     self.prediction_cache[cache_key] = (masks, scores, logits)
                     
                     # Manage cache size
-                    if len(self.prediction_cache) > self.max_cache_size:
+                    if len(self.prediction_cache) > self.prediction_cache.max_size:
                         self.clear_cache(keep_current=True)
                 
                 return masks, scores, logits
@@ -146,8 +197,12 @@ class SAM1Predictor(BaseSAMPredictor):
     def clear_cache(self, keep_current: bool = False) -> None:
         """Clear prediction cache with option to keep current image."""
         if keep_current and self.current_image_hash:
-            current_predictions = {k: v for k, v in self.prediction_cache.items()
-                                if k.startswith(str(self.current_image_hash))}
+            # Create new cache with only current image predictions
+            current_predictions = {}
+            for k, v in self.prediction_cache.cache.items():
+                if k.startswith(str(self.current_image_hash)):
+                    current_predictions[k] = v
+            
             self.prediction_cache.clear()
             self.prediction_cache.update(current_predictions)
         else:
@@ -182,20 +237,31 @@ class SAM2Predictor(BaseSAMPredictor):
     """Ultralytics SAM2 implementation with memory management."""
     
     def __init__(self, model_type: str = "base"):
+        """Initialize SAM2 predictor with the specified model type."""
         super().__init__()
+        
+        # Set SAM version to identify this predictor type
+        self.sam_version = 'sam2'
+        
+        # Store the model type
         self.model_type = model_type
+        
+        # Placeholder for model (will be initialized later)
         self.model = None
-        self.logger = logging.getLogger(__name__)
+        
+        # Track current image to avoid unnecessary reprocessing
+        self.current_image = None
+        self.current_image_hash = None
+        self.current_results = None
+        
+        # Initialize LRU cache for predictions
+        self.prediction_cache = LRUCache(max_size=20)
         
         # Initialize memory manager
         self.memory_manager = GPUMemoryManager()
         
-        # Cache settings
-        self.current_image = None
-        self.current_image_hash = None
-        self.prediction_cache = {}
-        self.max_cache_size = 50
-        self.current_results = None
+        # Configure logging
+        self.logger = logging.getLogger(__name__)
         
         # Initialize device
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -249,16 +315,24 @@ class SAM2Predictor(BaseSAMPredictor):
                         source=self.current_image,
                         bboxes=[box.tolist()]  # Just pass the box directly
                     )
-                elif point_coords is not None and point_labels is not None:
-                    # Format points for SAM2
-                    points = []
-                    for coord, label in zip(point_coords, point_labels):
-                        points.append([float(coord[0]), float(coord[1]), int(label)])
-                    
-                    results = self.model(
-                        source=self.current_image,
-                        points=[points]  # Wrap points in list
-                    )
+                elif point_coords is not None:
+                    # Format according to Ultralytics documentation
+                    # For SAM2, points should be a 1D list [x, y] and labels should be a separate list
+                    if point_labels is not None:
+                        # Flatten first point if we have multiple points - SAM2 only supports one point prompt for now
+                        if len(point_coords) > 0:
+                            x, y = point_coords[0]
+                            label = point_labels[0]
+                            self.logger.info(f"Using point prompt with SAM2: point=[{x}, {y}], label={label}")
+                            results = self.model(
+                                source=self.current_image,
+                                points=[x, y],  # Just x, y coordinates
+                                labels=[label]  # Separate list of labels
+                            )
+                        else:
+                            raise ValueError("Empty point_coords provided")
+                    else:
+                        raise ValueError("Point labels must be provided with point_coords")
                 else:
                     raise ValueError("Either points with labels or box must be provided")
                     
@@ -311,8 +385,12 @@ class SAM2Predictor(BaseSAMPredictor):
     def clear_cache(self, keep_current: bool = False) -> None:
         """Clear prediction cache with option to keep current image."""
         if keep_current and self.current_image_hash:
-            current_predictions = {k: v for k, v in self.prediction_cache.items()
-                                if k.startswith(str(self.current_image_hash))}
+            # Create new cache with only current image predictions
+            current_predictions = {}
+            for k, v in self.prediction_cache.cache.items():
+                if k.startswith(str(self.current_image_hash)):
+                    current_predictions[k] = v
+            
             self.prediction_cache.clear()
             self.prediction_cache.update(current_predictions)
         else:

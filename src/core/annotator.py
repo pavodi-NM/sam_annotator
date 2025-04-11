@@ -5,7 +5,7 @@ import os
 import time
 import logging
 from typing import Optional, List, Dict, Tuple
-import pandas as pd
+import pandas as pd 
 
 from .file_manager import FileManager
 from ..ui.window_manager import WindowManager
@@ -355,106 +355,80 @@ class SAMAnnotator:
             raise
    
     def _add_annotation(self) -> None:
-        """Add current annotation to the list with proper scaling."""
-        self.logger.info("Attempting to add annotation...")
-        
-        current_mask = self.window_manager.current_mask
-        if current_mask is None:
-            self.logger.warning("No region selected! Draw a box or add points first.")
-            self.window_manager.update_main_window(
-                image=self.image,
-                annotations=self.annotations,
-                current_class=self.class_names[self.current_class_id],
-                current_class_id=self.current_class_id,
-                current_image_path=self.current_image_path,
-                current_idx=self.current_idx,
-                total_images=len(self.image_files),
-                status="No region selected! Draw a box or add points first.",
-                annotation_mode=self.event_handler.mode
-            )
-            return
-
+        """Add current mask as an annotation."""
         try:
+            # Ensure we have a valid mask
+            if self.window_manager.current_mask is None:
+                self.logger.warning("No mask available to add as annotation")
+                return
+                
+            # Convert mask to proper format for contour finding
+            mask = self.window_manager.current_mask.astype(np.uint8) * 255
+            
+            # Find contours
+            contours, _ = cv2.findContours(
+                mask, 
+                cv2.RETR_EXTERNAL, 
+                cv2.CHAIN_APPROX_SIMPLE
+            )
+            
+            if not contours:
+                self.logger.warning("No contours found in mask")
+                return
+                
+            # Get largest contour by area
+            display_contour = max(contours, key=cv2.contourArea)
+            
             # Get display dimensions
             display_height, display_width = self.image.shape[:2]
             
-            # Convert mask to uint8 for contour finding
-            if current_mask.dtype == bool:
-                mask_uint8 = current_mask.astype(np.uint8) * 255
-            else:
-                mask_uint8 = (current_mask > 0).astype(np.uint8) * 255
-            
-            self.logger.info(f"Finding contours in mask with shape {mask_uint8.shape} and type {mask_uint8.dtype}")
-            
-            # Find contours at display size
-            contours, _ = cv2.findContours(mask_uint8, 
-                                        cv2.RETR_EXTERNAL,
-                                        cv2.CHAIN_APPROX_TC89_KCOS)
-            
-            if not contours:
-                self.logger.warning("No valid contours found in mask")
-                return
-                
-            # Get the largest contour at display size
-            display_contour = max(contours, key=cv2.contourArea)
-            
-            # Calculate bounding box from contour properly
-            x, y, w, h = cv2.boundingRect(display_contour)
-            display_box = [x, y, x + w, y + h]
-            
-            self.logger.info(f"Box coordinates: x={x}, y={y}, w={w}, h={h}")
-            
-            # Get original image dimensions for scaling
+            # Get original image dimensions
             original_image = cv2.imread(self.current_image_path)
-            if original_image is None:
-                self.logger.error(f"Could not load original image: {self.current_image_path}")
-                return
-                
             original_height, original_width = original_image.shape[:2]
             
             # Calculate scale factors
             scale_x = original_width / display_width
             scale_y = original_height / display_height
             
-            # Scale display box to original dimensions
+            # Calculate boxes in display coordinates
+            x, y, w, h = cv2.boundingRect(display_contour)
+            display_box = [x, y, x + w, y + h]
+            
+            # Calculate box in original coordinates
             original_box = [
-                int(display_box[0] * scale_x),
-                int(display_box[1] * scale_y),
-                int(display_box[2] * scale_x),
-                int(display_box[3] * scale_y)
+                int(x * scale_x),
+                int(y * scale_y),
+                int((x + w) * scale_x),
+                int((y + h) * scale_y)
             ]
             
-            # Create a clean mask from the current mask
-            # This ensures we have a consistent boolean mask
-            clean_mask = np.zeros((display_height, display_width), dtype=bool)
-            if current_mask.dtype == bool:
-                clean_mask = current_mask.copy()
-            else:
-                clean_mask = (current_mask > 0)
+            # Process contour for storage
+            # Store original cv2 contour format (useful for some operations)
+            contour_points = display_contour
             
-            # Process contour for storage - ensure we have both formats
-            # 1. contour_points: Original format for backward compatibility
-            # 2. contour: Flattened list for the new format
-            contour_points = display_contour  # Keep the original cv2 contour format
+            # Convert to flat list for simpler storage/visualization
+            contour_list = display_contour.flatten().tolist()
             
-            # Create flattened contour list
-            contour_list = display_contour.tolist()
-            if len(contour_list) > 0 and isinstance(contour_list[0], list) and len(contour_list[0]) == 1:
-                contour_list = [point[0] for point in contour_list]
+            # Ensure mask is boolean for consistent storage
+            clean_mask = self.window_manager.current_mask.copy()
             
-            # Create the annotation dictionary
+            # Get the current SAM version being used
+            sam_version = getattr(self.predictor, 'sam_version', 'unknown')
+            
+            # Create annotation structure
             annotation = {
                 'id': len(self.annotations),
                 'class_id': self.current_class_id,
                 'class_name': self.class_names[self.current_class_id],
                 'box': original_box,  # Box in original image coordinates
-                'contour': contour_list,  # Flattened points
-                'contour_points': contour_points,  # Original cv2 contour format 
-                'mask': clean_mask,  # Boolean mask
                 'display_box': display_box,  # Box in display coordinates
+                'contour_points': contour_points,  # OpenCV contour format
+                'contour': contour_list,  # Flattened points for visualization
+                'mask': clean_mask,  # Boolean mask
                 'area': cv2.contourArea(display_contour),
                 'metadata': {
                     'annotation_mode': self.event_handler.mode,
+                    'sam_version': sam_version,
                     'timestamp': time.time()
                 }
             }
@@ -935,6 +909,9 @@ class SAMAnnotator:
         if not points or len(points) == 0:
             return
             
+        # Import traceback at the top level to avoid UnboundLocalError
+        import traceback
+        
         try:
             # Get memory info before prediction - use safe method
             memory_info = self.predictor.memory_manager.safe_get_memory_info()
@@ -949,49 +926,149 @@ class SAMAnnotator:
             scale_x = original_width / display_width
             scale_y = original_height / display_height
             
-            # Scale point coordinates to original image size
-            input_points = []
-            for point in points:
-                orig_x = int(point[0] * scale_x)
-                orig_y = int(point[1] * scale_y)
-                input_points.append([orig_x, orig_y])
+            # Check which SAM version we're using
+            is_sam2 = hasattr(self.predictor, 'sam_version') and self.predictor.sam_version == 'sam2'
             
-            # Convert to numpy arrays
-            input_points = np.array(input_points)
-            input_labels = np.array(point_labels)
+            if is_sam2:
+                # Scale the coordinates to original image size for SAM2
+                if len(points) > 0:
+                    # Focus on the first point only as SAM2 has issues with multiple points
+                    point = points[0]
+                    label = point_labels[0]
+                    
+                    # Convert to original image coordinates
+                    orig_x = float(point[0] * scale_x)
+                    orig_y = float(point[1] * scale_y)
+                    
+                    self.logger.info(f"Using SAM2 with point prompt: [{orig_x}, {orig_y}], label={label}")
+                    
+                    try:
+                        # Direct call to Ultralytics SAM2 model following documentation format
+                        results = self.predictor.model(
+                            source=self.predictor.current_image,
+                            points=[orig_x, orig_y],  # single point [x, y]
+                            labels=[label]            # single label
+                        )
+                        
+                        # Process the results
+                        if len(results) > 0 and results[0].masks is not None:
+                            # Get the mask data
+                            masks = results[0].masks.data.cpu().numpy()
+                            
+                            # Handle single mask case
+                            if len(masks.shape) == 2:
+                                masks = np.expand_dims(masks, 0)
+                            
+                            # Use confidence scores if available
+                            scores = results[0].conf.cpu().numpy() if hasattr(results[0], 'conf') else np.ones(len(masks))
+                            
+                            # Select best mask
+                            best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
+                            best_mask = masks[best_mask_idx]
+                            
+                            # Scale to display size
+                            display_mask = cv2.resize(
+                                best_mask.astype(np.uint8),
+                                (display_width, display_height),
+                                interpolation=cv2.INTER_NEAREST
+                            )
+                            
+                            # Update UI
+                            self.window_manager.set_mask(display_mask.astype(bool))
+                            self.logger.info("Successfully generated mask using point-based prompt for SAM2")
+                        else:
+                            self.logger.warning("No masks returned from SAM2 prediction with point prompt")
+                            
+                            # Fall back to box-based approach if point-based fails
+                            self.logger.info("Falling back to box-based approach")
+                            
+                            # Create a box around the point
+                            padding = 20
+                            min_x = max(0, point[0] - padding)
+                            min_y = max(0, point[1] - padding)
+                            max_x = min(display_width, point[0] + padding)
+                            max_y = min(display_height, point[1] + padding)
+                            
+                            # Scale box to original coordinates
+                            orig_box = np.array([
+                                min_x * scale_x,
+                                min_y * scale_y,
+                                max_x * scale_x,
+                                max_y * scale_y
+                            ])
+                            
+                            # Call with bounding box
+                            results = self.predictor.model(
+                                source=self.predictor.current_image,
+                                bboxes=[orig_box.tolist()]
+                            )
+                            
+                            if len(results) > 0 and results[0].masks is not None:
+                                masks = results[0].masks.data.cpu().numpy()
+                                if len(masks.shape) == 2:
+                                    masks = np.expand_dims(masks, 0)
+                                
+                                scores = results[0].conf.cpu().numpy() if hasattr(results[0], 'conf') else np.ones(len(masks))
+                                best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
+                                best_mask = masks[best_mask_idx]
+                                
+                                display_mask = cv2.resize(
+                                    best_mask.astype(np.uint8),
+                                    (display_width, display_height),
+                                    interpolation=cv2.INTER_NEAREST
+                                )
+                                
+                                self.window_manager.set_mask(display_mask.astype(bool))
+                                self.logger.info("Successfully generated mask using box-based fallback for SAM2")
+                    except Exception as e:
+                        self.logger.error(f"Error with SAM2 point prediction: {str(e)}")
+                        self.logger.error(traceback.format_exc())
+            else:
+                # Format for SAM1 - separate points and labels
+                input_points = []
+                for point in points:
+                    orig_x = int(point[0] * scale_x)
+                    orig_y = int(point[1] * scale_y)
+                    input_points.append([orig_x, orig_y])
+                
+                # Convert to numpy arrays
+                input_points = np.array(input_points)
+                input_labels = np.array(point_labels)
+                
+                # Predict mask using SAM1
+                masks, scores, _ = self.predictor.predict(
+                    point_coords=input_points,
+                    point_labels=input_labels,
+                    multimask_output=True
+                )
+                
+                if len(masks) > 0:
+                    best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
+                    best_mask = masks[best_mask_idx]
+                    
+                    # Scale the mask to display size
+                    display_mask = cv2.resize(
+                        best_mask.astype(np.uint8),
+                        (display_width, display_height),
+                        interpolation=cv2.INTER_NEAREST
+                    )
+                    
+                    self.window_manager.set_mask(display_mask.astype(bool))
             
-            # Predict mask using SAM
-            masks, scores, _ = self.predictor.predict(
-                point_coords=input_points,
-                point_labels=input_labels,
-                multimask_output=True
+            # Update UI with the new mask (for both SAM1 and SAM2)
+            self.window_manager.update_main_window(
+                image=self.image,
+                annotations=self.annotations,
+                current_class=self.class_names[self.current_class_id],
+                current_class_id=self.current_class_id,
+                current_image_path=self.current_image_path,
+                current_idx=self.current_idx,
+                total_images=len(self.image_files),
+                status="Mask predicted - press 'a' to add",
+                input_points=points,
+                input_point_labels=point_labels,
+                annotation_mode=self.event_handler.mode
             )
-            
-            if len(masks) > 0:
-                best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
-                best_mask = masks[best_mask_idx]
-                
-                # Scale the mask to display size
-                display_mask = cv2.resize(
-                    best_mask.astype(np.uint8),
-                    (display_width, display_height),
-                    interpolation=cv2.INTER_NEAREST
-                )
-                
-                self.window_manager.set_mask(display_mask.astype(bool))
-                self.window_manager.update_main_window(
-                    image=self.image,
-                    annotations=self.annotations,
-                    current_class=self.class_names[self.current_class_id],
-                    current_class_id=self.current_class_id,
-                    current_image_path=self.current_image_path,
-                    current_idx=self.current_idx,
-                    total_images=len(self.image_files),
-                    status="Mask predicted - press 'a' to add",
-                    input_points=points,
-                    input_point_labels=point_labels,
-                    annotation_mode=self.event_handler.mode
-                )
                 
             # Get memory info after prediction - use safe method
             memory_info = self.predictor.memory_manager.safe_get_memory_info()
@@ -999,7 +1076,6 @@ class SAMAnnotator:
                 
         except Exception as e:
             self.logger.error(f"Error in point-based mask prediction: {str(e)}")
-            import traceback
             self.logger.error(traceback.format_exc())
     
     def run(self) -> None:

@@ -145,4 +145,4 @@ jobs:
         
         echo "⚠️ Could not verify package upload after $MAX_ATTEMPTS attempts."
         echo "The package might still be propagating through the repository."
-        exit 0  # Don't fail the build, just warn 
+        exit 0  # Don't fail the build, just warn
