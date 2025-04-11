@@ -1,8 +1,7 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  # Only trigger on tag pushes and manual workflow
   push:
     tags:
       - 'v*'
@@ -118,7 +117,7 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_TOKEN }}
-        skip-existing: false
+        skip-existing: true
         verbose: true
         
     - name: Verify Package Upload
