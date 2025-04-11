@@ -5,9 +5,20 @@ import os
 with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
+# Get version from pyproject.toml for consistency
+version = "0.1.0"  # Default version
+try:
+    with open('pyproject.toml', encoding='utf-8') as f:
+        for line in f:
+            if line.strip().startswith('version'):
+                version = line.split('=')[1].strip().replace('"', '').replace("'", '')
+                break
+except:
+    pass  # Use default version if pyproject.toml can't be read
+
 setup(
-    name="sam_annotator",
-    version="1.0.0",
+    name="sam_annotator",  # Use the exact same name as in pyproject.toml
+    version=version,
     description="A powerful tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -26,7 +37,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'sam-annotator=sam_annotator.main:main',
+            'sam-annotator=sam_annotator.main:main',  # Keep the hyphen for the command name
         ],
     },
     classifiers=[

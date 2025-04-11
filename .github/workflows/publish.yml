@@ -128,19 +128,23 @@ jobs:
         echo "Waiting for package to propagate to PyPI/TestPyPI..."
         sleep 30
         
-        # Get package name from pyproject.toml
+        # Get package name from pyproject.toml and convert underscores to hyphens for PyPI
         PACKAGE_NAME=$(grep -oP 'name\s*=\s*"\K[^"]+' pyproject.toml || echo "sam_annotator")
-        PACKAGE_NAME=$(echo $PACKAGE_NAME | tr -d '[:space:]')
+        # Convert underscores to hyphens for PyPI URL
+        PACKAGE_NAME_PYPI=${PACKAGE_NAME//_/-}
         echo "Package name: $PACKAGE_NAME"
+        echo "Package name for PyPI/TestPyPI: $PACKAGE_NAME_PYPI"
         
         # Determine which repository to check
         if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.repository }}" == "testpypi" ]] || [[ "${{ github.ref }}" == *-rc* ]] || [[ "${{ github.ref }}" == *-dev* ]] || [[ "${{ github.ref }}" == *-alpha* ]] || [[ "${{ github.ref }}" == *-beta* ]] || [[ "${{ github.ref }}" == *-test* ]]; then
-          REPO_URL="https://test.pypi.org/pypi/$PACKAGE_NAME/json"
+          REPO_URL="https://test.pypi.org/pypi/$PACKAGE_NAME_PYPI/json"
           echo "Checking TestPyPI for package..."
         else
-          REPO_URL="https://pypi.org/pypi/$PACKAGE_NAME/json"
+          REPO_URL="https://pypi.org/pypi/$PACKAGE_NAME_PYPI/json"
           echo "Checking PyPI for package..."
         fi
+        
+        echo "Checking URL: $REPO_URL"
         
         # Make multiple attempts to verify the package exists
         MAX_ATTEMPTS=5
