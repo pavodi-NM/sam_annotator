@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=6.0
+pytest-cov>=2.0
+black>=20.8b1
+isort>=5.0
+python-dotenv>=0.20.0

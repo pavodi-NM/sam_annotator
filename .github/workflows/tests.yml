@@ -1,0 +1,65 @@
+name: SAM Annotator Tests
+
+on:
+  push:
+    branches: 
+      - main
+      - dev
+  pull_request:
+    branches: 
+      - main
+      - dev
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-dev \
+          build-essential \
+          libgl1-mesa-glx \
+          libglib2.0-0
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt --extra-index-url https://download.pytorch.org/whl/cu118
+    
+    - name: Install project
+      run: |
+        pip install -e .
+    
+    - name: Run tests with pytest
+      run: |
+        export PYTORCH_ENABLE_MPS_FALLBACK=1
+        export PYTORCH_NO_CUDA_MEMORY_CACHING=1
+        python -m pytest tests/ \
+          --doctest-modules \
+          --junitxml=junit/test-results.xml \
+          --cov=src \
+          --cov-report=term \
+          -v \
+          --tb=short
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: junit/test-results.xml
+      if: ${{ always() }}

@@ -1,2 +1,19 @@
 *.pth
+*.pt 
 test_data/s1
+weights/
+
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment files
+.env
+.env.* 
+
+# OS files
+Thumbs.db

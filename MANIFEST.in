@@ -1,0 +1,24 @@
+include README.md
+include Annotation_Implementation.md
+# LICENSE file doesn't exist, so removing it
+include requirements.txt
+include requirements-dev.txt
+include DOCUMENTATION.md
+include mkdocs.yml
+# Exclude the large model weight files
+prune weights
+# Exclude test data and examples
+prune test_data
+prune examples
+# Include documentation files
+recursive-include docs *.md
+recursive-include .github/workflows *.yml
+# Docs directory might not exist with these files
+# recursive-include docs *.md *.txt
+exclude .gitignore
+exclude .env
+# Exclude this packaging guide from distribution
+exclude PACKAGING_GUIDE.md
+prune .git
+prune .pytest_cache
+prune __pycache__ 
