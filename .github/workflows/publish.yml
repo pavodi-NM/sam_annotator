@@ -1,10 +1,13 @@
 name: Publish to PyPI
 
 on:
-  # Only trigger on tag pushes and manual workflow
+  # Restrict the trigger conditions
   push:
+    branches:
+      - 'main'    # Only allow from main branch
+      - 'publish' # And publish branch
     tags:
-      - 'v*'
+      - 'v*'      # Only from v-prefixed tags
   workflow_dispatch:
     inputs:
       repository:
@@ -22,7 +25,44 @@ permissions:
   contents: read
 
 jobs:
+  # Add a validation job that runs first
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch or tag
+        run: |
+          # If this is a tag push, validate the tag format
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${{ github.ref_name }}"
+            echo "Processing tag: $TAG"
+            
+            # Validate semantic version format (basic check)
+            if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-?(rc|alpha|beta|dev)[0-9]*)?$ ]]; then
+              echo "::error::Invalid tag format: $TAG"
+              echo "Tags must follow semantic versioning like v1.2.3 or v1.2.3-rc1"
+              exit 1
+            fi
+            
+            # Reject any tags with 'test' in them
+            if [[ "$TAG" == *test* ]]; then
+              echo "::error::Test tags are not allowed for production releases"
+              exit 1
+            fi
+          else
+            echo "Processing branch: ${{ github.ref_name }}"
+            
+            # For branches, check if it's a whitelisted branch
+            if [[ "${{ github.ref_name }}" != "main" && "${{ github.ref_name }}" != "publish" ]]; then
+              echo "::error::Publishing is only allowed from 'main' or 'publish' branches"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ Validation passed!"
+
+  # Existing test job now depends on validation
   test:
+    needs: validate
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -55,7 +95,7 @@ jobs:
         fi
 
   deploy-test:
-    needs: test
+    needs: [validate, test]
     runs-on: ubuntu-latest
     # Add environment for TestPyPI with protection rules
     environment: testpypi-deploy
@@ -173,7 +213,7 @@ jobs:
         exit 0
 
   deploy-prod:
-    needs: test
+    needs: [validate, test]
     runs-on: ubuntu-latest
     # Add environment for PyPI with protection rules
     environment: pypi-deploy
