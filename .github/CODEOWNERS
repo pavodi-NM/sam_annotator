@@ -1,0 +1,26 @@
+# This is a CODEOWNERS file that defines code ownership in this repository
+# Format: file_pattern @user_or_team
+
+# Default owners for everything in the repo
+*       @pavodi-NM
+
+# Python core code
+*.py    @pavodi-NM
+
+# Package configuration files
+pyproject.toml    @pavodi-NM
+setup.py          @pavodi-NM
+requirements*.txt @pavodi-NM
+
+# Documentation files
+*.md              @pavodi-NM
+docs/             @pavodi-NM
+
+# Specific components
+sam_annotator/    @pavodi-NM
+
+# CI/CD workflows - @pavodi-NM
+.github/workflows/   @pavodi-NM
+
+# The .github directory itself
+.github/          @pavodi-NM 
