@@ -17,3 +17,6 @@ __pycache__/
 
 # OS files
 Thumbs.db
+
+# Backup files
+*.bak

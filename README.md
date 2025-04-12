@@ -212,7 +212,7 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 When using this software, please cite or acknowledge:
 
 ```
-SAM Annotator by Pavodi NDOYI MANIAMFU (FingerVision and University of Tsukuba)
+SAM Annotator by Pavodi NDOYI MANIAMFU (FingerVision and University of Tsukuba - Adaptive Information Processing Lab - Japan)
 https://github.com/pavodi-nm/sam_annotator
 ```
 
