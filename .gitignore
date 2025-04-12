@@ -20,3 +20,25 @@ Thumbs.db
 
 # Backup files
 *.bak
+
+#documentation files
+GITHUB_CICD_GUIDE.md
+GPG_SIGNING_GUIDE.md
+PACKAGING.md
+PACKAGING_GUIDE.md
+SAM_ANNOTATOR_PACKAGING.md
+SAM_Annotator_Documentation_Guide.md
+TRUSTED_PUBLISHING.md
+doc_env_variables.md
+docs.md
+docs.txt
+issue_sam2_point_annotation.md
+larger_docs.md
+larger_docs.txt
+migrate_code.md
+project_structure.md
+tasks.md
+
+# Folders
+deploy/
+scripts/
