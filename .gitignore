@@ -42,3 +42,6 @@ tasks.md
 # Folders
 deploy/
 scripts/
+
+# py files
+vizcopy.py 

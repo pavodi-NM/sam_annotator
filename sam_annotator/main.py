@@ -4,11 +4,43 @@ import os
 import sys
 import pandas as pd
 import time
+import json
 from sam_annotator.core import SAMAnnotator 
 from sam_annotator import __version__
+from utils.standalone_viz import MultiMaskViewer, view_masks, find_classes_csv
+
+# Constants for config file
+CONFIG_FILE = ".sam_config.json"
+
+def load_config():
+    """Load configuration from config file if it exists."""  
+    config = {
+        "last_category_path": None,
+        "last_classes_csv": None,
+        "last_sam_version": "sam1",
+        "last_model_type": None
+    }
+    
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                loaded_config = json.load(f)
+                config.update(loaded_config)
+        except Exception as e:
+            print(f"Warning: Could not load config file: {e}")  
+    
+    return config
+
+def save_config(config):
+    """Save configuration to config file."""
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=4)
+    except Exception as e:
+        print(f"Warning: Could not save config file: {e}")
 
 def create_sample_csv(output_path, logger):
-    """Create a sample CSV file with the correct format.""" 
+    """Create a sample CSV file with the correct format."""
     try:
         # Default class names
         class_names = [
@@ -227,8 +259,11 @@ def setup_debug_logging():
     return root_logger
 
 def main():
-    parser = argparse.ArgumentParser(description='SAM Multi-Object Annotation Tool')
+    # Load saved configuration
+    config = load_config()
     
+    parser = argparse.ArgumentParser(description='SAM Multi-Object Annotation Tool')
+
     # Version information
     parser.add_argument('--version', action='version', 
                        version=f'%(prog)s {__version__}',
@@ -238,11 +273,12 @@ def main():
     parser.add_argument('--sam_version', 
                        type=str,
                        choices=['sam1', 'sam2'],
-                       default='sam1',
+                       default=config.get('last_sam_version', 'sam1'),
                        help='SAM version to use (sam1 or sam2)')
                        
     parser.add_argument('--model_type',
                        type=str,
+                       default=config.get('last_model_type'),
                        help='Model type to use. For SAM1: vit_h, vit_l, vit_b. '
                             'For SAM2: tiny, small, base, large, tiny_v2, small_v2, base_v2, large_v2')
     
@@ -250,11 +286,19 @@ def main():
                        default=None,
                        help='Path to SAM checkpoint. If not provided, will use default for selected model')
     
-    # Data paths
-    parser.add_argument('--category_path', type=str, required=True,
+    # Data paths - make them not required if --visualization is specified
+    parser.add_argument('--category_path', type=str,
+                       default=config.get('last_category_path'),
                        help='Path to category folder')
-    parser.add_argument('--classes_csv', type=str, required=True,
+    parser.add_argument('--classes_csv', type=str,
+                       default=config.get('last_classes_csv'),
                        help='Path to CSV file containing class names (must have a "class_name" column)')
+    
+    # Visualization option
+    parser.add_argument('--visualization', action='store_true',
+                       help='Launch visualization tool for reviewing annotations')
+    parser.add_argument('--export_stats', action='store_true',
+                       help='Export dataset statistics when using visualization tool')
     
     # CSV validation control
     parser.add_argument('--skip_validation', action='store_true',
@@ -272,6 +316,7 @@ def main():
     parser.add_argument('--debug', action='store_true',
                        help='Enable debug mode with verbose logging')
     
+    # Parse arguments
     args = parser.parse_args()
     
     # Setup enhanced logging if debug flag is set
@@ -297,6 +342,52 @@ def main():
         else:
             logger.error("Failed to create sample CSV file.")
         return
+    
+    # Validate required arguments based on mode
+    if not args.visualization:
+        if not args.category_path:
+            logger.error("Error: --category_path is required for annotation mode")
+            parser.print_help()
+            sys.exit(1)
+        if not args.classes_csv and not args.use_sample_csv:
+            logger.error("Error: --classes_csv is required for annotation mode (or use --use_sample_csv)")
+            parser.print_help()
+            sys.exit(1)
+    else:
+        # For visualization mode, check if we have necessary paths
+        if not args.category_path:
+            if config.get('last_category_path'):
+                args.category_path = config.get('last_category_path')
+                logger.info(f"Using last used category path: {args.category_path}")
+            else:
+                logger.error("Error: --category_path is required for visualization")
+                parser.print_help()
+                sys.exit(1)
+    
+    # If visualization mode is enabled, launch the viewer instead of the annotator
+    if args.visualization:
+        logger.info(f"Launching visualization tool for {args.category_path}")
+        
+        # If no classes_csv is provided, try to find one related to the category path
+        if not args.classes_csv:
+            logger.info("No classes CSV specified, attempting to find one automatically")
+            classes_csv = find_classes_csv(args.category_path)
+            if classes_csv:
+                logger.info(f"Found classes CSV file: {classes_csv}")
+                args.classes_csv = classes_csv
+                
+                # Save this to config for future use
+                config["last_classes_csv"] = classes_csv
+                save_config(config)
+            else:
+                logger.warning("No classes CSV file found. Visualization will still work, but class names may not be displayed correctly.")
+        
+        try:
+            view_masks(args.category_path, export_stats=args.export_stats, classes_csv=args.classes_csv)
+            return
+        except Exception as e:
+            logger.error(f"Error in visualization: {str(e)}", exc_info=True)
+            raise
     
     # If model_type not specified, set default based on sam_version
     if args.model_type is None:
@@ -342,6 +433,14 @@ def main():
         logger.info("Initializing SAMAnnotator...")
         start_time = time.time()
         
+        # Save config for future use
+        save_config({
+            "last_category_path": args.category_path,
+            "last_classes_csv": args.classes_csv,
+            "last_sam_version": args.sam_version,
+            "last_model_type": args.model_type
+        })
+        
         # Create and run annotator
         annotator = SAMAnnotator(
             checkpoint_path=args.checkpoint,
@@ -362,5 +461,5 @@ def main():
         logger.error(f"Error in main: {str(e)}", exc_info=True)
         raise
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     main()
