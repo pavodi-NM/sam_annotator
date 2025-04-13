@@ -5,9 +5,17 @@ import sys
 import pandas as pd
 import time
 import json
+
+# Add parent directory to path if needed for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+# Now imports will work when running directly or installed via pip
 from sam_annotator.core import SAMAnnotator 
 from sam_annotator import __version__
-from utils.standalone_viz import MultiMaskViewer, view_masks, find_classes_csv
+from sam_annotator.utils.standalone_viz import MultiMaskViewer, view_masks, find_classes_csv
 
 # Constants for config file
 CONFIG_FILE = ".sam_config.json"
