@@ -16,6 +16,10 @@ A powerful tool for semi-automatic image annotation based on Meta AI's Segment A
 - **Undo/Redo**: Robust command system for undoing and redoing annotations
 - **Visualization**: Real-time visualization of annotations with adjustable opacity
 
+## Tool Overview
+
+![SAM Annotation Tool](sam-visual-examples/sam-annotation-all.png)
+
 ## Installation
 
 ### Prerequisites
@@ -126,7 +130,54 @@ car
 2. Left-click to add foreground points (green)
 3. Press 'a' to add the annotation with the current class
 4. Press 's' to save all the annotations
-5. Press 'c' to clear all the annotations 
+5. Press 'c' to clear all the annotations
+
+## Visualization Tool
+
+SAM Annotator includes a powerful visualization tool for reviewing annotations. This tool allows you to browse through your annotated images, view segmentation masks, and export statistics about your dataset.
+
+![Visualization Tool](sam-visual-examples/visualization-tool.png)
+
+### Launching the Visualization Tool
+
+To launch the visualization tool, use the `--visualization` flag:
+
+```bash
+python main.py --category_path <path_to_category> --visualization [--classes_csv <path_to_classes_csv>] [--export_stats]
+```
+
+Example:
+```bash
+python main.py --category_path test_data/s2 --visualization --classes_csv class_map_sam.csv
+```
+
+Or if installed via pip:
+```
+sam_annotator --category_path /path/to/categories --visualization
+```
+
+The tool will automatically look for the classes CSV file in the dataset directory if not specified.
+
+### Visualization Features
+
+- **Browse Images**: Navigate through your dataset using the Previous/Next buttons or keyboard shortcuts
+- **View Masks**: See segmentation masks and their overlays on the original images
+- **Object Details**: View class assignments and object properties
+- **Statistics**: Analyze class distribution and annotation density with visual charts
+- **Export**: Save visualizations of annotated images for documentation
+
+### Visualization Controls
+
+| Control | Action |
+|---------|--------|
+| Previous/Next buttons | Navigate between images |
+| Left/Right arrow keys | Navigate between images |
+| 's' key | Save visualization |
+| 'm' key | Mark as faulty |
+| Opacity slider | Adjust mask transparency |
+| Display mode | Switch between overlay, side-by-side, and mask-only views |
+
+When using the `--export_stats` flag, the tool will generate comprehensive statistics about your dataset, including class distribution, objects per image, and more.
 
 ## Keyboard Shortcuts
 

@@ -153,17 +153,12 @@ jobs:
         fi
     
     - name: Publish to TestPyPI
-      # Comment about alternative authentication methods
-      # Option 1: Using trusted publisher (OIDC) - default, requires TestPyPI configuration
-      # Option 2: Using API token - uncomment below and add TEST_PYPI_API_TOKEN secret
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         # Using Trusted Publishing - no token needed
         repository-url: https://test.pypi.org/legacy/
         skip-existing: true
         verbose: true
-        # Uncomment the line below and add TEST_PYPI_API_TOKEN secret if trusted publishing is not working
-        # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         
     - name: Verify Package Upload
       if: success()
