@@ -28,6 +28,7 @@ PACKAGING.md
 PACKAGING_GUIDE.md
 SAM_ANNOTATOR_PACKAGING.md
 SAM_Annotator_Documentation_Guide.md
+SAM_DEVELOPER_GUIDE.md
 TRUSTED_PUBLISHING.md
 doc_env_variables.md
 docs.md
@@ -46,3 +47,4 @@ scripts/
 # py files
 vizcopy.py 
 test_import.py 
+prepare_pypi.py

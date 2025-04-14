@@ -1,8 +1,25 @@
 from setuptools import setup, find_packages
 import os
+import subprocess
+import sys
 
-# Read the contents of README.md for long_description
-with open('README.md', encoding='utf-8') as f:
+# Generate PyPI-friendly README if the script exists
+readme_path = 'README.md'
+pypi_readme_path = 'README_PYPI.md'
+
+# Try to generate PyPI README if the script exists
+try:
+    if os.path.exists('prepare_pypi.py'):
+        print("Generating PyPI-friendly README...")
+        subprocess.check_call([sys.executable, 'prepare_pypi.py'])
+        if os.path.exists(pypi_readme_path):
+            readme_path = pypi_readme_path
+except Exception as e:
+    print(f"Warning: Could not generate PyPI README: {e}")
+    print("Using original README.md for PyPI")
+
+# Read the contents of README file for long_description
+with open(readme_path, encoding='utf-8') as f:
     long_description = f.read()
 
 # Get version from pyproject.toml for consistency

@@ -86,7 +86,7 @@ jobs:
         # Add a success marker to continue even if tests fail
         touch .tests-completed
 
-    - name: Check if tests completed
+    - name: Check if tests completed 
       run: |
         if [ ! -f .tests-completed ]; then
           echo "Tests did not complete. Marking step as successful to continue with deployment."
@@ -121,6 +121,15 @@ jobs:
     - name: Clean previous builds
       run: |
         rm -rf build/ dist/ *.egg-info/
+    
+    - name: Prepare PyPI README
+      run: |
+        python prepare_pypi.py
+        if [ -f README_PYPI.md ]; then
+          echo "Successfully generated PyPI-friendly README"
+        else
+          echo "Warning: Could not generate PyPI-friendly README, will use original"
+        fi
     
     - name: Build package
       run: |
@@ -239,6 +248,15 @@ jobs:
     - name: Clean previous builds
       run: |
         rm -rf build/ dist/ *.egg-info/
+    
+    - name: Prepare PyPI README
+      run: |
+        python prepare_pypi.py
+        if [ -f README_PYPI.md ]; then
+          echo "Successfully generated PyPI-friendly README"
+        else
+          echo "Warning: Could not generate PyPI-friendly README, will use original"
+        fi
     
     - name: Build package
       run: |

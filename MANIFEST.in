@@ -17,6 +17,9 @@ recursive-include .github/workflows *.yml
 # recursive-include docs *.md *.txt
 exclude .gitignore
 exclude .env
+# Exclude PyPI-specific files
+exclude prepare_pypi.py
+exclude README_PYPI.md
 # Exclude this packaging guide from distribution
 exclude PACKAGING_GUIDE.md
 prune .git
