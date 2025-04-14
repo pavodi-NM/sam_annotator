@@ -1,0 +1,1389 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A general-purpose image annotation tool based on Segment Anything Model (SAM)">
+      
+      
+        <meta name="author" content="Pavodi NDOYI MANIAMFU">
+      
+      
+        <link rel="canonical" href="https://pavodi-nm.github.io/sam_annotator/memory_management/">
+      
+      
+        <link rel="prev" href="../configuration/">
+      
+      
+        <link rel="next" href="../implementation/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.4.0">
+    
+    
+      
+        <title>Memory Management - SAM Annotator</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.9f615399.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.649f08f9.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#memory-management-in-sam-annotator" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SAM Annotator" class="md-header__button md-logo" aria-label="SAM Annotator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SAM Annotator
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Memory Management
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/pavodi-nm/sam_annotator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    pavodi-nm/sam_annotator
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SAM Annotator" class="md-nav__button md-logo" aria-label="SAM Annotator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    SAM Annotator
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/pavodi-nm/sam_annotator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    pavodi-nm/sam_annotator
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Keyboard Shortcuts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../loading_saving/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Loading and Saving Annotations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotation_formats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Annotation Formats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration Options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Memory Management
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Memory Management
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    Table of Contents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-management-architecture" class="md-nav__link">
+    Memory Management Architecture
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-platform-memory-management" class="md-nav__link">
+    Cross-Platform Memory Management
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-Platform Memory Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linux-based-systems" class="md-nav__link">
+    Linux-Based Systems
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows-based-systems" class="md-nav__link">
+    Windows-Based Systems
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-memory-management" class="md-nav__link">
+    GPU Memory Management
+  </a>
+  
+    <nav class="md-nav" aria-label="GPU Memory Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    Configuration Options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-manager-implementation" class="md-nav__link">
+    Memory Manager Implementation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-systems" class="md-nav__link">
+    Caching Systems
+  </a>
+  
+    <nav class="md-nav" aria-label="Caching Systems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#image-processing-cache" class="md-nav__link">
+    Image Processing Cache
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prediction-cache" class="md-nav__link">
+    Prediction Cache
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-optimization-strategies" class="md-nav__link">
+    Memory Optimization Strategies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-time-memory-monitoring" class="md-nav__link">
+    Real-Time Memory Monitoring
+  </a>
+  
+    <nav class="md-nav" aria-label="Real-Time Memory Monitoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#main-loop-monitoring" class="md-nav__link">
+    Main Loop Monitoring
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-monitoring-thresholds" class="md-nav__link">
+    Memory Monitoring Thresholds
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-response" class="md-nav__link">
+    Adaptive Response
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-recovery" class="md-nav__link">
+    Automatic Recovery
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-memory-issues" class="md-nav__link">
+    Troubleshooting Memory Issues
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting Memory Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-issues-on-windows" class="md-nav__link">
+    Common Issues on Windows
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-issues-on-linux" class="md-nav__link">
+    Common Issues on Linux
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-optimization-tips" class="md-nav__link">
+    General Optimization Tips
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-memory-management" class="md-nav__link">
+    Testing Memory Management
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementation Details
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_reference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../placeholder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    Table of Contents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-management-architecture" class="md-nav__link">
+    Memory Management Architecture
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-platform-memory-management" class="md-nav__link">
+    Cross-Platform Memory Management
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-Platform Memory Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linux-based-systems" class="md-nav__link">
+    Linux-Based Systems
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows-based-systems" class="md-nav__link">
+    Windows-Based Systems
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-memory-management" class="md-nav__link">
+    GPU Memory Management
+  </a>
+  
+    <nav class="md-nav" aria-label="GPU Memory Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    Configuration Options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-manager-implementation" class="md-nav__link">
+    Memory Manager Implementation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-systems" class="md-nav__link">
+    Caching Systems
+  </a>
+  
+    <nav class="md-nav" aria-label="Caching Systems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#image-processing-cache" class="md-nav__link">
+    Image Processing Cache
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prediction-cache" class="md-nav__link">
+    Prediction Cache
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-optimization-strategies" class="md-nav__link">
+    Memory Optimization Strategies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-time-memory-monitoring" class="md-nav__link">
+    Real-Time Memory Monitoring
+  </a>
+  
+    <nav class="md-nav" aria-label="Real-Time Memory Monitoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#main-loop-monitoring" class="md-nav__link">
+    Main Loop Monitoring
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-monitoring-thresholds" class="md-nav__link">
+    Memory Monitoring Thresholds
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-response" class="md-nav__link">
+    Adaptive Response
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-recovery" class="md-nav__link">
+    Automatic Recovery
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-memory-issues" class="md-nav__link">
+    Troubleshooting Memory Issues
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting Memory Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-issues-on-windows" class="md-nav__link">
+    Common Issues on Windows
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-issues-on-linux" class="md-nav__link">
+    Common Issues on Linux
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-optimization-tips" class="md-nav__link">
+    General Optimization Tips
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-memory-management" class="md-nav__link">
+    Testing Memory Management
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="memory-management-in-sam-annotator">Memory Management in SAM Annotator</h1>
+<p>This document provides a detailed overview of how SAM Annotator manages memory across different operating systems (Linux and Windows) and the caching systems implemented to enhance performance.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#memory-management-architecture">Memory Management Architecture</a></li>
+<li><a href="#cross-platform-memory-management">Cross-Platform Memory Management</a></li>
+<li><a href="#linux-based-systems">Linux-Based Systems</a></li>
+<li><a href="#windows-based-systems">Windows-Based Systems</a></li>
+<li><a href="#gpu-memory-management">GPU Memory Management</a></li>
+<li><a href="#configuration-options">Configuration Options</a></li>
+<li><a href="#memory-manager-implementation">Memory Manager Implementation</a></li>
+<li><a href="#caching-systems">Caching Systems</a></li>
+<li><a href="#image-processing-cache">Image Processing Cache</a></li>
+<li><a href="#prediction-cache">Prediction Cache</a></li>
+<li><a href="#memory-optimization-strategies">Memory Optimization Strategies</a></li>
+<li><a href="#real-time-memory-monitoring">Real-Time Memory Monitoring</a></li>
+<li><a href="#troubleshooting-memory-issues">Troubleshooting Memory Issues</a></li>
+<li><a href="#testing-memory-management">Testing Memory Management</a></li>
+</ol>
+<h2 id="memory-management-architecture">Memory Management Architecture</h2>
+<p>SAM Annotator uses a layered approach to memory management:</p>
+<ol>
+<li><strong>GPU Memory Manager</strong>: Central component that interfaces with NVIDIA SMI or PyTorch to monitor and manage GPU memory.</li>
+<li><strong>Image Processor Cache</strong>: Caches processed images to avoid redundant transformations.</li>
+<li><strong>Prediction Cache</strong>: Stores recent segmentation predictions to avoid redundant computations.</li>
+<li><strong>Memory Optimizers</strong>: Active memory management components that clear caches when memory usage exceeds thresholds.</li>
+</ol>
+<h2 id="cross-platform-memory-management">Cross-Platform Memory Management</h2>
+<h3 id="linux-based-systems">Linux-Based Systems</h3>
+<p>On Linux systems, SAM Annotator takes advantage of more advanced memory management capabilities:</p>
+<ul>
+<li><strong>NVIDIA SMI Integration</strong>: When available, uses NVIDIA System Management Interface to get detailed GPU memory statistics.</li>
+<li><strong>Enhanced Memory Monitoring</strong>: Accesses detailed memory utilization metrics including total, used, and free memory.</li>
+<li><strong>Background Process Optimization</strong>: Linux's better handling of background processes allows for more aggressive caching strategies.</li>
+</ul>
+<p>Example memory information on Linux:
+<div class="highlight"><pre><span></span><code>Memory before prediction: Used: 2.45 GB / Total: 8.00 GB (30.6%)
+</code></pre></div></p>
+<h3 id="windows-based-systems">Windows-Based Systems</h3>
+<p>On Windows systems, SAM Annotator implements fallback mechanisms:</p>
+<ul>
+<li><strong>PyTorch Fallbacks</strong>: When NVIDIA SMI is not available, falls back to PyTorch's memory management functions.</li>
+<li><strong>Simplified Memory Reporting</strong>: Uses a more robust approach to memory reporting to handle potential missing metrics.</li>
+<li><strong>Safety Mechanisms</strong>: Implements additional safety checks to prevent KeyError issues when certain memory metrics are not available.</li>
+<li><strong>Robust Error Handling</strong>: The <code>safe_get_memory_info()</code> method guarantees a valid memory information dictionary, even on Windows or CPU-only systems.</li>
+</ul>
+<p>Example memory information on Windows:
+<div class="highlight"><pre><span></span><code>Memory before prediction: Running on CPU - memory stats not available
+</code></pre></div></p>
+<h2 id="gpu-memory-management">GPU Memory Management</h2>
+<h3 id="configuration-options">Configuration Options</h3>
+<p>SAM Annotator's memory management is highly configurable through environment variables:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SAM_GPU_MEMORY_FRACTION</code></td>
+<td>0.9</td>
+<td>Maximum fraction of GPU memory to use (0.0-1.0)</td>
+</tr>
+<tr>
+<td><code>SAM_MEMORY_WARNING_THRESHOLD</code></td>
+<td>0.8</td>
+<td>Memory utilization threshold for warnings (0.0-1.0)</td>
+</tr>
+<tr>
+<td><code>SAM_MEMORY_CRITICAL_THRESHOLD</code></td>
+<td>0.95</td>
+<td>Memory utilization threshold for critical errors (0.0-1.0)</td>
+</tr>
+<tr>
+<td><code>SAM_ENABLE_MEMORY_GROWTH</code></td>
+<td>True</td>
+<td>Whether to allow dynamic memory growth or enforce the limit strictly</td>
+</tr>
+</tbody>
+</table>
+<h3 id="memory-manager-implementation">Memory Manager Implementation</h3>
+<p>The GPU memory management is centralized in the <code>GPUMemoryManager</code> class:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GPUMemoryManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enhanced GPU memory manager with fallback options.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Load configuration from environment variables with defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_fraction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_env_float</span><span class="p">(</span><span class="s1">&#39;SAM_GPU_MEMORY_FRACTION&#39;</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warning_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_env_float</span><span class="p">(</span><span class="s1">&#39;SAM_MEMORY_WARNING_THRESHOLD&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">critical_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_env_float</span><span class="p">(</span><span class="s1">&#39;SAM_MEMORY_CRITICAL_THRESHOLD&#39;</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enable_memory_growth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_env_bool</span><span class="p">(</span><span class="s1">&#39;SAM_ENABLE_MEMORY_GROWTH&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Try to initialize NVIDIA SMI with fallbacks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nvml_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">nvidia_smi</span>
+            <span class="n">nvidia_smi</span><span class="o">.</span><span class="n">nvmlInit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nvidia_smi</span> <span class="o">=</span> <span class="n">nvidia_smi</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nvml_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="c1"># Fallback to torch memory management</span>
+            <span class="k">pass</span>
+</code></pre></div>
+<p>Key methods:
+- <code>get_gpu_memory_info()</code>: Retrieves current memory statistics with platform-specific handling.
+- <code>safe_get_memory_info()</code>: Guarantees a valid memory info dictionary, even on Windows/CPU systems.
+- <code>check_memory_status()</code>: Evaluates memory usage against thresholds and returns status and warnings.
+- <code>optimize_memory()</code>: Forces garbage collection and cache clearing when needed.
+- <code>should_cache()</code>: Determines if it's safe to cache based on current memory usage.</p>
+<p>The memory manager is initialized by both the <code>SAM1Predictor</code> and <code>SAM2Predictor</code> classes, and is used throughout the application for memory monitoring and optimization.</p>
+<h2 id="caching-systems">Caching Systems</h2>
+<p>SAM Annotator employs multiple caching systems to optimize performance.</p>
+<h3 id="image-processing-cache">Image Processing Cache</h3>
+<p>Implemented in <code>ImageProcessor</code> class, this cache reduces the computational overhead of resizing and preprocessing images:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Cache initialization in ImageProcessor.__init__</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">_processed_cache</span> <span class="o">=</span> <span class="n">WeakValueDictionary</span><span class="p">()</span>  <span class="c1"># Cache processed images</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Cache metadata</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">max_cache_size</span> <span class="o">=</span> <span class="mi">10</span>
+</code></pre></div>
+<p>Features:
+- <strong>Weak References</strong>: Uses <code>WeakValueDictionary</code> to allow cached images to be garbage collected when memory is low.
+- <strong>Size-Limited Cache</strong>: Maintains a maximum of 10 processed images by default.
+- <strong>Hash-Based Keys</strong>: Uses MD5 hashes of image data to identify cached entries.
+- <strong>Memory Usage Monitoring</strong>: Provides <code>get_memory_usage()</code> method to estimate cache size in bytes.
+- <strong>Explicit Cleanup</strong>: Offers <code>clear_cache()</code> method for forced cleanup.</p>
+<p>Implementation details:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process image for annotation display using ScalingManager with caching.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Generate cache key</span>
+        <span class="n">image_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+        <span class="c1"># Check cache first</span>
+        <span class="k">if</span> <span class="n">image_hash</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_processed_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_processed_cache</span><span class="p">[</span><span class="n">image_hash</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span><span class="p">[</span><span class="n">image_hash</span><span class="p">]</span>
+
+        <span class="c1"># Process image using existing ScalingManager</span>
+        <span class="n">processed_image</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaling_manager</span><span class="o">.</span><span class="n">process_image</span><span class="p">(</span>
+            <span class="n">image</span><span class="p">,</span> 
+            <span class="n">interpolation</span><span class="o">=</span><span class="n">InterpolationMethod</span><span class="o">.</span><span class="n">AREA</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Cache the results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_processed_cache</span><span class="p">[</span><span class="n">image_hash</span><span class="p">]</span> <span class="o">=</span> <span class="n">processed_image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span><span class="p">[</span><span class="n">image_hash</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span>
+
+        <span class="c1"># Manage cache size for metadata</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cache_size</span><span class="p">:</span>
+            <span class="c1"># Remove oldest items</span>
+            <span class="n">oldest_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span><span class="p">))</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span><span class="p">[</span><span class="n">oldest_key</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">processed_image</span><span class="p">,</span> <span class="n">metadata</span>
+</code></pre></div>
+<h3 id="prediction-cache">Prediction Cache</h3>
+<p>Implemented in both <code>SAM1Predictor</code> and <code>SAM2Predictor</code> classes, this cache stores segmentation results to avoid redundant computations:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Cache initialization in predictor classes</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">current_image_hash</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">prediction_cache</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">max_cache_size</span> <span class="o">=</span> <span class="mi">50</span>
+</code></pre></div>
+<p>Features:
+- <strong>Memory-Aware Caching</strong>: Only caches predictions when memory usage is below warning threshold.
+- <strong>Current Image Preservation</strong>: Option to retain cache entries for current image while clearing others.
+- <strong>Composite Keys</strong>: Uses a combination of image hash and input parameters to identify cached entries.
+- <strong>Automatic Cleanup</strong>: Clears older entries when cache size exceeds limit.</p>
+<p>Implementation details:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">point_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">box</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">multimask_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Predict masks with memory management.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Check memory status before prediction</span>
+        <span class="n">status_ok</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_manager</span><span class="o">.</span><span class="n">check_memory_status</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">status_ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="c1"># Generate cache key and check cache</span>
+        <span class="n">cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_cache_key</span><span class="p">(</span><span class="n">point_coords</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">,</span> <span class="n">box</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
+
+        <span class="c1"># Run prediction with optimizations</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                <span class="n">point_coords</span><span class="o">=</span><span class="n">point_coords</span><span class="p">,</span>
+                <span class="n">point_labels</span><span class="o">=</span><span class="n">point_labels</span><span class="p">,</span>
+                <span class="n">box</span><span class="o">=</span><span class="n">box</span><span class="p">,</span>
+                <span class="n">multimask_output</span><span class="o">=</span><span class="n">multimask_output</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Cache results if memory allows</span>
+            <span class="n">memory_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_manager</span><span class="o">.</span><span class="n">get_gpu_memory_info</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">memory_info</span><span class="p">[</span><span class="s1">&#39;utilization&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_manager</span><span class="o">.</span><span class="n">warning_threshold</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prediction_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">logits</span><span class="p">)</span>
+
+                <span class="c1"># Manage cache size</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction_cache</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cache_size</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">(</span><span class="n">keep_current</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">logits</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Try to recover memory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_manager</span><span class="o">.</span><span class="n">optimize_memory</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">raise</span>
+</code></pre></div>
+<h2 id="memory-optimization-strategies">Memory Optimization Strategies</h2>
+<p>SAM Annotator employs several strategies to optimize memory usage:</p>
+<ol>
+<li><strong>Periodic Memory Checks</strong>: Regularly checks memory usage in the main application loop:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="c1"># From annotator.py run() method</span>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_processor</span><span class="p">,</span> <span class="s1">&#39;get_memory_usage&#39;</span><span class="p">):</span>
+    <span class="n">memory_usage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_processor</span><span class="o">.</span><span class="n">get_memory_usage</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">memory_usage</span> <span class="o">&gt;</span> <span class="mf">1e9</span><span class="p">:</span>  <span class="c1"># More than 1GB</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Clearing image cache due to high memory usage&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_processor</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+
+<span class="c1"># Check GPU memory periodically</span>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="p">,</span> <span class="s1">&#39;get_memory_usage&#39;</span><span class="p">):</span>
+    <span class="n">gpu_memory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">get_memory_usage</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">gpu_memory</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">:</span>  <span class="c1"># Over 80% GPU memory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">optimize_memory</span><span class="p">()</span>
+</code></pre></div>
+<ol>
+<li>
+<p><strong>Threshold-Based Cache Management</strong>: Clears caches when memory usage exceeds predefined thresholds.</p>
+</li>
+<li>
+<p><strong>Explicit Garbage Collection</strong>: Forces Python's garbage collector and PyTorch's CUDA cache clearing:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">optimize_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimize GPU memory usage.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">memory_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_gpu_memory_info</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">force</span> <span class="ow">or</span> <span class="n">memory_info</span><span class="p">[</span><span class="s1">&#39;utilization&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">warning_threshold</span><span class="p">:</span>
+            <span class="c1"># Clear cache</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+
+            <span class="c1"># Force garbage collection</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Memory optimization performed&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error optimizing memory: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<ol>
+<li><strong>TF32 Precision</strong>: Enables TF32 precision on supported NVIDIA GPUs for better performance and memory efficiency:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_setup_gpu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configure GPU memory management.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enable_memory_growth</span><span class="p">:</span>
+            <span class="c1"># Enable memory growth</span>
+            <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()):</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">set_per_process_memory_fraction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_fraction</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># Enable TF32 for better performance on Ampere GPUs</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">matmul</span><span class="o">.</span><span class="n">allow_tf32</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">allow_tf32</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error setting up GPU memory management: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<ol>
+<li>
+<p><strong>Automatic Image Resizing</strong>: Resizes large images to reduce memory footprint using the <code>ScalingManager</code>.</p>
+</li>
+<li>
+<p><strong>WeakValueDictionary for Image Cache</strong>: Uses weak references to allow the garbage collector to reclaim memory when needed.</p>
+</li>
+</ol>
+<h2 id="real-time-memory-monitoring">Real-Time Memory Monitoring</h2>
+<p>The SAM Annotator tool implements real-time memory monitoring that runs continuously in the main application loop. This proactive approach ensures that memory usage is kept in check during extended annotation sessions.</p>
+<h3 id="main-loop-monitoring">Main Loop Monitoring</h3>
+<p>The main loop in both <code>SAMAnnotator</code> and derived classes continuously monitors memory usage:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Main event loop implementation from sam_annotator.py</span>
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="c1"># Check image processor memory usage</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_processor</span><span class="p">,</span> <span class="s1">&#39;get_memory_usage&#39;</span><span class="p">):</span>
+        <span class="n">memory_usage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_processor</span><span class="o">.</span><span class="n">get_memory_usage</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">memory_usage</span> <span class="o">&gt;</span> <span class="mf">1e9</span><span class="p">:</span>  <span class="c1"># More than 1GB</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Clearing image cache&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_processor</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+
+    <span class="c1"># Check GPU memory</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="p">,</span> <span class="s1">&#39;get_memory_usage&#39;</span><span class="p">):</span>
+        <span class="n">gpu_memory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">get_memory_usage</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">gpu_memory</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">:</span>  <span class="c1"># Over 80% GPU memory</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">optimize_memory</span><span class="p">()</span>
+
+    <span class="c1"># Rest of the event loop...</span>
+</code></pre></div>
+<h3 id="memory-monitoring-thresholds">Memory Monitoring Thresholds</h3>
+<p>The real-time monitoring system uses two types of thresholds:</p>
+<ol>
+<li><strong>Absolute thresholds</strong> for image cache (1GB)</li>
+<li><strong>Percentage thresholds</strong> for GPU memory (80%)</li>
+</ol>
+<p>These values were determined based on extensive testing to provide the best balance between performance and stability.</p>
+<h3 id="adaptive-response">Adaptive Response</h3>
+<p>The monitoring system doesn't just detect high memory usage; it responds adaptively:</p>
+<ol>
+<li><strong>For image processing cache</strong>: When memory exceeds 1GB, it clears the image cache completely</li>
+<li><strong>For GPU memory</strong>: When usage exceeds 80%, it performs a targeted optimization that includes:</li>
+<li>Clearing unused prediction caches</li>
+<li>Running PyTorch's CUDA cache empty function</li>
+<li>Triggering Python's garbage collector</li>
+</ol>
+<h3 id="automatic-recovery">Automatic Recovery</h3>
+<p>If memory issues occur during predictions, the system attempts automatic recovery:</p>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Prediction code...</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in prediction: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Try to recover memory</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">memory_manager</span><span class="o">.</span><span class="n">optimize_memory</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">raise</span>
+</code></pre></div>
+<p>This real-time monitoring and recovery system ensures that SAM Annotator remains stable even during long annotation sessions with large images or complex segmentation tasks.</p>
+<h2 id="troubleshooting-memory-issues">Troubleshooting Memory Issues</h2>
+<p>If you encounter memory issues when using SAM Annotator:</p>
+<h3 id="common-issues-on-windows">Common Issues on Windows</h3>
+<ol>
+<li><strong>KeyError: 'formatted'</strong>: This error occurs when the GPU memory information lacks the 'formatted' key. Now fixed with the <code>safe_get_memory_info()</code> method.</li>
+</ol>
+<p>Solution: Update to the latest version with the fix.</p>
+<ol>
+<li><strong>Out of Memory Errors</strong>: Windows systems may experience OOM errors with large images.</li>
+</ol>
+<p>Solution: Reduce the maximum image size in the configuration or use the CPU mode.</p>
+<h3 id="common-issues-on-linux">Common Issues on Linux</h3>
+<ol>
+<li><strong>CUDA Out of Memory</strong>: Linux systems might still have CUDA OOM errors with large batches.</li>
+</ol>
+<p>Solution: Set the environment variable <code>SAM_GPU_MEMORY_FRACTION=0.7</code> to limit GPU memory usage.</p>
+<ol>
+<li><strong>nvidia-smi Not Found</strong>: Some Linux distributions might lack proper NVIDIA driver setup.</li>
+</ol>
+<p>Solution: Install NVIDIA drivers or set <code>SAM_ENABLE_MEMORY_GROWTH=false</code> to use PyTorch's memory management.</p>
+<h3 id="general-optimization-tips">General Optimization Tips</h3>
+<ol>
+<li><strong>Environment Variables</strong>:</li>
+<li><code>SAM_GPU_MEMORY_FRACTION</code>: Controls maximum GPU memory usage (default: 0.9)</li>
+<li><code>SAM_MEMORY_WARNING_THRESHOLD</code>: Sets memory warning level (default: 0.8)</li>
+<li><code>SAM_MEMORY_CRITICAL_THRESHOLD</code>: Sets memory critical level (default: 0.95)</li>
+<li>
+<p><code>SAM_ENABLE_MEMORY_GROWTH</code>: Enables/disables memory growth (default: True)</p>
+</li>
+<li>
+<p><strong>Reduce Image Size</strong>: Configure smaller target image sizes to reduce memory footprint.</p>
+</li>
+<li>
+<p><strong>Limit Batch Processing</strong>: Process fewer images at once to reduce memory pressure.</p>
+</li>
+</ol>
+<h2 id="testing-memory-management">Testing Memory Management</h2>
+<p>SAM Annotator includes a test suite for memory management that validates:</p>
+<ol>
+<li><strong>Memory allocation limits</strong>: Tests allocation with different memory fractions.</li>
+<li><strong>Memory growth behavior</strong>: Validates behavior when memory limits are reached.</li>
+<li><strong>Optimization effectiveness</strong>: Measures memory recovery after optimization.</li>
+</ol>
+<p>The test code includes a memory allocation test that tries to allocate large tensors while monitoring memory usage:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_memory_allocation</span><span class="p">(</span><span class="n">memory_manager</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test allocating and freeing memory.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Initial memory state</span>
+        <span class="n">initial_info</span> <span class="o">=</span> <span class="n">memory_manager</span><span class="o">.</span><span class="n">get_gpu_memory_info</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial GPU memory state: </span><span class="si">{</span><span class="n">format_memory_info</span><span class="p">(</span><span class="n">initial_info</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Allocate some tensors</span>
+        <span class="n">tensors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="c1"># Allocate a 1GB tensor</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="mi">256</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>  <span class="c1"># ~1GB</span>
+            <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">)</span>
+            <span class="n">tensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+            <span class="c1"># Check memory status</span>
+            <span class="n">status_ok</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">memory_manager</span><span class="o">.</span><span class="n">check_memory_status</span><span class="p">()</span>
+            <span class="n">current_info</span> <span class="o">=</span> <span class="n">memory_manager</span><span class="o">.</span><span class="n">get_gpu_memory_info</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After allocation </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">format_memory_info</span><span class="p">(</span><span class="n">current_info</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># If we hit critical threshold, break</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">status_ok</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Hit critical memory threshold!&quot;</span><span class="p">)</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Try to optimize memory</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Attempting memory optimization...&quot;</span><span class="p">)</span>
+        <span class="n">memory_manager</span><span class="o">.</span><span class="n">optimize_memory</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Check memory after optimization</span>
+        <span class="n">post_opt_info</span> <span class="o">=</span> <span class="n">memory_manager</span><span class="o">.</span><span class="n">get_gpu_memory_info</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After optimization: </span><span class="si">{</span><span class="n">format_memory_info</span><span class="p">(</span><span class="n">post_opt_info</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error during memory test: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>To run memory tests with different configurations, use:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">TEST_MEMORY_FRACTIONS</span><span class="o">=</span><span class="m">0</span>.9,0.7,0.5<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>tests.test_memory_manager
+</code></pre></div>
+<hr />
+<p>This document covers the key aspects of memory management in SAM Annotator. For further details, refer to the code documentation and comments in the relevant files:
+- <code>memory_manager.py</code>: Core memory management functionality
+- <code>image_utils.py</code>: Image processing cache implementation
+- <code>predictor.py</code>: Prediction caching systems </p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/pavodi-nm/sam_annotator" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.expand", "navigation.indexes", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.4e0fa4ba.min.js"></script>
+      
+    
+  </body>
+</html>
