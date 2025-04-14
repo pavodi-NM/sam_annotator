@@ -47,4 +47,3 @@ scripts/
 # py files
 vizcopy.py 
 test_import.py 
-prepare_pypi.py
