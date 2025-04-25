@@ -35,7 +35,7 @@ A nice and simple tool for semi-automatic image annotation based on Meta AI's Se
 ### Installation via pip
 
 ```bash
-# Install the latest stable version (when available)
+# Install the latest stable version (available on PyPI)
 pip install sam_annotator
 ```
 
@@ -43,10 +43,10 @@ For the latest development version:
 
 ```bash
 # For the latest development version from TestPyPI (specify exact version)
-pip install -i https://test.pypi.org/simple/ sam-annotator==0.1.0.dev19
+pip install -i https://test.pypi.org/simple/ sam-annotator==0.2.1.dev10
 
 # If you experience dependency issues, add PyPI as an extra index
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.1.0.dev19
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.2.1.dev10
 ```
 
 ### Setup from source
