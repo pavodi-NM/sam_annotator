@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
+
 # SAM Annotator
 
 A nice and simple tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
