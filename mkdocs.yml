@@ -54,9 +54,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          setup_commands:
-            - import sys
-            - sys.path.append("docs")
+          paths: [docs]  # Alternative to setup_commands that's more compatible
           options:
             docstring_style: google
-            show_source: true 
+            show_source: true

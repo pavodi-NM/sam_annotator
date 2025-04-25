@@ -30,18 +30,18 @@ sam_annotator --category_path <path> --classes_csv <path> [--sam_version sam1|sa
 The class definition file is a CSV file that defines the annotation classes available in your project. The file should have the following format:
 
 ```csv
-class_id,class_name,color
-0,background,"0,0,0"
-1,person,"255,0,0"
-2,car,"0,255,0"
+class_name
+background
+person
+car
 ...
 ```
 
 ### Fields
 
-- `class_id`: Numeric ID for the class (starts at 0)
-- `class_name`: Display name for the class
-- `color`: RGB color values for the class visualization (comma-separated)
+- `class_name`: Display name for the class, a numeric ID is automatically generated and assigned to each class (starting from 0).
+- In case, the csv file is missing `class_name`, the app will ask to correct this automatically.
+
 
 !!! note
     SAM Annotator currently supports a maximum of 15 classes (including background).
@@ -57,7 +57,7 @@ Support for configuration files to customize additional aspects of SAM Annotator
 
 ## Environment Variables
 
-SAM Annotator supports the following environment variables for advanced configuration:
+SAM Annotator supports the following environment variables for advanced configuration (which is not yet implemented fully):
 
 | Variable | Description | Default |
 |----------|-------------|---------|

@@ -7,6 +7,12 @@ on:
       - 'main'    # Only allow from main branch
     tags:
       - 'v*'      # Only from v-prefixed tags
+    paths:
+      - 'pyproject.toml'
+      - 'sam_annotator/__init__.py'
+      - 'setup.py'
+      - 'MANIFEST.in'
+      - 'prepare_pypi.py'
   workflow_dispatch:
     inputs:
       repository:

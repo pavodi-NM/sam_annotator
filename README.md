@@ -1,6 +1,6 @@
 # SAM Annotator
 
-A powerful tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
+A nice and simple tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
 
 > **⚠️ DEVELOPMENT VERSION NOTICE**
 >
@@ -10,7 +10,7 @@ A powerful tool for semi-automatic image annotation based on Meta AI's Segment A
 ## Features
 
 - **Semi-Automatic Segmentation**: Use SAM to generate high-quality masks with minimal interaction
-- **Multiple Annotation Methods**: Box-based and point-based prompts
+- **Multiple Annotation Methods**: Box-based and point-based annotation methods
 - **Class Management**: Assign classes to segmented objects
 - **Export Options**: Export annotations to COCO, YOLO, or Pascal VOC formats
 - **Undo/Redo**: Robust command system for undoing and redoing annotations
