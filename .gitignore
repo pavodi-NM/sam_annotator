@@ -47,3 +47,18 @@ scripts/
 # py files
 vizcopy.py 
 test_import.py 
+
+site/
+memory_management/ 
+build/
+dist/ 
+implementation/ 
+shortcuts/ 
+loading_saving/ 
+placeholder/ 
+configuration/ 
+annotation_formats/ 
+api_reference/  
+
+
+
