@@ -1,4 +1,5 @@
 [![CodeQL](https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
+[![Author](https://img.shields.io/badge/Author-Pavodi%20N.%20Maniamfu-blue)](https://pavodi-nm.github.io/)
 
 # SAM Annotator
 
@@ -16,7 +17,7 @@ A nice and simple tool for semi-automatic image annotation based on Meta AI's Se
 - **Class Management**: Assign classes to segmented objects
 - **Export Options**: Export annotations to COCO, YOLO, or Pascal VOC formats
 - **Undo/Redo**: Robust command system for undoing and redoing annotations
-- **Visualization**: Real-time visualization of annotations with adjustable opacity
+- **Visualization**: Real-time visualization of annotations with adjustable opacity  
 
 ## Tool Overview
 
