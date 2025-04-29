@@ -1,5 +1,5 @@
 [![Author](https://img.shields.io/badge/Author-Pavodi%20N.%20Maniamfu-blue)](https://pavodi-nm.github.io/)
-[![Downloads](https://img.shields.io/badge/dynamic/json?color=2ecc71&label=%F0%9F%93%A6%20Installs&query=total_downloads&url=https%3A%2F%2Fpepy.tech%2Fapi%2Fprojects%2Fsam-annotator)](https://pepy.tech/project/sam-annotator "Total number of installations via pip from PyPi")
+[![Installs](https://img.shields.io/pypi/dt/sam-annotator?label=Installs&color=orange)](https://pypi.org/project/sam-annotator/ "Total number of installations via pip from PyPi")
 [![CodeQL](https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
 [![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/pavodi-nm/sam_annotator/blob/main/LICENSE)
 
@@ -277,6 +277,3 @@ https://github.com/pavodi-nm/sam_annotator
 - [Segment Anything Model (SAM)](https://segment-anything.com/) by Meta AI Research
 - OpenCV for image processing
 - PyTorch for deep learning
-
-
-
