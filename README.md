@@ -1,5 +1,5 @@
 [![Author](https://img.shields.io/badge/Author-Pavodi%20N.%20Maniamfu-blue)](https://pavodi-nm.github.io/)
-<a href="https://pypi.org/project/sam-annotator/"><img alt="PyPI Downloads" title="Total number of installations via pip from PyPI" src="https://static.pepy.tech/personalized-badge/sam-annotator?period=total&units=international_system&left_color=555555&right_color=2ecc71&left_text=📦%20Installs"/></a>
+[![Installs](https://img.shields.io/pypi/dm/sam-annotator?label=%F0%9F%93%A6%20Installs&color=2ecc71&labelColor=555555)](https://pypi.org/project/sam-annotator/ "Total number of installations via pip from PyPI")
 
 [![CodeQL](https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
 [![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/pavodi-nm/sam_annotator/blob/main/LICENSE)
