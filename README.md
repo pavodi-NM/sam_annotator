@@ -276,3 +276,4 @@ https://github.com/pavodi-nm/sam_annotator
 - [Segment Anything Model (SAM)](https://segment-anything.com/) by Meta AI Research
 - OpenCV for image processing
 - PyTorch for deep learning
+
