@@ -9,9 +9,9 @@ requirements-dev.txt
 requirements.txt
 setup.cfg
 setup.py
+.github/workflows/codeql.yml
 .github/workflows/docs.yml
 .github/workflows/publish.yml
-.github/workflows/publish_improved.yml
 .github/workflows/tests.yml
 docs/README.md
 docs/annotation_formats.md
@@ -83,6 +83,7 @@ sam_annotator/utils/__init__.py
 sam_annotator/utils/file_utils.py
 sam_annotator/utils/image_utils.py
 sam_annotator/utils/scaling.py
+sam_annotator/utils/standalone_viz.py
 sam_annotator/utils/visualization - Copy.py
 sam_annotator/utils/visualization.py
 src/__init__.py
@@ -121,6 +122,7 @@ src/utils/image_utils.py
 src/utils/scaling.py
 src/utils/visualization - Copy.py
 src/utils/visualization.py
+src/utils/viz.py
 tests/test_memory_manager.py
 tests/test_mode_toggle.py
 tests/test_mode_toggle_handler.py
