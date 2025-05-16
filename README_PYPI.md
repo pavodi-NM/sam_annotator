@@ -1,9 +1,13 @@
-[![Author](https://img.shields.io/badge/Author-Pavodi%20N.%20Maniamfu-blue)](https://pavodi-nm.github.io/)
-[![Installs](https://static.pepy.tech/personalized-badge/sam-annotator?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Installs)](https://pypi.org/project/sam-annotator/ "Total number of installations via pip from PyPi")
-[![CodeQL](https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/pavodi-nm/sam_annotator/blob/main/LICENSE)
+[[View Author on GitHub](https://github.com/pavodi-NM/sam_annotator/blob/main/https://img.shields.io/badge/Author-Pavodi%20N.%20Maniamfu-blue)](https://pavodi-nm.github.io/)
+[[View Installs on GitHub](https://github.com/pavodi-NM/sam_annotator/blob/main/https://static.pepy.tech/personalized-badge/sam-annotator?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Installs)](https://pypi.org/project/sam-annotator/ "Total number of installations via pip from PyPi")
+[[View CodeQL on GitHub](https://github.com/pavodi-NM/sam_annotator/blob/main/https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
+[[View License on GitHub](https://github.com/pavodi-NM/sam_annotator/blob/main/https://img.shields.io/badge/License-MIT-green)](https://github.com/pavodi-nm/sam_annotator/blob/main/LICENSE)
 
 # SAM Annotator
+> **Note:** This package has visual examples available on the [GitHub repository](https://github.com/pavodi-NM/sam_annotator).
+> Links to images in this document will redirect you to the GitHub repository.
+
+
 
 A nice and simple tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
 
@@ -23,7 +27,7 @@ A nice and simple tool for semi-automatic image annotation based on Meta AI's Se
 
 ## Tool Overview
 
-![SAM Annotation Tool](sam-visual-examples/sam-annotation-all.png)
+[View SAM Annotation Tool on GitHub](https://github.com/pavodi-NM/sam_annotator/blob/main/sam-visual-examples/sam-annotation-all.png)
 
 ## Installation
 
@@ -141,7 +145,7 @@ car
 
 SAM Annotator includes a powerful visualization tool for reviewing annotations. This tool allows you to browse through your annotated images, view segmentation masks, and export statistics about your dataset.
 
-![Visualization Tool](sam-visual-examples/visualization-tool.png)
+[View Visualization Tool on GitHub](https://github.com/pavodi-NM/sam_annotator/blob/main/sam-visual-examples/visualization-tool.png)
 
 ### Launching the Visualization Tool
 

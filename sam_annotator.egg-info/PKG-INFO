@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: sam_annotator
-Version: 0.1.0a1
+Version: 0.2.1a11
 Summary: A general-purpose image annotation tool based on Segment Anything Model (SAM)
 Home-page: https://github.com/pavodi-nm/sam_annotator
 Author: SAM Annotator Team
@@ -44,9 +44,14 @@ Dynamic: home-page
 Dynamic: license-file
 Dynamic: requires-python
 
+[![Author](https://img.shields.io/badge/Author-Pavodi%20N.%20Maniamfu-blue)](https://pavodi-nm.github.io/)
+[![Installs](https://static.pepy.tech/personalized-badge/sam-annotator?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Installs)](https://pypi.org/project/sam-annotator/ "Total number of installations via pip from PyPi")
+[![CodeQL](https://github.com/pavodi-nm/sam_annotator/actions/workflows/codeql.yml/badge.svg)](https://github.com/pavodi-nm/sam_annotator/security/code-scanning)
+[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/pavodi-nm/sam_annotator/blob/main/LICENSE)
+
 # SAM Annotator
 
-A powerful tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
+A nice and simple tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
 
 > **⚠️ DEVELOPMENT VERSION NOTICE**
 >
@@ -56,11 +61,15 @@ A powerful tool for semi-automatic image annotation based on Meta AI's Segment A
 ## Features
 
 - **Semi-Automatic Segmentation**: Use SAM to generate high-quality masks with minimal interaction
-- **Multiple Annotation Methods**: Box-based and point-based prompts
+- **Multiple Annotation Methods**: Box-based and point-based annotation methods
 - **Class Management**: Assign classes to segmented objects
 - **Export Options**: Export annotations to COCO, YOLO, or Pascal VOC formats
 - **Undo/Redo**: Robust command system for undoing and redoing annotations
-- **Visualization**: Real-time visualization of annotations with adjustable opacity
+- **Visualization**: Real-time visualization of annotations with adjustable opacity  
+
+## Tool Overview
+
+![SAM Annotation Tool](sam-visual-examples/sam-annotation-all.png)
 
 ## Installation
 
@@ -75,18 +84,18 @@ A powerful tool for semi-automatic image annotation based on Meta AI's Segment A
 ### Installation via pip
 
 ```bash
-# Install the latest stable version (when available)
-pip install sam_annotator
+# Install the latest stable version (available on PyPI)
+pip install sam-annotator
 ```
 
 For the latest development version:
 
 ```bash
 # For the latest development version from TestPyPI (specify exact version)
-pip install -i https://test.pypi.org/simple/ sam-annotator==0.1.0.dev19
+pip install -i https://test.pypi.org/simple/ sam-annotator==0.2.1.dev10
 
 # If you experience dependency issues, add PyPI as an extra index
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.1.0.dev19
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.2.1.dev10
 ```
 
 ### Setup from source
@@ -172,7 +181,54 @@ car
 2. Left-click to add foreground points (green)
 3. Press 'a' to add the annotation with the current class
 4. Press 's' to save all the annotations
-5. Press 'c' to clear all the annotations 
+5. Press 'c' to clear all the annotations
+
+## Visualization Tool
+
+SAM Annotator includes a powerful visualization tool for reviewing annotations. This tool allows you to browse through your annotated images, view segmentation masks, and export statistics about your dataset.
+
+![Visualization Tool](sam-visual-examples/visualization-tool.png)
+
+### Launching the Visualization Tool
+
+To launch the visualization tool, use the `--visualization` flag:
+
+```bash
+python main.py --category_path <path_to_category> --visualization [--classes_csv <path_to_classes_csv>] [--export_stats]
+```
+
+Example:
+```bash
+python main.py --category_path test_data/s2 --visualization --classes_csv class_map_sam.csv
+```
+
+Or if installed via pip:
+```
+sam_annotator --category_path /path/to/categories --visualization
+```
+
+The tool will automatically look for the classes CSV file in the dataset directory if not specified.
+
+### Visualization Features
+
+- **Browse Images**: Navigate through your dataset using the Previous/Next buttons or keyboard shortcuts
+- **View Masks**: See segmentation masks and their overlays on the original images
+- **Object Details**: View class assignments and object properties
+- **Statistics**: Analyze class distribution and annotation density with visual charts
+- **Export**: Save visualizations of annotated images for documentation
+
+### Visualization Controls
+
+| Control | Action |
+|---------|--------|
+| Previous/Next buttons | Navigate between images |
+| Left/Right arrow keys | Navigate between images |
+| 's' key | Save visualization |
+| 'm' key | Mark as faulty |
+| Opacity slider | Adjust mask transparency |
+| Display mode | Switch between overlay, side-by-side, and mask-only views |
+
+When using the `--export_stats` flag, the tool will generate comprehensive statistics about your dataset, including class distribution, objects per image, and more.
 
 ## Keyboard Shortcuts
 
@@ -258,7 +314,7 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 When using this software, please cite or acknowledge:
 
 ```
-SAM Annotator by Pavodi NDOYI MANIAMFU (FingerVision and University of Tsukuba)
+SAM Annotator by Pavodi NDOYI MANIAMFU (FingerVision and University of Tsukuba - Adaptive Information Processing Lab - Japan)
 https://github.com/pavodi-nm/sam_annotator
 ```
 
