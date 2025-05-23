@@ -52,11 +52,6 @@ setup(
         "segment-anything>=1.0",
         "PyYAML>=6.0",
     ],
-    entry_points={
-        'console_scripts': [
-            'sam-annotator=sam_annotator.main:main',  # Keep the hyphen for the command name
-        ],
-    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",

@@ -49,7 +49,8 @@ docs = [
 ]
 
 [project.scripts]
-sam_annotator = "sam_annotator.main:main"
+sam_annotator = "sam_annotator.main:cli_entry_point"
+sam-annotator = "sam_annotator.main:cli_entry_point"
 
 [project.urls]
 "Homepage" = "https://github.com/pavodi-nm/sam_annotator"

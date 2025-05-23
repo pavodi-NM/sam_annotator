@@ -21,13 +21,17 @@ from sam_annotator.cli.csv_utils import create_sample_csv, validate_csv
 from sam_annotator.cli.logging_utils import setup_standard_logging, setup_debug_logging
 from sam_annotator.cli.parser import parse_args
 
-def main():
-    """Main entry point for SAM Annotator."""
+def main(args=None):
+    """Main entry point for SAM Annotator.
+    
+    Args:
+        args: Command line arguments (defaults to sys.argv[1:])
+    """
     # Load saved configuration
     config = load_config()
     
     # Parse arguments
-    args = parse_args(config)
+    args = parse_args(config, args)
     
     # Setup logging
     logger = setup_debug_logging() if args.debug else setup_standard_logging()
