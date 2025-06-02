@@ -12,6 +12,7 @@ SHORTCUTS = {
     'undo': 'z',  # Add undo shortcut
     'redo': 'y',  # Add redo shortcut
     'clear_all': 'c',  
+    'toggle_auto_advance': 'u',  # Toggle auto-advance after save
     
     # View controls
     'toggle_masks': 'm',

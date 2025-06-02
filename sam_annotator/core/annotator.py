@@ -82,6 +82,9 @@ class SAMAnnotator:
         self.annotations: List[Dict] = []
         self.current_class_id = 0
         
+        # Auto-advance feature state (disabled by default)
+        self.auto_advance_after_save = False
+        
         # Add command manager
         self.command_manager = CommandManager()
         
@@ -525,6 +528,16 @@ class SAMAnnotator:
                 
                 if saved:
                     self.logger.info(f"Successfully saved {len(valid_annotations)} annotations")
+                    status_msg = f"Saved {len(valid_annotations)} annotations"
+                    
+                    # Auto-advance logic
+                    if self.auto_advance_after_save:
+                        if self.session_manager.can_move_next():
+                            self._next_image()
+                            status_msg += " - moved to next image"
+                        else:
+                            status_msg += " - at last image, cannot advance"
+                    
                     self.window_manager.update_main_window(
                         image=self.image,
                         annotations=self.annotations,
@@ -533,7 +546,7 @@ class SAMAnnotator:
                         current_image_path=self.current_image_path,
                         current_idx=self.current_idx,
                         total_images=len(self.image_files),
-                        status=f"Saved {len(valid_annotations)} annotations",
+                        status=status_msg,
                         annotation_mode=self.event_handler.mode
                     )
                     return True
@@ -881,20 +894,38 @@ class SAMAnnotator:
             
     def _handle_redo(self) -> None:
         """Handle redo command."""
-        if self.command_manager.redo():
-            self.window_manager.update_main_window(
-                image=self.image,
-                annotations=self.annotations,
-                current_class=self.class_names[self.current_class_id],
-                current_class_id=self.current_class_id,
-                current_image_path=self.current_image_path,
-                current_idx=self.current_idx,
-                total_images=len(self.image_files),
-                status="Redo successful",
-                annotation_mode=self.event_handler.mode
-            )
-    
-   
+        try:
+            if self.command_manager.can_redo():
+                self.command_manager.redo()
+                self.logger.info("Redo successful")
+                
+                # Update review panel
+                self.window_manager.update_review_panel(self.annotations)
+                
+            else:
+                self.logger.info("Nothing to redo")
+        except Exception as e:
+            self.logger.error(f"Error during redo: {str(e)}")
+
+    def _handle_toggle_auto_advance(self) -> None:
+        """Toggle auto-advance after save feature."""
+        self.auto_advance_after_save = not self.auto_advance_after_save
+        status_msg = f"Auto-advance after save {'enabled' if self.auto_advance_after_save else 'disabled'}"
+        self.logger.info(status_msg)
+        
+        # Update UI with status message
+        self.window_manager.update_main_window(
+            image=self.image,
+            annotations=self.annotations,
+            current_class=self.class_names[self.current_class_id],
+            current_class_id=self.current_class_id,
+            current_image_path=self.current_image_path,
+            current_idx=self.current_idx,
+            total_images=len(self.image_files),
+            status=status_msg,
+            annotation_mode=self.event_handler.mode
+        )
+
     def _handle_export(self, format: str = 'coco') -> None:
         """Handle dataset export using delegating FileManager."""
         try:
@@ -1262,6 +1293,8 @@ class SAMAnnotator:
                 elif action == "export_pascal":
                     self.logger.info("Starting Pascal VOC export")
                     self._handle_export('pascal')
+                elif action == "toggle_auto_advance":
+                    self._handle_toggle_auto_advance()
                                     
         except Exception as e:
             self.logger.error(f"Error in main loop: {str(e)}")

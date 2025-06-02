@@ -179,6 +179,9 @@ class EventHandler:
             elif char == SHORTCUTS['clear_all']:
                 self.logger.info("Clear all command received")
                 return 'clear_all'
+            elif char == SHORTCUTS['toggle_auto_advance']:
+                self.logger.info("Toggle auto-advance command received")
+                return 'toggle_auto_advance'
             
             return None
             

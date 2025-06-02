@@ -17,6 +17,7 @@ A nice and simple tool for semi-automatic image annotation based on Meta AI's Se
 - **Semi-Automatic Segmentation**: Use SAM to generate high-quality masks with minimal interaction
 - **Multiple Annotation Methods**: Box-based and point-based annotation methods
 - **Class Management**: Assign classes to segmented objects
+- **Auto-Advance Workflow**: Automatically move to the next image after saving annotations (toggle with 'u')
 - **Export Options**: Export annotations to COCO, YOLO, or Pascal VOC formats
 - **Undo/Redo**: Robust command system for undoing and redoing annotations
 - **Visualization**: Real-time visualization of annotations with adjustable opacity  
@@ -195,6 +196,7 @@ SAM Annotator provides a comprehensive set of keyboard shortcuts to improve your
 | n             | Next image                       |
 | p             | Previous image                   |
 | j             | Jump to specific image number    |
+| u             | Toggle auto-advance after save   |
 | w             | Toggle between annotation modes  |
 | x             | Clear current selection          |
 | c             | Clear all annotations            |
