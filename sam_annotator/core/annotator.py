@@ -724,6 +724,63 @@ class SAMAnnotator:
             # Update index and load new image
             self.current_idx = self.session_manager.current_idx
             self._load_image(next_path)
+    
+    def _handle_jump_to_image(self) -> None:
+        """Handle jumping to a specific image number."""
+        try:
+            # Display prompt with current range
+            total_images = len(self.image_files)
+            current_image = self.current_idx + 1
+            
+            print(f"\nCurrent image: {current_image}/{total_images}")
+            prompt = f"Jump to image (1-{total_images}): "
+            print(prompt, end='', flush=True)
+            
+            # Get user input
+            user_input = input().strip()
+            
+            # Handle empty input (cancel)
+            if not user_input:
+                print("Jump cancelled.")
+                return
+            
+            # Try to parse the number
+            try:
+                target_number = int(user_input)
+                
+                # Convert from 1-based to 0-based indexing
+                target_index = target_number - 1
+                
+                # Validate the index
+                if 0 <= target_index < total_images:
+                    # Clear current state
+                    self.event_handler.reset_state()
+                    self.window_manager.set_mask(None)
+                    self.annotations = []
+                    
+                    # Jump to the target image - update both indices
+                    self.current_idx = target_index
+                    self.session_manager.current_idx = target_index  # Synchronize session manager
+                    
+                    image_path = str(self.file_manager.structure['images'] / self.image_files[self.current_idx])
+                    self._load_image(image_path)
+                    
+                    print(f"Jumped to image {target_number}")
+                    self.logger.info(f"Jumped to image {target_number} (index {target_index})")
+                else:
+                    print(f"Error: Image number {target_number} is out of range (1-{total_images}). Staying on current image.")
+                    self.logger.error(f"Invalid image number {target_number}. Valid range is 1-{total_images}")
+                    
+            except ValueError:
+                print(f"Error: '{user_input}' is not a valid number. Please enter a number between 1 and {total_images}.")
+                self.logger.error(f"Invalid input '{user_input}' for jump command")
+                
+        except (EOFError, KeyboardInterrupt):
+            print("\nJump cancelled.")
+            self.logger.info("Jump command cancelled by user")
+        except Exception as e:
+            print(f"Error during jump: {str(e)}")
+            self.logger.error(f"Error in jump command: {str(e)}")
          
     def _remove_last_annotation(self) -> None:
         """Remove the last added annotation."""
@@ -1090,6 +1147,9 @@ class SAMAnnotator:
             # Find the first unannotated image or last image if all are annotated
             self.current_idx = self.file_manager.get_last_annotated_index()
             
+            # Synchronize session manager with the starting index
+            self.session_manager.current_idx = self.current_idx
+            
             # Load first image
             self._load_image(str(self.file_manager.structure['images'] / self.image_files[self.current_idx]))
             
@@ -1178,6 +1238,8 @@ class SAMAnnotator:
                     self._next_image()
                 elif action == 'prev':
                     self._prev_image()
+                elif action == 'jump':
+                    self._handle_jump_to_image()
                 elif action == 'save':
                     self._save_annotations()
                 elif action == 'clear_selection':

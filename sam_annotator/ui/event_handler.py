@@ -158,6 +158,9 @@ class EventHandler:
             elif char == SHORTCUTS['prev_image']:
                 self.logger.info("Previous image command received")
                 return 'prev'
+            elif char == SHORTCUTS['jump_to_image']:
+                self.logger.info("Jump to image command received")
+                return 'jump'
             elif char == SHORTCUTS['save']:
                 self.logger.info("Save command received")
                 return 'save'

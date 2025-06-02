@@ -5,6 +5,7 @@ SHORTCUTS = {
     'quit': 'q',
     'next_image': 'n',
     'prev_image': 'p',
+    'jump_to_image': 'j',  # Jump to specific image number
     'save': 's',
     'clear_selection': 'x', 
     'add_annotation': 'a',

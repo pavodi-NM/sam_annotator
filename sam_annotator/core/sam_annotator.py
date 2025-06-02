@@ -357,6 +357,12 @@ class SAMAnnotator:
                     self.session_manager.next_image()
                 elif action == "prev":
                     self.session_manager.prev_image()
+                elif action == "jump":
+                    # Handle jump to specific image
+                    if jump_path := self.session_manager.prompt_and_jump_to_image():
+                        # Successfully jumped, reload the image and annotations
+                        self.file_manager.load_image_and_annotations(jump_path)
+                        self.logger.info(f"Jumped to image {self.session_manager.current_idx + 1}/{len(self.session_manager.image_files)}")
                 elif action == "undo":
                     self._handle_undo()
                 elif action == "redo":

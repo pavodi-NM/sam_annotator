@@ -194,6 +194,7 @@ SAM Annotator provides a comprehensive set of keyboard shortcuts to improve your
 | s             | Save annotations                 |
 | n             | Next image                       |
 | p             | Previous image                   |
+| j             | Jump to specific image number    |
 | w             | Toggle between annotation modes  |
 | x             | Clear current selection          |
 | c             | Clear all annotations            |
