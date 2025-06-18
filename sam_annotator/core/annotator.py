@@ -1014,136 +1014,44 @@ class SAMAnnotator:
             scale_x = original_width / display_width
             scale_y = original_height / display_height
             
-            # Check which SAM version we're using
-            is_sam2 = hasattr(self.predictor, 'sam_version') and self.predictor.sam_version == 'sam2'
+            # Scale coordinates to original image size for both SAM1 and SAM2
+            input_points = []
+            for point in points:
+                orig_x = float(point[0] * scale_x)
+                orig_y = float(point[1] * scale_y)
+                input_points.append([orig_x, orig_y])
             
-            if is_sam2:
-                # Scale the coordinates to original image size for SAM2
-                if len(points) > 0:
-                    # Focus on the first point only as SAM2 has issues with multiple points
-                    point = points[0]
-                    label = point_labels[0]
-                    
-                    # Convert to original image coordinates
-                    orig_x = float(point[0] * scale_x)
-                    orig_y = float(point[1] * scale_y)
-                    
-                    self.logger.info(f"Using SAM2 with point prompt: [{orig_x}, {orig_y}], label={label}")
-                    
-                    try:
-                        # Direct call to Ultralytics SAM2 model following documentation format
-                        results = self.predictor.model(
-                            source=self.predictor.current_image,
-                            points=[orig_x, orig_y],  # single point [x, y]
-                            labels=[label]            # single label
-                        )
-                        
-                        # Process the results
-                        if len(results) > 0 and results[0].masks is not None:
-                            # Get the mask data
-                            masks = results[0].masks.data.cpu().numpy()
-                            
-                            # Handle single mask case
-                            if len(masks.shape) == 2:
-                                masks = np.expand_dims(masks, 0)
-                            
-                            # Use confidence scores if available
-                            scores = results[0].conf.cpu().numpy() if hasattr(results[0], 'conf') else np.ones(len(masks))
-                            
-                            # Select best mask
-                            best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
-                            best_mask = masks[best_mask_idx]
-                            
-                            # Scale to display size
-                            display_mask = cv2.resize(
-                                best_mask.astype(np.uint8),
-                                (display_width, display_height),
-                                interpolation=cv2.INTER_NEAREST
-                            )
-                            
-                            # Update UI
-                            self.window_manager.set_mask(display_mask.astype(bool))
-                            self.logger.info("Successfully generated mask using point-based prompt for SAM2")
-                        else:
-                            self.logger.warning("No masks returned from SAM2 prediction with point prompt")
-                            
-                            # Fall back to box-based approach if point-based fails
-                            self.logger.info("Falling back to box-based approach")
-                            
-                            # Create a box around the point
-                            padding = 20
-                            min_x = max(0, point[0] - padding)
-                            min_y = max(0, point[1] - padding)
-                            max_x = min(display_width, point[0] + padding)
-                            max_y = min(display_height, point[1] + padding)
-                            
-                            # Scale box to original coordinates
-                            orig_box = np.array([
-                                min_x * scale_x,
-                                min_y * scale_y,
-                                max_x * scale_x,
-                                max_y * scale_y
-                            ])
-                            
-                            # Call with bounding box
-                            results = self.predictor.model(
-                                source=self.predictor.current_image,
-                                bboxes=[orig_box.tolist()]
-                            )
-                            
-                            if len(results) > 0 and results[0].masks is not None:
-                                masks = results[0].masks.data.cpu().numpy()
-                                if len(masks.shape) == 2:
-                                    masks = np.expand_dims(masks, 0)
-                                
-                                scores = results[0].conf.cpu().numpy() if hasattr(results[0], 'conf') else np.ones(len(masks))
-                                best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
-                                best_mask = masks[best_mask_idx]
-                                
-                                display_mask = cv2.resize(
-                                    best_mask.astype(np.uint8),
-                                    (display_width, display_height),
-                                    interpolation=cv2.INTER_NEAREST
-                                )
-                                
-                                self.window_manager.set_mask(display_mask.astype(bool))
-                                self.logger.info("Successfully generated mask using box-based fallback for SAM2")
-                    except Exception as e:
-                        self.logger.error(f"Error with SAM2 point prediction: {str(e)}")
-                        self.logger.error(traceback.format_exc())
-            else:
-                # Format for SAM1 - separate points and labels
-                input_points = []
-                for point in points:
-                    orig_x = int(point[0] * scale_x)
-                    orig_y = int(point[1] * scale_y)
-                    input_points.append([orig_x, orig_y])
+            # Convert to numpy arrays
+            input_points = np.array(input_points)
+            input_labels = np.array(point_labels)
+            
+            # Use unified predictor interface for both SAM1 and SAM2
+            masks, scores, _ = self.predictor.predict(
+                point_coords=input_points,
+                point_labels=input_labels,
+                multimask_output=True
+            )
+            
+            if len(masks) > 0:
+                best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
+                best_mask = masks[best_mask_idx]
                 
-                # Convert to numpy arrays
-                input_points = np.array(input_points)
-                input_labels = np.array(point_labels)
-                
-                # Predict mask using SAM1
-                masks, scores, _ = self.predictor.predict(
-                    point_coords=input_points,
-                    point_labels=input_labels,
-                    multimask_output=True
+                # Scale the mask to display size
+                display_mask = cv2.resize(
+                    best_mask.astype(np.uint8),
+                    (display_width, display_height),
+                    interpolation=cv2.INTER_NEAREST
                 )
                 
-                if len(masks) > 0:
-                    best_mask_idx = np.argmax(scores) if scores.size > 0 else 0
-                    best_mask = masks[best_mask_idx]
-                    
-                    # Scale the mask to display size
-                    display_mask = cv2.resize(
-                        best_mask.astype(np.uint8),
-                        (display_width, display_height),
-                        interpolation=cv2.INTER_NEAREST
-                    )
-                    
-                    self.window_manager.set_mask(display_mask.astype(bool))
+                # Force clear any existing mask first
+                self.window_manager.set_mask(None)
+                # Set the new mask
+                self.window_manager.set_mask(display_mask.astype(bool))
+                self.logger.info(f"Successfully generated mask using point-based prompt with {len(input_points)} point(s)")
+            else:
+                self.logger.warning("No masks returned from point-based prediction")
             
-            # Update UI with the new mask (for both SAM1 and SAM2)
+            # Update UI with the new mask
             self.window_manager.update_main_window(
                 image=self.image,
                 annotations=self.annotations,
