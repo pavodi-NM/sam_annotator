@@ -114,9 +114,9 @@ class SAMAnnotator:
             )
             
             if self.sam_version == 'sam1':
-                self.predictor = SAM1Predictor()
+                self.predictor = SAM1Predictor(model_type=self.model_type)
             else:
-                self.predictor = SAM2Predictor()
+                self.predictor = SAM2Predictor(model_type=self.model_type)
                 
             # Initialize the predictor with verified checkpoint
             self.predictor.initialize(verified_checkpoint)

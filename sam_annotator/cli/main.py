@@ -12,7 +12,7 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 # Import from sam_annotator package
-from sam_annotator.core import SAMAnnotator
+from sam_annotator.core import SAMAnnotator 
 from sam_annotator.utils.standalone_viz import view_masks, find_classes_csv
 
 # Import CLI components
@@ -95,9 +95,15 @@ def main(args=None):
     # If model_type not specified, set default based on sam_version
     if args.model_type is None:
         args.model_type = 'vit_h' if args.sam_version == 'sam1' else 'small_v2'
-        
+
+    # Set default checkpoint based on model_type for SAM1
     if args.checkpoint is None and args.sam_version == 'sam1':
-        args.checkpoint = "weights/sam_vit_h_4b8939.pth"
+        checkpoint_map = {
+            'vit_h': 'weights/sam_vit_h_4b8939.pth',
+            'vit_l': 'weights/sam_vit_l_0b3195.pth',
+            'vit_b': 'weights/sam_vit_b_01ec64.pth'
+        }
+        args.checkpoint = checkpoint_map.get(args.model_type, 'weights/sam_vit_h_4b8939.pth')
     
     # Log setup info
     logger.info(f"Using SAM version: {args.sam_version}")
