@@ -1,10 +1,14 @@
-# Migration Guide: v0.2.1a12
+# Migration Guide: v0.2.1.dev11
+
+## Overview
+
+This development release includes critical bug fixes for model type handling and major UI improvements for the class selector, expanding support from 15 to 1000+ classes with full keyboard navigation.
 
 ## Bug Fixes
 
 ### Critical: Model Type Parameter Propagation
 
-**Issue:** In versions prior to 0.2.1a12, the `--model_type` parameter was not correctly passed to the SAM predictor, causing model architecture mismatches with checkpoint files.
+**Issue:** In versions prior to 0.2.1.dev11, the `--model_type` parameter was not correctly passed to the SAM predictor, causing model architecture mismatches with checkpoint files.
 
 **Symptoms:**
 - Size mismatch errors when loading SAM1 models (vit_b, vit_l)
@@ -44,3 +48,25 @@ The version is now automatically synchronized from pyproject.toml:
 - No more manual version updates needed in `__init__.py`
 - Single source of truth in `pyproject.toml`
 - Works for both installed and development/editable installs
+
+## Class Limit Expansion (15 → 1000+)
+
+**Major Feature:** Class selector now supports 1000+ classes with scrollable UI.
+
+### What Changed:
+- Maximum classes increased from 15 to 1000
+- UI window fixed at 20 visible classes (600px height)
+- Full keyboard navigation support
+- Mouse wheel scrolling support
+- Auto-scroll to keep selected class visible
+
+### Action Required:
+None - existing projects will work seamlessly with the expanded limit.
+
+### New Keyboard Shortcuts:
+- **Arrow Up/Down**: Navigate to previous/next class
+- **Page Up/Down**: Jump 5 classes at a time
+- **Home/End**: Jump to first/last class
+- **Mouse Wheel**: Scroll viewport (3 classes at a time)
+
+For complete details, see [CLASS_LIMIT_CHANGES.md](CLASS_LIMIT_CHANGES.md)
