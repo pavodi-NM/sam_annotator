@@ -126,10 +126,15 @@ class ViewControls:
             
     def handle_keyboard(self, key: int) -> bool:
         """Handle keyboard shortcuts for view controls."""
+        # Only handle printable ASCII characters (32-126)
+        # This prevents conflicts with arrow keys and other special keys
+        if key < 32 or key > 126:
+            return False
+
         try:
             char = chr(key).lower()
             handled = True
-            
+
             if char == 'v':  # Toggle visibility
                 self.toggle_visibility()
             elif char == 'm':  # Toggle masks
@@ -142,16 +147,16 @@ class ViewControls:
                 self.view_state['show_points'] = not self.view_state['show_points']
             else:
                 handled = False
-                
+
             if handled:
                 self._notify_state_change()
                 if self.is_visible:
                     self.render()
                 return True
-                    
+
         except ValueError:
             pass
-            
+
         return False
             
     

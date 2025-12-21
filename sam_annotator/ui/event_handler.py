@@ -2,6 +2,7 @@ from typing import Optional, Tuple, List, Callable
 import cv2
 import numpy as np
 from ..config.shortcuts import SHORTCUTS
+from ..config.settings import BUTTON_HEIGHT
 
 class EventHandler: 
     """Handles all mouse and keyboard events for the SAM Annotator."""
@@ -93,17 +94,16 @@ class EventHandler:
 
     def handle_class_window_event(self, event: int, x: int, y: int, flags: int, param: any) -> None:
         """Handle mouse events for the class selection window."""
-        if event == cv2.EVENT_LBUTTONDOWN:
-            button_height = 30
-            selected_class = y // button_height
-            if self.on_class_selection:
-                self.on_class_selection(selected_class)
+        # Delegate all mouse events to the class selector widget
+        selected_class_id = self.window_manager.class_selector.handle_mouse(event, x, y, flags, param)
+        if selected_class_id is not None and self.on_class_selection:
+            self.on_class_selection(selected_class_id)
  
-    def handle_keyboard_event(self, key: int) -> Optional[str]: 
+    def handle_keyboard_event(self, key: int) -> Optional[str]:
         """Handle keyboard events and return action string."""
         try:
             # Handle function keys
-            if key == -1:  # No key pressed
+            if key == -1 or key == 255:  # No key pressed
                 return None
             
             if key == ord('e'):
@@ -121,12 +121,21 @@ class EventHandler:
                     self.logger.info("Pascal export selected")
                     return "export_pascal"  # Make sure this is being returned
                 
-            # Let view controls handle their keys first
-            if self.window_manager.view_controls.handle_keyboard(key):
-                return "update_view"
-                
-            # Let annotation review handle its keys
+            # Let annotation review handle its keys first (w/s when visible)
             if self.window_manager.annotation_review.handle_keyboard(key):
+                return "update_view"
+
+            # Let class selector handle arrow keys for navigation (BEFORE view controls)
+            # This ensures arrow keys go to class selection, not other handlers
+            selected_class_id = self.window_manager.class_selector.handle_keyboard(key)
+            if selected_class_id is not None:
+                # Class was selected via keyboard, trigger callback
+                if self.on_class_selection:
+                    self.on_class_selection(selected_class_id)
+                return "update_view"  # Update main view with new class selection
+
+            # Let view controls handle their keys
+            if self.window_manager.view_controls.handle_keyboard(key):
                 return "update_view"
                 
             # Convert key to character, handling both upper and lowercase

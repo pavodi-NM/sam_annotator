@@ -118,7 +118,7 @@ class SAMAnnotator:
         """
         try:
             df = pd.read_csv(classes_csv)
-            self.class_names = df['class_name'].tolist()[:15]  # Limit to 15 classes
+            self.class_names = df['class_name'].tolist()[:1000]  # Limit to 1000 classes
             self.annotation_manager.class_names = self.class_names
             self.logger.info(f"Loaded {len(self.class_names)} classes")
             

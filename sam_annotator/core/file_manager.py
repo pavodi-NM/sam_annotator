@@ -68,7 +68,7 @@ class FileManager:
         """Load class names from CSV file."""
         try:
             df = pd.read_csv(classes_csv)
-            class_names = df['class_name'].tolist()[:15]  # Limit to 15 classes
+            class_names = df['class_name'].tolist()[:1000]  # Limit to 1000 classes
             self.logger.info(f"Loaded {len(class_names)} classes from {classes_csv}")
             return class_names
         except Exception as e:

@@ -169,7 +169,7 @@ class SAMAnnotator:
         """Load class names from CSV."""
         try:
             df = pd.read_csv(classes_csv)
-            self.class_names = df['class_name'].tolist()[:15]
+            self.class_names = df['class_name'].tolist()[:1000]
             self.logger.info(f"Loaded {len(self.class_names)} classes")
         except Exception as e:
             self.logger.error(f"Error loading classes: {str(e)}")
