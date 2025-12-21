@@ -5,7 +5,12 @@ All notable changes to SAM Annotator will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.1.dev11] - 2025-12-21
+## [0.2.1.dev12] - 2025-12-21
+
+### Fixed
+- **Critical:** Re-added missing `segment-anything>=1.0` dependency that was accidentally removed in dev11
+
+## [0.2.1.dev11] - 2025-12-21 [YANKED - Missing dependency]
 
 ### Fixed
 - **Critical:** `--model_type` parameter was not correctly passed from CLI to SAM predictor, causing model architecture mismatches with checkpoint files
@@ -36,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Event handler order optimized for better keyboard input processing
 
 ### Documentation
-- See [MIGRATION_0.2.1.dev11.md](MIGRATION_0.2.1.dev11.md) for detailed migration information
+- See [MIGRATION_0.2.1.dev12.md](MIGRATION_0.2.1.dev12.md) for detailed migration information
 - See [CLASS_LIMIT_CHANGES.md](CLASS_LIMIT_CHANGES.md) for complete documentation of class limit expansion and bug fixes
 
 ## [0.2.1.dev10] - Previous TestPyPI Release
