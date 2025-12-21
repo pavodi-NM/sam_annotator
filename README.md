@@ -7,20 +7,17 @@
 
 A nice and simple tool for semi-automatic image annotation based on Meta AI's Segment Anything Model (SAM).
 
-> **⚠️ DEVELOPMENT VERSION NOTICE**
->
-> This package is currently in early development (alpha stage). The API and functionality may change 
-> significantly between versions. Please, contact the author for any feedback or suggestions.
-
 ## Features
 
-- **Semi-Automatic Segmentation**: Use SAM to generate high-quality masks with minimal interaction
+- **Semi-Automatic Segmentation**: Use SAM (v1 or v2) to generate high-quality masks with minimal interaction
 - **Multiple Annotation Methods**: Box-based and point-based annotation methods
-- **Class Management**: Assign classes to segmented objects
+- **1000+ Classes Support**: Manage up to 1000+ classes with scrollable UI and full keyboard navigation
+- **Class Management**: Assign classes to segmented objects with intuitive keyboard shortcuts
 - **Auto-Advance Workflow**: Automatically move to the next image after saving annotations (toggle with 'u')
 - **Export Options**: Export annotations to COCO, YOLO, or Pascal VOC formats
 - **Undo/Redo**: Robust command system for undoing and redoing annotations
-- **Visualization**: Real-time visualization of annotations with adjustable opacity  
+- **Visualization**: Real-time visualization of annotations with adjustable opacity
+- **Dual SAM Support**: Works with both SAM1 (segment-anything) and SAM2 (ultralytics)  
 
 ## Tool Overview
 
@@ -39,18 +36,11 @@ A nice and simple tool for semi-automatic image annotation based on Meta AI's Se
 ### Installation via pip
 
 ```bash
-# Install the latest stable version (available on PyPI)
+# Install the stable version from PyPI
 pip install sam-annotator
-```
 
-For the latest development version:
-
-```bash
-# For the latest development version from TestPyPI (specify exact version)
-pip install -i https://test.pypi.org/simple/ sam-annotator==0.2.1.dev10
-
-# If you experience dependency issues, add PyPI as an extra index
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sam-annotator==0.2.1.dev10
+# Verify installation
+sam_annotator --version
 ```
 
 ### Setup from source
