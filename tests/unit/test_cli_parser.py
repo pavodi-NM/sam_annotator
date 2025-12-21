@@ -119,3 +119,40 @@ class TestParser:
         # Test use sample
         args = parse_args(config, ["--use_sample_csv"])
         assert args.use_sample_csv is True 
+
+class TestModelTypeHandling:
+    """Tests for model_type parameter handling in CLI parser."""
+
+    @pytest.fixture
+    def sample_config(self):
+        """Return a minimal sample configuration."""
+        return {}
+
+    def test_parse_args_explicit_model_type(self, sample_config):
+        """Test parsing explicit model_type from command line."""
+        args = parse_args(sample_config, ["--model_type", "vit_b"])
+        assert args.model_type == "vit_b"
+
+    def test_parse_args_default_model_type_sam1(self, sample_config):
+        """Test default model_type for SAM1."""
+        args = parse_args(sample_config, ["--sam_version", "sam1"])
+        # model_type should be None here, will be set to vit_h in cli/main.py
+        assert args.sam_version == "sam1"
+
+    def test_parse_args_default_model_type_sam2(self, sample_config):
+        """Test default model_type for SAM2."""
+        args = parse_args(sample_config, ["--sam_version", "sam2"])
+        # model_type should be None here, will be set to small_v2 in cli/main.py
+        assert args.sam_version == "sam2"
+
+    def test_parse_args_model_type_with_sam1(self, sample_config):
+        """Test model_type parameter with SAM1."""
+        args = parse_args(sample_config, ["--sam_version", "sam1", "--model_type", "vit_l"])
+        assert args.sam_version == "sam1"
+        assert args.model_type == "vit_l"
+
+    def test_parse_args_model_type_with_sam2(self, sample_config):
+        """Test model_type parameter with SAM2."""
+        args = parse_args(sample_config, ["--sam_version", "sam2", "--model_type", "base_v2"])
+        assert args.sam_version == "sam2"
+        assert args.model_type == "base_v2"

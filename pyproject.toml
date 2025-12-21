@@ -4,19 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sam_annotator"
-version = "0.2.1a11" 
+version = "0.2.1a12" 
 description = "A general-purpose image annotation tool based on Segment Anything Model (SAM)"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Pavodi NDOYI MANIAMFU", email = "pavodi.mani@fingervision.biz"}
+    {name = "Pavodi NDOYI MANIAMFU", email = "pavodi.mani@fingervision.biz"} 
 ]
 dependencies = [
     "torch>=1.7.0",
     "opencv-python>=4.5.0",
     "numpy>=1.19.0",
-    "segment-anything>=1.0",
     "pandas>=1.2.0",
     "pyyaml>=6.0",
     "psutil>=5.9.0",

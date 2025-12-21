@@ -41,7 +41,6 @@ requests==2.32.3
 sam_annotator==0.1.0a1
 scipy==1.15.2
 seaborn==0.13.2
-segment-anything==1.0
 six==1.17.0
 sympy==1.13.1
 torch==2.6.0
