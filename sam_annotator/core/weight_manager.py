@@ -2,11 +2,19 @@ import os
 import logging
 import requests
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, Optional, Tuple, List
 from ultralytics.utils.downloads import GITHUB_ASSETS_STEMS
 
+from sam_annotator.core.model_registry import (
+    MODEL_REGISTRY,
+    get_version_requirements,
+    supports_auto_download,
+    is_valid_model_type,
+)
+
+
 class SAMWeightManager:
-    """Manages SAM model weights for both SAM1 and SAM2.""" 
+    """Manages SAM model weights for SAM1, SAM2, and SAM3."""
     CHECKPOINTS = {
         "sam1": {
             "vit_h": {
@@ -55,6 +63,18 @@ class SAMWeightManager:
                 "name": "sam2.1_l.pt",
                 "path": "weights/sam2.1_l.pt"
             }
+        },
+        "sam3": {
+            # SAM3 has a single unified model variant
+            # Requires manual download from HuggingFace (no auto-download)
+            "sam3": {
+                "name": "sam3.pt",
+                "path": "weights/sam3.pt",
+                "manual_download": True,
+                "download_url": "https://huggingface.co/facebook/sam3",
+                "size_gb": 3.4,
+                "min_ultralytics_version": "8.3.237"
+            }
         }
     }
 
@@ -102,19 +122,61 @@ class SAMWeightManager:
                     raise ValueError(
                         f"Invalid model type for SAM2. Choose from: {', '.join(self.CHECKPOINTS['sam2'].keys())}"
                     )
-                    
+
                 checkpoint_info = self.CHECKPOINTS["sam2"][model_type]
                 checkpoint_path = checkpoint_info["path"]
-                
+
                 # Create symlink if weight exists in default location but not in weights directory
                 default_path = os.path.join(os.getcwd(), checkpoint_info["name"])
                 if os.path.exists(default_path) and not os.path.exists(checkpoint_path):
                     os.symlink(default_path, checkpoint_path)
-                
+
                 # Ultralytics will handle the download automatically when the model is initialized
-                
+
+            elif version.lower() == "sam3":
+                if model_type not in self.CHECKPOINTS["sam3"]:
+                    raise ValueError(
+                        f"Invalid model type for SAM3. Choose from: {', '.join(self.CHECKPOINTS['sam3'].keys())}"
+                    )
+
+                checkpoint_info = self.CHECKPOINTS["sam3"][model_type]
+                checkpoint_path = checkpoint_info["path"]
+
+                # SAM3 requires manual download - check if file exists
+                if not os.path.exists(checkpoint_path):
+                    # Also check common alternative locations
+                    alt_paths = [
+                        os.path.join(os.getcwd(), checkpoint_info["name"]),
+                        os.path.join(os.path.expanduser("~"), ".cache", "sam3", checkpoint_info["name"]),
+                        os.path.join(os.path.expanduser("~"), "sam3.pt"),
+                    ]
+
+                    found_path = None
+                    for alt_path in alt_paths:
+                        if os.path.exists(alt_path):
+                            found_path = alt_path
+                            break
+
+                    if found_path:
+                        # Create symlink to found checkpoint
+                        self.logger.info(f"Found SAM3 checkpoint at: {found_path}")
+                        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+                        os.symlink(found_path, checkpoint_path)
+                    else:
+                        # Provide helpful error message with download instructions
+                        raise FileNotFoundError(
+                            f"SAM3 checkpoint not found at: {checkpoint_path}\n\n"
+                            "SAM3 requires MANUAL download (no auto-download available):\n"
+                            f"1. Visit: {checkpoint_info['download_url']}\n"
+                            "2. Request access (requires HuggingFace account)\n"
+                            f"3. Download {checkpoint_info['name']} (~{checkpoint_info['size_gb']} GB)\n"
+                            f"4. Place in: {self.weights_dir}/{checkpoint_info['name']}\n\n"
+                            "Or specify custom path with: --checkpoint /path/to/sam3.pt\n\n"
+                            f"Note: Requires ultralytics>={checkpoint_info['min_ultralytics_version']}"
+                        )
+
             else:
-                raise ValueError(f"Unsupported SAM version: {version}")
+                raise ValueError(f"Unsupported SAM version: {version}. Choose from: sam1, sam2, sam3")
                 
             return checkpoint_path
             
@@ -170,11 +232,117 @@ class SAMWeightManager:
         """Verify checkpoint file exists and has minimum expected size."""
         if not os.path.exists(checkpoint_path):
             return False
-            
+
         # Check minimum size (SAM models are typically >300MB)
         min_size = 300 * 1024 * 1024  # 300MB
         if os.path.getsize(checkpoint_path) < min_size:
             self.logger.warning(f"Checkpoint file seems too small: {checkpoint_path}")
             return False
-            
+
         return True
+
+    def check_weights_exist(
+        self,
+        version: str,
+        model_type: str,
+        user_checkpoint_path: Optional[str] = None
+    ) -> Tuple[bool, Optional[str], Optional[str]]:
+        """Check if weights exist without throwing exceptions.
+
+        This is used for pre-flight checks before starting the application.
+
+        Args:
+            version: SAM version ('sam1', 'sam2', 'sam3')
+            model_type: Model type for the version
+            user_checkpoint_path: Optional custom path from user
+
+        Returns:
+            Tuple of (exists, resolved_path, error_message)
+            - exists: True if weights are available or will auto-download
+            - resolved_path: Path to weights if found, None otherwise
+            - error_message: Error description if not found, None otherwise
+        """
+        # If user specified a path, just check if it exists
+        if user_checkpoint_path:
+            if os.path.exists(user_checkpoint_path):
+                return True, user_checkpoint_path, None
+            else:
+                return False, None, f"Specified checkpoint not found: {user_checkpoint_path}"
+
+        # Validate version and model_type
+        if version not in self.CHECKPOINTS:
+            return False, None, f"Unknown SAM version: {version}"
+
+        if model_type not in self.CHECKPOINTS[version]:
+            valid_types = list(self.CHECKPOINTS[version].keys())
+            return False, None, f"Invalid model type '{model_type}' for {version}. Valid: {valid_types}"
+
+        checkpoint_info = self.CHECKPOINTS[version][model_type]
+        checkpoint_path = checkpoint_info.get("path", "")
+
+        # For auto-download versions, weights will be downloaded automatically
+        if supports_auto_download(version):
+            # Check if already exists
+            if os.path.exists(checkpoint_path):
+                return True, checkpoint_path, None
+            # Will be downloaded, so return True
+            return True, None, None
+
+        # For manual download versions (like SAM3), check if weights exist
+        search_paths = self._get_weight_search_paths(version, model_type)
+
+        for path in search_paths:
+            if os.path.exists(path):
+                return True, path, None
+
+        # Not found
+        return False, None, f"{version.upper()} weights not found. Manual download required."
+
+    def _get_weight_search_paths(self, version: str, model_type: str) -> List[str]:
+        """Get list of paths to search for weights.
+
+        Args:
+            version: SAM version
+            model_type: Model type
+
+        Returns:
+            List of paths to check for weights
+        """
+        if version not in self.CHECKPOINTS or model_type not in self.CHECKPOINTS[version]:
+            return []
+
+        checkpoint_info = self.CHECKPOINTS[version][model_type]
+        weight_name = checkpoint_info.get("name", f"{model_type}.pt")
+        default_path = checkpoint_info.get("path", f"weights/{weight_name}")
+
+        paths = [
+            default_path,
+            os.path.join(os.getcwd(), weight_name),
+            os.path.join(os.getcwd(), "weights", weight_name),
+            os.path.join(self.weights_dir, weight_name),
+        ]
+
+        # Add user home cache paths for SAM3
+        if version == "sam3":
+            paths.extend([
+                os.path.join(os.path.expanduser("~"), ".cache", "sam3", weight_name),
+                os.path.join(os.path.expanduser("~"), weight_name),
+            ])
+
+        return paths
+
+    def get_weight_info(self, version: str, model_type: str) -> Optional[Dict]:
+        """Get weight information for a specific version and model type.
+
+        Args:
+            version: SAM version
+            model_type: Model type
+
+        Returns:
+            Dictionary with weight info, or None if not found
+        """
+        if version not in self.CHECKPOINTS:
+            return None
+        if model_type not in self.CHECKPOINTS[version]:
+            return None
+        return self.CHECKPOINTS[version][model_type].copy()

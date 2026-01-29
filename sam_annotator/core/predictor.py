@@ -643,7 +643,7 @@ class SAM2Predictor(BaseSAMPredictor):
         """Get additional information from the latest prediction."""
         if self.current_results is None:
             return {}
-            
+
         try:
             result = self.current_results[0]
             return {
@@ -652,4 +652,378 @@ class SAM2Predictor(BaseSAMPredictor):
             }
         except Exception as e:
             self.logger.error(f"Error getting additional info: {str(e)}")
+            return {}
+
+
+class SAM3Predictor(BaseSAMPredictor):
+    """SAM3 implementation with visual prompt support via Ultralytics.
+
+    SAM3 (Segment Anything Model 3) supports both visual prompts (points, boxes)
+    and semantic prompts (text). This predictor implements visual prompt support
+    for backward compatibility with the existing annotation workflow.
+
+    Key features:
+    - Concept-based segmentation with text prompts (via SAM3SemanticPredictor)
+    - Backward compatible visual prompts (points, boxes)
+    - Open vocabulary detection
+    - Requires manual download from HuggingFace
+
+    Requirements:
+    - Ultralytics >= 8.3.237
+    - Manual download of sam3.pt from https://huggingface.co/facebook/sam3
+    """
+
+    def __init__(self, model_type: str = "sam3"):
+        """Initialize SAM3 predictor.
+
+        Args:
+            model_type: Model variant (SAM3 has single variant 'sam3')
+        """
+        super().__init__()
+
+        # Set SAM version identifier
+        self.sam_version = 'sam3'
+
+        # SAM3 has a single unified model variant
+        self.model_type = model_type
+
+        # Placeholder for model (initialized later)
+        self.model = None
+
+        # Track current image state
+        self.current_image = None
+        self.current_image_hash = None
+        self.current_results = None
+
+        # Initialize LRU cache for predictions
+        self.prediction_cache = LRUCache(max_size=20)
+
+        # Initialize memory manager
+        self.memory_manager = GPUMemoryManager()
+
+        # Configure logging
+        self.logger = logging.getLogger(__name__)
+
+        # Initialize device
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if self.device.type == 'cpu':
+            self.logger.warning(
+                "SAM3 running on CPU will be very slow. "
+                "GPU with 8GB+ VRAM is strongly recommended."
+            )
+
+    def initialize(self, checkpoint_path: str) -> None:
+        """Initialize SAM3 model from checkpoint.
+
+        SAM3 requires manual download - weights are not auto-downloaded.
+
+        Args:
+            checkpoint_path: Path to sam3.pt checkpoint file
+
+        Raises:
+            FileNotFoundError: If checkpoint doesn't exist (with download instructions)
+            RuntimeError: If model initialization fails
+        """
+        try:
+            # Verify checkpoint exists (SAM3 requires manual download)
+            import os
+            if not os.path.exists(checkpoint_path):
+                raise FileNotFoundError(
+                    f"SAM3 checkpoint not found at: {checkpoint_path}\n\n"
+                    "SAM3 requires MANUAL download (no auto-download available):\n"
+                    "1. Visit: https://huggingface.co/facebook/sam3\n"
+                    "2. Request access (requires HuggingFace account)\n"
+                    "3. Download sam3.pt (~3.4 GB)\n"
+                    "4. Place in: weights/sam3.pt\n\n"
+                    "Or specify custom path with: --checkpoint /path/to/sam3.pt"
+                )
+
+            # Check GPU memory before loading (SAM3 needs ~8GB)
+            if self.device.type == 'cuda':
+                memory_info = self.memory_manager.get_gpu_memory_info()
+                available_memory = memory_info['total'] - memory_info['used']
+
+                # SAM3 requires approximately 8GB GPU memory
+                if available_memory < 8 * (1024 ** 3):
+                    self.logger.warning(
+                        f"Limited GPU memory available ({available_memory / (1024**3):.1f}GB). "
+                        "SAM3 requires ~8GB. Performance may be severely affected."
+                    )
+
+            # Load model via Ultralytics SAM (visual prompt mode)
+            # SAM3 uses the same SAM class but with sam3.pt checkpoint
+            from ultralytics import SAM as UltralyticsSAM
+            self.model = UltralyticsSAM(checkpoint_path)
+
+            # Enable memory optimizations on CUDA
+            if self.device.type == 'cuda':
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
+                torch.backends.cudnn.benchmark = True
+
+            self.logger.info(f"Initialized SAM3 model on {self.device}")
+            self.logger.info(f"SAM3 checkpoint: {checkpoint_path}")
+
+        except FileNotFoundError:
+            # Re-raise with download instructions
+            raise
+        except Exception as e:
+            self.logger.error(f"Error initializing SAM3: {str(e)}")
+            raise RuntimeError(f"Failed to initialize SAM3 model: {str(e)}")
+
+    def set_image(self, image: np.ndarray) -> None:
+        """Store image for prediction with caching.
+
+        Args:
+            image: RGB image as numpy array (H, W, 3)
+        """
+        try:
+            # Calculate image hash for change detection
+            image_hash = hashlib.md5(image.tobytes()).hexdigest()
+
+            # Only update if image changed
+            if image_hash != self.current_image_hash:
+                def _set_image_operation():
+                    self.current_image = image
+                    self.current_image_hash = image_hash
+                    self.prediction_cache.clear()
+                    return True
+
+                # Execute with automatic memory recovery
+                success, result, recovery_info = self.memory_manager.execute_with_recovery(
+                    _set_image_operation,
+                    f"SAM3 set_image (size: {image.shape}, hash: {image_hash[:8]})"
+                )
+
+                if success:
+                    if recovery_info:
+                        self.logger.info(f"SAM3 set image succeeded after recovery: {recovery_info}")
+                else:
+                    error_msg = f"Failed to set SAM3 image. {recovery_info.message if recovery_info else 'Memory recovery unsuccessful.'}"
+                    self.logger.error(error_msg)
+                    raise RuntimeError(error_msg)
+
+        except Exception as e:
+            if "out of memory" not in str(e).lower() and "cuda" not in str(e).lower():
+                self.logger.error(f"Non-memory error setting image in SAM3: {str(e)}")
+                raise
+            else:
+                self.logger.error(f"Memory error setting image in SAM3: {str(e)}")
+                raise RuntimeError(f"Memory error during SAM3 image loading: {str(e)}")
+
+    def predict(self,
+                point_coords: Optional[np.ndarray] = None,
+                point_labels: Optional[np.ndarray] = None,
+                box: Optional[np.ndarray] = None,
+                multimask_output: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Predict masks using visual prompts (SAM2-compatible interface).
+
+        SAM3 supports the same visual prompt interface as SAM2 for backward
+        compatibility. For text-based prompts, use SAM3SemanticPredictor.
+
+        Args:
+            point_coords: Nx2 array of point coordinates [[x, y], ...]
+            point_labels: N array of point labels (1=foreground, 0=background)
+            box: Bounding box as [x_min, y_min, x_max, y_max]
+            multimask_output: Whether to return multiple masks (default True)
+
+        Returns:
+            Tuple of (masks, scores, logits):
+            - masks: (N, H, W) boolean array of predicted masks
+            - scores: (N,) confidence scores for each mask
+            - logits: (N, 1) raw logits (placeholder for compatibility)
+        """
+        if self.model is None:
+            raise RuntimeError("Model not initialized. Call initialize() first.")
+
+        try:
+            # Check memory status before prediction
+            status_ok, message = self.memory_manager.check_memory_status()
+            if not status_ok:
+                self.logger.warning(f"Memory warning before SAM3 prediction: {message}")
+
+            # Generate cache key and check cache
+            cache_key = self._generate_cache_key(point_coords, point_labels, box)
+
+            if cache_key in self.prediction_cache:
+                self.memory_manager.update_stats('cache_hits')
+                return self.prediction_cache[cache_key]
+
+            self.memory_manager.update_stats('cache_misses')
+
+            # Define the core prediction operation
+            def _core_sam3_prediction():
+                with torch.no_grad():
+                    if box is not None:
+                        # Box-based prediction
+                        results = self.model(
+                            source=self.current_image,
+                            bboxes=[box.tolist()]
+                        )
+                    elif point_coords is not None:
+                        # Point-based prediction
+                        if point_labels is None:
+                            raise ValueError("Point labels must be provided with point_coords")
+
+                        if len(point_coords) == 0:
+                            raise ValueError("Empty point_coords provided")
+
+                        # Format points for SAM3 (same as SAM2)
+                        # Nested format: [[[x1, y1], [x2, y2], ...]] for single object
+                        object_points = []
+                        object_labels = []
+
+                        for point, label in zip(point_coords, point_labels):
+                            x, y = point
+                            object_points.append([float(x), float(y)])
+                            object_labels.append(int(label))
+
+                        points_nested = [object_points]
+                        labels_nested = [object_labels]
+
+                        self.logger.info(
+                            f"SAM3 prediction with {len(point_coords)} point(s): "
+                            f"points={point_coords.tolist()}, labels={point_labels.tolist()}"
+                        )
+
+                        results = self.model(
+                            source=self.current_image,
+                            points=points_nested,
+                            labels=labels_nested
+                        )
+                    else:
+                        raise ValueError("Either points with labels or box must be provided")
+
+                    # Store results for potential reuse
+                    self.current_results = results
+
+                    # Convert results to standard format
+                    if len(results) > 0 and results[0].masks is not None:
+                        masks = results[0].masks.data.cpu().numpy()
+
+                        # Handle single mask case
+                        if len(masks.shape) == 2:
+                            masks = np.expand_dims(masks, 0)
+
+                        # Use confidence scores if available
+                        scores = (results[0].conf.cpu().numpy()
+                                  if hasattr(results[0], 'conf') and results[0].conf is not None
+                                  else np.ones(len(masks)))
+
+                        # Placeholder logits for interface compatibility
+                        logits = np.ones((len(masks), 1))
+                    else:
+                        # Return empty mask if no results
+                        h, w = self.current_image.shape[:2]
+                        masks = np.zeros((1, h, w), dtype=bool)
+                        scores = np.array([0.0])
+                        logits = np.array([[0.0]])
+
+                    return masks, scores, logits
+
+            # Execute with automatic memory recovery
+            success, result, recovery_info = self.memory_manager.execute_with_recovery(
+                _core_sam3_prediction,
+                f"SAM3 prediction (points: {point_coords is not None}, box: {box is not None})"
+            )
+
+            if success:
+                masks, scores, logits = result
+
+                # Cache results if memory allows
+                if self.memory_manager.should_cache():
+                    self.prediction_cache[cache_key] = (masks, scores, logits)
+
+                    # Manage cache size
+                    if len(self.prediction_cache) > self.prediction_cache.max_size:
+                        self.clear_cache(keep_current=True)
+
+                if recovery_info:
+                    self.logger.info(f"SAM3 prediction succeeded after recovery: {recovery_info}")
+
+                return masks, scores, logits
+            else:
+                error_msg = f"SAM3 prediction failed. {recovery_info.message if recovery_info else 'Memory recovery unsuccessful.'}"
+                self.logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
+        except Exception as e:
+            if "out of memory" not in str(e).lower() and "cuda" not in str(e).lower():
+                self.logger.error(f"Non-memory error in SAM3 prediction: {str(e)}")
+                raise
+            else:
+                self.logger.error(f"Memory error in SAM3 prediction: {str(e)}")
+                raise RuntimeError(f"Memory error during SAM3 prediction: {str(e)}")
+
+    def clear_cache(self, keep_current: bool = False) -> None:
+        """Clear prediction cache with option to keep current image predictions.
+
+        Args:
+            keep_current: If True, retain predictions for current image
+        """
+        if keep_current and self.current_image_hash:
+            # Preserve only current image predictions
+            current_predictions = {}
+            for k, v in self.prediction_cache.cache.items():
+                if k.startswith(str(self.current_image_hash)):
+                    current_predictions[k] = v
+
+            self.prediction_cache.clear()
+            self.prediction_cache.update(current_predictions)
+        else:
+            self.prediction_cache.clear()
+
+        # Force memory optimization
+        self.memory_manager.optimize_memory(force=True)
+
+    def get_memory_usage(self) -> float:
+        """Get current GPU memory usage ratio.
+
+        Returns:
+            Float between 0 and 1 representing memory utilization
+        """
+        return self.memory_manager.get_gpu_memory_info()['utilization']
+
+    def _generate_cache_key(self,
+                            point_coords: Optional[np.ndarray],
+                            point_labels: Optional[np.ndarray],
+                            box: Optional[np.ndarray]) -> str:
+        """Generate unique cache key for prediction inputs.
+
+        Args:
+            point_coords: Point coordinates array
+            point_labels: Point labels array
+            box: Bounding box array
+
+        Returns:
+            String cache key
+        """
+        key_parts = [str(self.current_image_hash)]
+
+        if point_coords is not None:
+            key_parts.append(hashlib.md5(point_coords.tobytes()).hexdigest())
+        if point_labels is not None:
+            key_parts.append(hashlib.md5(point_labels.tobytes()).hexdigest())
+        if box is not None:
+            key_parts.append(hashlib.md5(box.tobytes()).hexdigest())
+
+        return "_".join(key_parts)
+
+    def get_additional_info(self) -> dict:
+        """Get additional information from the latest prediction.
+
+        Returns:
+            Dictionary with confidence scores and bounding boxes if available
+        """
+        if self.current_results is None:
+            return {}
+
+        try:
+            result = self.current_results[0]
+            return {
+                'confidence': result.conf.cpu().numpy() if hasattr(result, 'conf') and result.conf is not None else None,
+                'boxes': result.boxes.data.cpu().numpy() if hasattr(result, 'boxes') and result.boxes is not None else None,
+            }
+        except Exception as e:
+            self.logger.error(f"Error getting additional info from SAM3: {str(e)}")
             return {}

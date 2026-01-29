@@ -25,8 +25,8 @@ from .command_manager import (
     ModifyAnnotationCommand
 ) 
 
-from .base_predictor import BaseSAMPredictor 
-from .predictor import SAM1Predictor, SAM2Predictor
+from .base_predictor import BaseSAMPredictor
+from .predictor import SAM1Predictor, SAM2Predictor, SAM3Predictor
 from .session_manager import SessionManager
 
 
@@ -49,7 +49,17 @@ class SAMAnnotator:
         
         # Store SAM version and model type
         self.sam_version = sam_version
-        self.model_type = model_type or ('vit_h' if sam_version == 'sam1' else 'small_v2')
+        # Set default model type based on SAM version
+        if model_type:
+            self.model_type = model_type
+        elif sam_version == 'sam1':
+            self.model_type = 'vit_h'
+        elif sam_version == 'sam2':
+            self.model_type = 'small_v2'
+        elif sam_version == 'sam3':
+            self.model_type = 'sam3'  # SAM3 has single unified model
+        else:
+            self.model_type = 'small_v2'  # fallback
         self.logger.info(f"Using SAM version: {sam_version} with model type: {self.model_type}")
         
         # Initialize file manager first (replaces direct DatasetManager initialization)
@@ -105,25 +115,34 @@ class SAMAnnotator:
         try:
             # Initialize weight manager
             weight_manager = SAMWeightManager()
-            
+
             # Get appropriate checkpoint path
             verified_checkpoint = weight_manager.get_checkpoint_path(
                 user_checkpoint_path=checkpoint_path,
                 version=self.sam_version,
                 model_type=self.model_type
             )
-            
+
+            # Create predictor based on SAM version
             if self.sam_version == 'sam1':
                 self.predictor = SAM1Predictor(model_type=self.model_type)
-            else:
+            elif self.sam_version == 'sam2':
                 self.predictor = SAM2Predictor(model_type=self.model_type)
-                
+            elif self.sam_version == 'sam3':
+                self.predictor = SAM3Predictor(model_type=self.model_type)
+            else:
+                raise ValueError(f"Unknown SAM version: {self.sam_version}. Choose from: sam1, sam2, sam3")
+
             # Initialize the predictor with verified checkpoint
             self.predictor.initialize(verified_checkpoint)
             self.logger.info(f"Successfully initialized {self.sam_version.upper()} predictor with {self.model_type} model")
-            
+
+        except FileNotFoundError as e:
+            # Special handling for SAM3 missing checkpoint (provides download instructions)
+            self.logger.error(str(e))
+            raise
         except Exception as e:
-            self.logger.error(f"Error Initializing SAM model: {str(e)}")
+            self.logger.error(f"Error initializing SAM model: {str(e)}")
             raise
    
     

@@ -1,12 +1,19 @@
-from typing import Optional, Tuple, List, Callable
+from typing import Optional, Tuple, List, Callable, Dict
 import cv2
 import numpy as np
+import time
 from ..config.shortcuts import SHORTCUTS
 from ..config.settings import BUTTON_HEIGHT
 
-class EventHandler: 
+class EventHandler:
     """Handles all mouse and keyboard events for the SAM Annotator."""
-    
+
+    # Debounce time in seconds for critical actions
+    DEBOUNCE_TIME = 0.3  # 300ms debounce
+
+    # Actions that should be debounced to prevent accidental repeats
+    DEBOUNCED_ACTIONS = {'save', 'add', 'undo', 'redo', 'clear_all', 'next', 'prev'}
+
     def __init__(self, window_manager, logger):
         """Initialize event handler."""
         self.window_manager = window_manager
@@ -16,27 +23,53 @@ class EventHandler:
         self.box_end: Optional[Tuple[int, int]] = None
         self.points: List[List[int]] = []
         self.point_labels: List[int] = []
-        
+
         # Annotation mode (box or point)
         self.mode = 'box'  # Default to box mode
-        
+
         # View control constants
         self.ZOOM_STEP = 0.1
         self.OPACITY_STEP = 0.1
-        
+
         # Callback storage
         self.on_mask_prediction: Optional[Callable] = None
         self.on_class_selection: Optional[Callable] = None
         self.on_point_prediction: Optional[Callable] = None
+
+        # Debouncing: track last execution time for each action
+        self._last_action_time: Dict[str, float] = {}
         
-    def register_callbacks(self, 
+    def register_callbacks(self,
                          on_mask_prediction: Callable,
                          on_class_selection: Callable,
-                         on_point_prediction: Optional[Callable] = None) -> None: 
+                         on_point_prediction: Optional[Callable] = None) -> None:
         """Register callback functions."""
         self.on_mask_prediction = on_mask_prediction
         self.on_class_selection = on_class_selection
         self.on_point_prediction = on_point_prediction
+
+    def _should_debounce(self, action: str) -> bool:
+        """Check if an action should be debounced (skipped due to recent execution).
+
+        Args:
+            action: The action name to check
+
+        Returns:
+            True if the action should be skipped (debounced), False if it should execute
+        """
+        if action not in self.DEBOUNCED_ACTIONS:
+            return False
+
+        current_time = time.time()
+        last_time = self._last_action_time.get(action, 0)
+
+        if current_time - last_time < self.DEBOUNCE_TIME:
+            # Too soon since last execution, debounce this
+            return True
+
+        # Update last action time and allow execution
+        self._last_action_time[action] = current_time
+        return False
 
     def handle_mouse_event(self, event: int, x: int, y: int, flags: int, param: any) -> None:
         """Handle mouse events for the main window."""
@@ -158,41 +191,39 @@ class EventHandler:
                     return 'switch_mode_box'
             
             # Basic navigation shortcuts
+            action = None
+
             if char == SHORTCUTS['quit']:
-                self.logger.info("Quit command received")
-                return 'quit'
+                action = 'quit'
             elif char == SHORTCUTS['next_image']:
-                self.logger.info("Next image command received")
-                return 'next'
+                action = 'next'
             elif char == SHORTCUTS['prev_image']:
-                self.logger.info("Previous image command received")
-                return 'prev'
+                action = 'prev'
             elif char == SHORTCUTS['jump_to_image']:
-                self.logger.info("Jump to image command received")
-                return 'jump'
+                action = 'jump'
             elif char == SHORTCUTS['save']:
-                self.logger.info("Save command received")
-                return 'save'
+                action = 'save'
             elif char == SHORTCUTS['clear_selection']:
-                self.logger.info("Clear selection command received")
-                return 'clear_selection'
+                action = 'clear_selection'
             elif char == SHORTCUTS['add_annotation']:
-                self.logger.info("Add annotation command received")
-                return 'add'
+                action = 'add'
             elif char == SHORTCUTS['undo']:
-                self.logger.info("Undo command received")
-                return 'undo'
+                action = 'undo'
             elif char == SHORTCUTS['redo']:
-                self.logger.info("Redo command received")
-                return 'redo'
+                action = 'redo'
             elif char == SHORTCUTS['clear_all']:
-                self.logger.info("Clear all command received")
-                return 'clear_all'
+                action = 'clear_all'
             elif char == SHORTCUTS['toggle_auto_advance']:
-                self.logger.info("Toggle auto-advance command received")
-                return 'toggle_auto_advance'
-            
-            return None
+                action = 'toggle_auto_advance'
+
+            # Apply debouncing for critical actions
+            if action and self._should_debounce(action):
+                return None  # Skip this repeated keypress
+
+            if action:
+                self.logger.info(f"{action.replace('_', ' ').title()} command received")
+
+            return action
             
         except Exception as e:
             self.logger.error(f"Error in keyboard event handler: {str(e)}")
